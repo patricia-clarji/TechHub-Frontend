@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+
+<html lang="en" class="scroll-smooth">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TechHub</title>
+
+        <link rel="icon" type="image/png" href="./images/favicon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+            rel="stylesheet">
+
+        <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+        <link rel="stylesheet" href="./dist/output.css">
+
+    </head>
+
+    <body class="bg-[var(--bg)] text-[var(--text)]">
+
+        <!-- NAVBAR -->
+        <header
+            class="
+                fixed
+                top-0
+                left-0
+                right-0
+                z-50
+                bg-[var(--bg)]/95
+                backdrop-blur-md
+                border-b
+                border-[var(--border)]">
+            <nav
+                class="max-w-7xl mx-auto px-10 py-6 flex justify-between items-center">
+
+                <a href="#home" class="flex items-center gap-3">
+
+                    <img src="./images/logo.png" alt="TechHub Logo"
+                        class="h-25 w-25 object-contain">
+
+                    <span class="font-[Playfair_Display] text-4xl font-bold">
+                        TechHub
+                    </span>
+
+                </a>
+
+                <ul class="flex gap-8 text-sm uppercase tracking-wide">
+                    <li><a href="#home"
+                            class="hover:text-[#8B6B47]">Home</a></li>
+                    <li><a href="#products"
+                            class="hover:text-[#8B6B47]">Products</a></li>
+                    <li><a href="#categories"
+                            class="hover:text-[#8B6B47]">Categories</a></li>
+                    <li><a href="#deals"
+                            class="hover:text-[#8B6B47]">Deals</a></li>
+                    <li><a href="#about"
+                            class="hover:text-[#8B6B47]">About</a></li>
+                </ul>
+
+                <div class="flex items-center gap-6">
+                    <i class="fa-solid fa-magnifying-glass cursor-pointer"></i>
+                    <i class="fa-solid fa-cart-shopping cursor-pointer"></i>
+                    <i class="fa-solid fa-user cursor-pointer"></i>
+
+                    <button id="theme-toggle" class="theme-switch">
+
+                        <div id="toggle-track">
+
+                            <div id="toggle-thumb">
+                                <i id="theme-icon"
+                                    class="fa-solid fa-moon text-xs">
+                                </i>
+                            </div>
+
+                        </div>
+
+                    </button>
+
+                    <button
+                        class="bg-[#8B6B47] text-white px-5 py-3 transition duration-300 hover:bg-[#6F5337]">
+                        Shop Now
+                    </button>
+                </div>
+
+            </nav>
+        </header>
+
+        <!-- HERO -->
+        <section id="home" class="max-w-7xl mx-auto px-10 pt-40 pb-24">
+
+            <div class="grid grid-cols-2 gap-16 items-center">
+
+                <div>
+
+                    <span
+                        class="uppercase text-xs tracking-[0.3em] text-[#8B6B47] border border-[#DDD1C4] px-4 py-2">
+                        Premium Electronics
+                    </span>
+
+                    <h1
+                        class="font-[Playfair_Display] text-7xl font-bold leading-tight mt-8">
+                        Discover the Latest Technology at Unbeatable Prices
+                    </h1>
+
+                    <p class="mt-8 text-lg text-[#7B6D60]">
+                        Shop premium electronics, gaming gear, laptops,
+                        smartphones,
+                        and accessories — all in one place.
+                    </p>
+
+                    <div class="flex gap-4 mt-10">
+
+                        <button
+                            class="bg-[#8B6B47] text-white px-6 py-3 transition duration-300 hover:bg-[#6F5337]">
+                            Shop Now
+                        </button>
+
+                        <button
+                            class="border border-[#8B6B47] px-6 py-3 hover:bg-[#8B6B47] hover:text-white transition">
+                            View Categories
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <img
+                    src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400"
+                    class="h-[650px] w-full object-cover rounded-xl shadow-lg"
+                    alt="Tech Devices">
+
+            </div>
+
+        </section>
+
+        <!--Trust Bar-->
+        <section class="max-w-7xl mx-auto px-10 py-12">
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+
+                <div
+                    class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 text-center">
+
+                    <i
+                        class="fa-solid fa-truck-fast text-2xl text-[var(--primary)]"></i>
+
+                    <h3 class="font-semibold mt-4">
+                        Free Delivery
+                    </h3>
+
+                    <p class="text-[var(--text-muted)] text-sm mt-2">
+                        Fast shipping nationwide
+                    </p>
+
+                </div>
+
+                <div
+                    class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 text-center">
+
+                    <i
+                        class="fa-solid fa-truck-fast text-2xl text-[var(--primary)]"></i>
+                    <h3 class="font-semibold mt-4">
+                        Secure Checkout
+                    </h3>
+
+                    <p class="text-[var(--text-muted)] text-sm mt-2">
+                        Protected transactions
+                    </p>
+
+                </div>
+
+                <div
+                    class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 text-center">
+
+                    <i
+                        class="fa-solid fa-truck-fast text-2xl text-[var(--primary)]"></i>
+                    <h3 class="font-semibold mt-4">
+                        Genuine Products
+                    </h3>
+
+                    <p class="text-[var(--text-muted)] text-sm mt-2">
+                        Authorized brand partners
+                    </p>
+
+                </div>
+
+                <div
+                    class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 text-center">
+
+                    <i
+                        class="fa-solid fa-truck-fast text-2xl text-[var(--primary)]"></i>
+                    <h3 class="font-semibold mt-4">
+                        Premium Support
+                    </h3>
+
+                    <p class="text-[var(--text-muted)] text-sm mt-2">
+                        Assistance whenever needed
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- WHY TECHHUB -->
+        <section id="why-techhub" class="max-w-7xl mx-auto px-10 py-24">
+
+            <span
+                class="uppercase text-xs tracking-[0.3em] text-[#8B6B47] border border-[#DDD1C4] px-4 py-2">
+                Why TechHub
+            </span>
+
+            <h2 class="font-[Playfair_Display] text-5xl font-bold mt-4 mb-6">
+                Everything You Need, Nothing to Worry About
+            </h2>
+
+            <p class="text-gray-600 mb-10">
+                TechHub delivers a seamless shopping experience.
+            </p>
+
+            <div class="grid grid-cols-2 gap-6">
+
+                <div class="bg-[#EEE6DC] p-8 rounded-lg">
+                    <h3 class="font-bold text-2xl mb-3">🚚 Fast Delivery</h3>
+                    <p>Same-day dispatch on most orders.</p>
+                </div>
+
+                <div class="bg-[#EEE6DC] p-8 rounded-lg">
+                    <h3 class="font-bold text-2xl mb-3">🔒 Secure Payments</h3>
+                    <p>Encrypted checkout with major payment methods.</p>
+                </div>
+
+                <div class="bg-[#EEE6DC] p-8 rounded-lg">
+                    <h3 class="font-bold text-2xl mb-3">🛡 Product Warranty</h3>
+                    <p>Manufacturer-backed warranty included.</p>
+                </div>
+
+                <div class="bg-[#EEE6DC] p-8 rounded-lg">
+                    <h3 class="font-bold text-2xl mb-3">💬 24/7 Support</h3>
+                    <p>Expert assistance whenever you need it.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- CATEGORIES -->
+
+        <section id="categories" class="max-w-7xl mx-auto px-10 py-28">
+
+            <div class="text-center mb-16">
+
+                <span
+                    class="uppercase text-xs tracking-[0.3em] text-[#8B6B47] border border-[#DDD1C4] px-4 py-2">
+                    Browse By Category
+                </span>
+
+                <h2
+                    class="font-[Playfair_Display] text-6xl font-bold mt-8 mb-4">
+                    Shop by Category
+                </h2>
+
+                <p class="text-[#7B6D60] text-lg max-w-2xl mx-auto">
+                    Explore premium technology collections carefully curated
+                    for
+                    productivity, entertainment, and modern living.
+                </p>
+
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+
+                <!-- Smartphones -->
+                <div
+                    class="relative overflow-hidden rounded-2xl group cursor-pointer h-[500px]">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200"
+                        class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110">
+
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    </div>
+
+                    <div class="absolute bottom-10 left-10 text-white">
+
+                        <p class="uppercase tracking-widest text-sm mb-2">
+                            Premium Mobile
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-5xl font-bold">
+                            Smartphones
+                        </h3>
+
+                        <p class="mt-3 text-white/80 max-w-sm">
+                            Flagship devices from Apple, Samsung and other
+                            leading
+                            brands.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- Laptops -->
+                <div
+                    class="relative overflow-hidden rounded-2xl group cursor-pointer h-[500px]">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=1200&auto=format&fit=crop"
+                        class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110">
+
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    </div>
+
+                    <div class="absolute bottom-10 left-10 text-white">
+
+                        <p class="uppercase tracking-widest text-sm mb-2">
+                            Productivity
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-5xl font-bold">
+                            Laptops
+                        </h3>
+
+                        <p class="mt-3 text-white/80 max-w-sm">
+                            Powerful machines for creators, professionals
+                            and students.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- Gaming -->
+                <div
+                    class="relative overflow-hidden rounded-2xl group cursor-pointer h-[500px]">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1603481546238-487240415921?w=1200"
+                        class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110">
+
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    </div>
+
+                    <div class="absolute bottom-10 left-10 text-white">
+
+                        <p class="uppercase tracking-widest text-sm mb-2">
+                            Entertainment
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-5xl font-bold">
+                            Gaming
+                        </h3>
+
+                        <p class="mt-3 text-white/80 max-w-sm">
+                            Consoles, accessories and next-generation gaming
+                            gear.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- Smart Home -->
+                <div
+                    class="relative overflow-hidden rounded-2xl group cursor-pointer h-[500px]">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1558002038-1055907df827?w=1200"
+                        class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110">
+
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    </div>
+
+                    <div class="absolute bottom-10 left-10 text-white">
+
+                        <p class="uppercase tracking-widest text-sm mb-2">
+                            Smart Living
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-5xl font-bold">
+                            Smart Home
+                        </h3>
+
+                        <p class="mt-3 text-white/80 max-w-sm">
+                            Connected devices that simplify everyday life.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- BRANDS -->
+        <section class="max-w-7xl mx-auto px-10 py-12">
+            <div
+                class="flex justify-between items-center opacity-60 text-3xl font-semibold">
+                <span>Apple</span>
+                <span>Samsung</span>
+                <span>Sony</span>
+                <span>Dell</span>
+                <span>Lenovo</span>
+                <span>ASUS</span>
+            </div>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="products" class="max-w-7xl mx-auto px-10 py-24">
+
+            <span
+                class="uppercase text-xs tracking-[0.3em] text-[#8B6B47] border border-[#DDD1C4] px-4 py-2">
+                Featured Products
+            </span>
+
+            <h2 class="font-[Playfair_Display] text-5xl font-bold mt-6">
+                Hot Picks This Week
+            </h2>
+
+            <div class="grid grid-cols-4 gap-8 mt-12">
+
+                <div
+                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=1200"
+                        class="rounded-lg h-48 w-full object-cover">
+
+                    <div class="mt-4 flex justify-between items-end">
+
+                        <div>
+                            <h3
+                                class="font-[Playfair_Display] text-xl font-semibold">
+                                ProMax Ultra 5G
+                            </h3>
+
+                            <p class="mt-1">
+                                ★★★★★ 4.9 · $899
+                            </p>
+                        </div>
+
+                        <button
+                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
+                            flex items-center justify-center
+                            hover:bg-[#8B6B47] hover:text-white
+                            transition-all duration-300 hover:scale-110">
+
+                            <i class="fa-solid fa-cart-shopping"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800"
+                        class="rounded-lg h-48 w-full object-cover">
+
+                    <div class="mt-4 flex justify-between items-end">
+
+                        <div>
+                            <h3
+                                class="font-[Playfair_Display] text-xl font-semibold">
+                                EliteBook Pro
+                            </h3>
+
+                            <p class="mt-1">
+                                ★★★★★ 4.8 · $1299
+                            </p>
+                        </div>
+
+                        <button
+                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
+                            flex items-center justify-center
+                            hover:bg-[#8B6B47] hover:text-white
+                            transition-all duration-300 hover:scale-110">
+
+                            <i class="fa-solid fa-cart-shopping"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800"
+                        class="rounded-lg h-48 w-full object-cover">
+
+                    <div class="mt-4 flex justify-between items-end">
+
+                        <div>
+                            <h3
+                                class="font-[Playfair_Display] text-xl font-semibold">
+                                GameForce Wireless
+                            </h3>
+
+                            <p class="mt-1">
+                                ★★★★★ 4.7 · $149
+                            </p>
+                        </div>
+
+                        <button
+                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
+                            flex items-center justify-center
+                            hover:bg-[#8B6B47] hover:text-white
+                            transition-all duration-300 hover:scale-110">
+
+                            <i class="fa-solid fa-cart-shopping"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=800"
+                        class="rounded-lg h-48 w-full object-cover">
+
+                    <div class="mt-4 flex justify-between items-end">
+
+                        <div>
+                            <h3
+                                class="font-[Playfair_Display] text-xl font-semibold">
+                                HomeHub Speaker
+                            </h3>
+
+                            <p class="mt-1">
+                                ★★★★★ 4.6 · $79
+                            </p>
+                        </div>
+
+                        <button
+                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
+                            flex items-center justify-center
+                            hover:bg-[#8B6B47] hover:text-white
+                            transition-all duration-300 hover:scale-110">
+
+                            <i class="fa-solid fa-cart-shopping"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!--Flash Sales-->
+
+            <section class="max-w-7xl mx-auto px-10 py-24">
+
+                <div
+                    class="bg-[#EEE6DC] border border-[#DDD1C4] rounded-3xl p-12">
+
+                    <div class="text-center">
+
+                        <span
+                            class="uppercase text-xs tracking-[0.3em] text-[#8B6B47]">
+                            Limited Time Offer
+                        </span>
+
+                        <h2
+                            class="font-[Playfair_Display] text-5xl font-bold mt-6">
+                            Flash Sale Event
+                        </h2>
+
+                        <p class="mt-4 text-[#7B6D60]">
+                            Exclusive discounts on selected premium devices.
+                        </p>
+
+                    </div>
+
+                    <div class="flex justify-center gap-5 mt-12">
+
+                        <div
+                            class="bg-white border border-[#DDD1C4] rounded-xl p-6 w-28 text-center">
+                            <h3 id="days"
+                                class="font-[Playfair_Display] text-5xl font-bold text-[#8B6B47]">00</h3>
+                            <p class="mt-2 text-sm">Days</p>
+                        </div>
+
+                        <div
+                            class="bg-white border border-[#DDD1C4] rounded-xl p-6 w-28 text-center">
+                            <h3 id="hours"
+                                class="font-[Playfair_Display] text-5xl font-bold text-[#8B6B47]">00</h3>
+                            <p class="mt-2 text-sm">Hours</p>
+                        </div>
+
+                        <div
+                            class="bg-white border border-[#DDD1C4] rounded-xl p-6 w-28 text-center">
+                            <h3 id="minutes"
+                                class="font-[Playfair_Display] text-5xl font-bold text-[#8B6B47]">00</h3>
+                            <p class="mt-2 text-sm">Minutes</p>
+                        </div>
+
+                        <div
+                            class="bg-white border border-[#DDD1C4] rounded-xl p-6 w-28 text-center">
+                            <h3 id="seconds"
+                                class="font-[Playfair_Display] text-5xl font-bold text-[#8B6B47]">00</h3>
+                            <p class="mt-2 text-sm">Seconds</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- DEALS PRODUCTS -->
+            <section id="deals" class="max-w-7xl mx-auto px-10 py-24">
+
+                <span
+                    class="uppercase text-xs tracking-[0.3em] text-[#8B6B47] border border-[#DDD1C4] px-4 py-2">
+                    Limited Time Offers
+                </span>
+
+                <h2 class="font-[Playfair_Display] text-5xl font-bold mt-6">
+                    Deals & Promotions
+                </h2>
+
+                <div class="grid grid-cols-2 gap-8 mt-12">
+
+                    <div
+                        class="group bg-[#EEE6DC] p-10 rounded-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer">
+                        <p class="uppercase text-sm mb-4">
+                            Summer Sale
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-4xl font-bold">
+                            Up To 40% Off
+                        </h3>
+
+                        <p class="mt-4 text-[#7B6D60]">
+                            Save on laptops, smartphones, and gaming
+                            accessories.
+                        </p>
+
+                        <button
+                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7">
+                            Shop Deals →
+                        </button>
+                    </div>
+
+                    <div
+                        class="group bg-[#EEE6DC] p-10 rounded-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl cursor-pointer">
+                        <p class="uppercase text-sm mb-4">
+                            New Arrivals
+                        </p>
+
+                        <h3 class="font-[Playfair_Display] text-4xl font-bold">
+                            Latest Tech Collection
+                        </h3>
+
+                        <p class="mt-4 text-[#7B6D60]">
+                            Discover the newest innovations from top brands.
+                        </p>
+
+                        <button
+                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7">
+                            Explore →
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!--Product finder-->
+            <section class="max-w-7xl mx-auto px-10 py-24">
+
+                <div class="bg-white border border-[#DDD1C4] rounded-3xl p-12">
+
+                    <div class="text-center">
+
+                        <span
+                            class="uppercase text-xs tracking-[0.3em] text-[#8B6B47]">
+                            Curated Recommendations
+                        </span>
+
+                        <h2
+                            class="font-[Playfair_Display] text-5xl font-bold mt-6">
+                            Find Your Perfect Device
+                        </h2>
+
+                        <p class="mt-4 text-[#7B6D60] max-w-2xl mx-auto">
+                            Select your primary use case and discover products
+                            tailored to your needs.
+                        </p>
+
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+
+                        <button
+                            class="bg-[#EEE6DC] p-8 rounded-xl hover:bg-white border border-transparent hover:border-[#8B6B47] transition">
+                            Work
+                        </button>
+
+                        <button
+                            class="bg-[#EEE6DC] p-8 rounded-xl hover:bg-white border border-transparent hover:border-[#8B6B47] transition">
+                            Study
+                        </button>
+
+                        <button
+                            class="bg-[#EEE6DC] p-8 rounded-xl hover:bg-white border border-transparent hover:border-[#8B6B47] transition">
+                            Gaming
+                        </button>
+
+                        <button
+                            class="bg-[#EEE6DC] p-8 rounded-xl hover:bg-white border border-transparent hover:border-[#8B6B47] transition">
+                            Creative
+                        </button>
+
+                    </div>
+
+                    <div class="text-center mt-10">
+
+                        <button
+                            class="bg-[#8B6B47] text-white px-8 py-4 rounded-xl hover:bg-[#6F5337] transition">
+                            Find Recommendations
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- TESTIMONIALS -->
+            <section id="testimonials" class="max-w-7xl mx-auto px-10 py-24">
+
+                <h2 class="font-[Playfair_Display] text-5xl font-bold mb-12">
+                    What Our Customers Say
+                </h2>
+
+                <div class="grid grid-cols-3 gap-8">
+
+                    <div class="bg-white p-8 rounded-lg">
+                        <img
+                            src="https://randomuser.me/api/portraits/women/44.jpg"
+                            class="w-12 h-12 rounded-full mb-4">
+                        <p>★★★★★</p>
+                        <p class="mt-4">Fast shipping and excellent quality.</p>
+                        <h4 class="mt-4 font-bold">Sarah Johnson</h4>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg">
+                        <img
+                            src="https://randomuser.me/api/portraits/men/32.jpg"
+                            class="w-12 h-12 rounded-full mb-4">
+                        <p>★★★★★</p>
+                        <p class="mt-4">The best electronics store I've
+                            used.</p>
+                        <h4 class="mt-4 font-bold">Michael Carter</h4>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg">
+                        <img
+                            src="https://randomuser.me/api/portraits/women/68.jpg"
+                            class="w-12 h-12 rounded-full mb-4">
+                        <p>★★★★★</p>
+                        <p class="mt-4">Amazing customer service and
+                            delivery.</p>
+                        <h4 class="mt-4 font-bold">Emma Rodriguez</h4>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- STATS -->
+            <section class="max-w-7xl mx-auto px-10 py-24">
+                <div class="grid grid-cols-4 text-center gap-10">
+                    <div>
+                        <h2
+                            class="font-[Playfair_Display] text-6xl text-[#8B6B47] font-bold">10K+</h2>
+                        <p>Products</p>
+                    </div>
+                    <div>
+                        <h2
+                            class="font-[Playfair_Display] text-6xl text-[#8B6B47] font-bold">50K+</h2>
+                        <p>Customers</p>
+                    </div>
+                    <div>
+                        <h2
+                            class="font-[Playfair_Display] text-6xl text-[#8B6B47] font-bold">500+</h2>
+                        <p>Brands</p>
+                    </div>
+                    <div>
+                        <h2
+                            class="font-[Playfair_Display] text-6xl text-[#8B6B47] font-bold">99%</h2>
+                        <p>Satisfaction</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEWSLETTER -->
+            <section class="max-w-7xl mx-auto px-10 py-24">
+
+                <div class="bg-[#EEE6DC] p-12 text-center">
+
+                    <h2 class="font-[Playfair_Display] text-5xl font-bold">
+                        Stay Updated With the Latest Tech Deals
+                    </h2>
+
+                    <p class="mt-4 text-[#7B6D60]">
+                        Subscribe to receive exclusive discounts and product
+                        launches.
+                    </p>
+
+                    <div class="flex justify-center gap-4 mt-8">
+
+                        <input type="email" placeholder="Enter your email"
+                            class="bg-white px-5 py-3 w-[400px]">
+
+                        <button class="bg-[#8B6B47] text-white px-6 py-3">
+                            Subscribe
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- FOOTER -->
+            <footer id="about" class="border-t border-[#DDD1C4]">
+
+                <div class="max-w-7xl mx-auto px-10 py-16">
+
+                    <h2 class="font-[Playfair_Display] text-5xl font-bold mb-8">
+                        Your One-Stop Tech Destination
+                    </h2>
+
+                    <div class="grid grid-cols-4 gap-10">
+
+                        <div>
+                            <h3 class="font-bold mb-4">Company</h3>
+                            <ul class="space-y-2">
+                                <li>About</li>
+                                <li>Careers</li>
+                                <li>Contact</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold mb-4">Products</h3>
+                            <ul class="space-y-2">
+                                <li>Smartphones</li>
+                                <li>Laptops</li>
+                                <li>Gaming</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold mb-4">Customer Service</h3>
+                            <ul class="space-y-2">
+                                <li>Help Center</li>
+                                <li>Returns</li>
+                                <li>Track Order</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold mb-4">Contact</h3>
+                            <ul class="space-y-2">
+                                <li>support@techhub.com</li>
+                                <li>+1 800 555 TECH</li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </footer>
+
+            <!--Sticky Cart-->
+            <div class="fixed bottom-6 right-6 z-50">
+
+                <button
+                    class="
+                        bg-[#8B6B47]
+                        hover:bg-[#6F5337]
+                        text-white
+                        px-6
+                        py-4
+                        rounded-full
+                        shadow-lg
+                        flex
+                        items-center
+                        gap-3
+                        transition-all
+                        duration-300">
+
+                    <i class="fa-solid fa-cart-shopping"></i>
+
+                    <span>
+                        Cart
+                    </span>
+
+                    <span
+                        id="cart-count"
+                        class="
+                        bg-white
+                        text-[#8B6B47]
+                        w-6
+                        h-6
+                        rounded-full
+                        text-xs
+                        flex
+                        items-center
+                        justify-center
+                        font-bold">
+                        0
+                    </span>
+
+                </button>
+
+            </div>
+
+        </body>
+
+        <script>
+
+            // Theme Toggle
+
+const themeToggle =
+document.getElementById("theme-toggle");
+
+const themeIcon =
+document.getElementById("theme-icon");
+
+if (localStorage.getItem("theme") === "dark") {
+
+    document.documentElement.classList.add("dark");
+
+    themeIcon.classList.remove("fa-moon");
+    themeIcon.classList.add("fa-sun");
+
+}
+
+themeToggle.addEventListener("click", () => {
+
+    document.documentElement.classList.toggle("dark");
+
+    const isDark =
+    document.documentElement.classList.contains("dark");
+
+    localStorage.setItem(
+        "theme",
+        isDark ? "dark" : "light"
+    );
+
+    if (isDark) {
+
+        themeIcon.classList.remove("fa-moon");
+        themeIcon.classList.add("fa-sun");
+
+    } else {
+
+        themeIcon.classList.remove("fa-sun");
+        themeIcon.classList.add("fa-moon");
+
+    }
+
+});
+
+
+            //Countdown
+            let saleEnd = localStorage.getItem("saleEnd");
+
+            if (!saleEnd) {
+
+                saleEnd = new Date().getTime() + (48 * 60 * 60 * 1000);
+
+                localStorage.setItem("saleEnd", saleEnd);
+
+            }
+
+            saleEnd = parseInt(saleEnd);
+
+            function updateCountdown() {
+
+                const now = new Date().getTime();
+
+                const distance = saleEnd - now;
+
+                if (distance <= 0) {
+
+                    document.getElementById("days").innerHTML = "00";
+                    document.getElementById("hours").innerHTML = "00";
+                    document.getElementById("minutes").innerHTML = "00";
+                    document.getElementById("seconds").innerHTML = "00";
+
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+
+                const hours = Math.floor(
+                    (distance % (1000 * 60 * 60 * 24))
+                    / (1000 * 60 * 60)
+                );
+
+                const minutes = Math.floor(
+                    (distance % (1000 * 60 * 60))
+                    / (1000 * 60)
+                );
+
+                const seconds = Math.floor(
+                    (distance % (1000 * 60))
+                    / 1000
+                );
+
+                document.getElementById("days").innerHTML =
+                    String(days).padStart(2, "0");
+
+                document.getElementById("hours").innerHTML =
+                    String(hours).padStart(2, "0");
+
+                document.getElementById("minutes").innerHTML =
+                    String(minutes).padStart(2, "0");
+
+                document.getElementById("seconds").innerHTML =
+                    String(seconds).padStart(2, "0");
+            }
+
+            updateCountdown();
+
+            setInterval(updateCountdown, 1000);
+
+            </script>
+
+    </html>
