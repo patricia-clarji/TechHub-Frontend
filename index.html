@@ -19,6 +19,7 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
         <link rel="stylesheet" href="./dist/output.css">
+        
 
     </head>
 
@@ -52,15 +53,15 @@
 
                 <ul class="flex gap-8 text-sm uppercase tracking-wide">
                     <li><a href="#home"
-                            class="hover:text-[#8B6B47]">Home</a></li>
+                            class="nav-link">Home</a></li>
                     <li><a href="#products"
-                            class="hover:text-[#8B6B47]">Products</a></li>
+                            class="nav-link">Products</a></li>
                     <li><a href="#categories"
-                            class="hover:text-[#8B6B47]">Categories</a></li>
+                            class="nav-link">Categories</a></li>
                     <li><a href="#deals"
-                            class="hover:text-[#8B6B47]">Deals</a></li>
+                            class="nav-link">Deals</a></li>
                     <li><a href="#about"
-                            class="hover:text-[#8B6B47]">About</a></li>
+                            class="nav-link">About</a></li>
                 </ul>
 
                 <div class="flex items-center gap-6">
@@ -116,7 +117,7 @@
                     </button>
 
                     <button
-                        class="bg-[#8B6B47] text-white px-5 py-3 transition duration-300 hover:bg-[#6F5337]">
+                        class="bg-[#8B6B47] text-white px-5 py-3 transition duration-300 hover:bg-[#6F5337] premium-btn  ">
                         Shop Now
                     </button>
                 </div>
@@ -127,8 +128,8 @@
         <!-- HERO -->
         <section id="home" class="max-w-7xl mx-auto px-10 pt-40 pb-24">
 
-            <div class="grid grid-cols-2 gap-16 items-center">
-
+            <div
+                class="grid grid-cols-2 gap-16 items-center animate-luxury animate-delay-1">
                 <div>
 
                     <span
@@ -137,11 +138,12 @@
                     </span>
 
                     <h1
-                        class="font-[Playfair_Display] text-7xl font-bold leading-tight mt-8">
+                        class="font-[Playfair_Display] text-7xl font-bold leading-tight mt-8   animate-luxury animate-delay-2">
                         Discover the Latest Technology at Unbeatable Prices
                     </h1>
 
-                    <p class="mt-8 text-lg text-[#7B6D60]">
+                    <p
+                        class="mt-8 text-lg text-[#7B6D60] animate-luxury animate-delay-3">
                         Shop premium electronics, gaming gear, laptops,
                         smartphones,
                         and accessories — all in one place.
@@ -150,12 +152,12 @@
                     <div class="flex gap-4 mt-10">
 
                         <button
-                            class="bg-[#8B6B47] text-white px-6 py-3 transition duration-300 hover:bg-[#6F5337]">
+                            class="bg-[#8B6B47] text-white px-6 py-3 transition duration-300 hover:bg-[#6F5337] flex gap-4 mt-10 animate-luxury animate-delay-4 premium-btn">
                             Shop Now
                         </button>
 
                         <button
-                            class="border border-[#8B6B47] px-6 py-3 hover:bg-[#8B6B47] hover:text-white transition">
+                            class="border border-[#8B6B47] px-6 py-3 hover:bg-[#8B6B47] hover:text-white transition flex gap-4 mt-10 animate-luxury animate-delay-4">
                             View Categories
                         </button>
 
@@ -165,7 +167,7 @@
 
                 <img
                     src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400"
-                    class="h-[650px] w-full object-cover rounded-xl shadow-lg"
+                    class="h-[650px] w-full object-cover rounded-xl shadow-lg float-luxury"
                     alt="Tech Devices">
 
             </div>
@@ -316,10 +318,21 @@
 
                     <img
                         src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200"
-                        class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-110">
+                        class="absolute inset-0
+                        bg-gradient-to-t
+                        from-black/80
+                        via-black/20
+                        to-transparent
+                        transition-all
+                        duration-700
+                        group-hover:from-black/90
+                        group-hover:via-black/40">">
 
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+                    class="
+                    absolute bottom-10 left-10 text-white
+                    transition-all duration-700
+                    group-hover:translate-y-[-8px]">
                     </div>
 
                     <div class="absolute bottom-10 left-10 text-white">
@@ -900,7 +913,7 @@
                         </p>
 
                         <button
-                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7">
+                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7 premium-btn">
                             Shop Deals →
                         </button>
                     </div>
@@ -920,7 +933,7 @@
                         </p>
 
                         <button
-                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7">
+                            class="mt-6 bg-[#8B6B47] text-white px-5 py-3 rounded-lg transition-all duration-300 hover:bg-[#6F5337] hover:px-7 premium-btn">
                             Explore →
                         </button>
                     </div>
@@ -980,7 +993,7 @@
                     <div class="text-center mt-10">
 
                         <button
-                            class="bg-[#8B6B47] text-white px-8 py-4 rounded-xl hover:bg-[#6F5337] transition">
+                            class="bg-[#8B6B47] text-white px-8 py-4 rounded-xl hover:bg-[#6F5337] transition premium-btn">
                             Find Recommendations
                         </button>
 
@@ -1077,7 +1090,8 @@
                         <input type="email" placeholder="Enter your email"
                             class="bg-white px-5 py-3 w-[400px]">
 
-                        <button class="bg-[#8B6B47] text-white px-6 py-3">
+                        <button
+                            class="bg-[#8B6B47] text-white px-6 py-3 premium-btn">
                             Subscribe
                         </button>
 
@@ -1259,9 +1273,7 @@
                     rounded-full
                     bg-[#8B6B47]
                     text-white
-                    shadow-xl
-                    hover:bg-[#6F5337]
-                    transition">
+                    style=" animation:chatbotPulse 2.5s infinite;">
 
                     <i class="fa-solid fa-comments text-xl"></i>
 
@@ -1499,9 +1511,26 @@
 
             </div>
 
-        </body>
+            <script>
 
-        <script>
+            const revealItems = document.querySelectorAll(
+            ".bg-white, .bg-\\[\\#EEE6DC\\], .rounded-2xl"
+            );
+
+            const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                entry.target.classList.add("animate-luxury");
+                observer.unobserve(entry.target);
+                }
+            });
+            }, { threshold: 0.15 });
+
+            revealItems.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.08}s`;
+            observer.observe(item);
+            });
+
 
             const quickViewModal =
                 document.getElementById("quick-view-modal");
@@ -2304,6 +2333,13 @@
 
             updateWishlistCount();
 
+            //cart
+
+            let cart =
+            JSON.parse(
+                localStorage.getItem("cart")
+            ) || [];
+
             //toast
 
 
@@ -2366,5 +2402,7 @@
         });
 
         </script>
+
+        </body>
 
     </html>
