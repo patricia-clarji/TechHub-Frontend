@@ -91,11 +91,11 @@
                         </div>
                     </button>
 
-                    <button
-                        class="hidden sm:flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">
+                    <a href="products.html"
+                        class="hidden sm:inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold uppercase tracking-widest px-5 py-2.5 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">
                         <span>Shop Now</span>
                         <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
+                    </a>
                 </div>
             </nav>
 
@@ -159,10 +159,10 @@
 
                 <!-- Action Section -->
                 <div class="space-y-4 mobile-link">
-                    <button
-                        class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-6 py-3 rounded-full text-sm font-semibold premium-btn transition-all duration-300 shadow-lg hover:shadow-xl">
-                        Shop Now
-                    </button>
+<a href="products.html"
+                    class="w-full inline-flex items-center justify-center bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-6 py-3 rounded-full text-sm font-semibold premium-btn transition-all duration-300 shadow-lg hover:shadow-xl">
+                    Shop Now
+                </a>
                     
                     <!-- Social Links -->
                     <div class="flex items-center justify-center gap-4 pt-4">
@@ -217,16 +217,16 @@
                     </p>
 
                     <div class="flex flex-wrap gap-4 hero-btns">
-                        <button
-                            class="group flex items-center gap-3 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 hover:shadow-xl hover:shadow-[var(--glow)] premium-btn">
+                        <a href="products.html"
+                            class="group inline-flex items-center gap-3 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-7 py-3.5 rounded-full font-semibold text-sm transition-all duration-300 hover:shadow-xl hover:shadow-[var(--glow)] premium-btn">
                             <span>Shop Now</span>
                             <i
                                 class="fa-solid fa-arrow-right transition-transform duration-300 group-hover:translate-x-1 text-xs"></i>
-                        </button>
-                        <button
+                        </a>
+                        <a href="products.html#categories"
                             class="flex items-center gap-3 border border-[var(--accent)] text-[var(--accent)] px-7 py-3.5 rounded-full font-semibold text-sm hover:bg-[var(--accent)] hover:text-white transition-all duration-300">
                             <span>View Categories</span>
-                        </button>
+                        </a>
                     </div>
 
                     <!-- Quick stats under hero -->
@@ -503,10 +503,10 @@
                         class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Hot
                         Picks This Week</h2>
                 </div>
-                <button
+                <a href="products.html"
                     class="text-[var(--accent)] text-sm font-semibold uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all duration-300 whitespace-nowrap">
                     View All <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
+                </a>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1072,6 +1072,11 @@
             </button>
         </div>
 
+        <!-- Mini Cart Panel (hidden by default) -->
+        <div id="mini-cart-panel" class="hidden fixed bottom-20 right-6 z-50 w-80 sm:w-96 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden">
+          <!-- content populated by src/app.js -->
+        </div>
+
         <!-- ══════════════════════════════════════════════
             TOAST
         ══════════════════════════════════════════════ -->
@@ -1110,9 +1115,11 @@
             QUICK VIEW MODAL
         ══════════════════════════════════════════════ -->
         <div id="quick-view-modal"
-            class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md hidden">
+            class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md hidden"
+            role="dialog" aria-modal="true" aria-hidden="true">
             <div
-                class="max-w-xl mx-auto mt-24 mx-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl overflow-hidden shadow-2xl">
+                class="max-w-xl mx-auto mt-24 mx-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl overflow-hidden shadow-2xl"
+                tabindex="-1">
                 <img id="qv-image" src alt class="w-full h-64 object-cover">
                 <div class="p-8">
                     <h3 id="qv-name"
@@ -1120,9 +1127,9 @@
                     <p id="qv-price"
                         class="text-[var(--accent)] text-2xl font-bold mt-2"></p>
                     <div class="flex gap-3 mt-6">
-                        <button
-                            class="flex-1 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-3 rounded-full font-semibold transition-all duration-300 premium-btn">Add
-                            to Cart</button>
+                        <button id="qv-add-to-cart"
+                            class="flex-1 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-3 rounded-full font-semibold transition-all duration-300 premium-btn"
+                            aria-label="Add product to cart">Add to Cart</button>
                         <button id="close-qv"
                             class="px-6 border border-[var(--border)] rounded-full hover:bg-[var(--bg-muted)] transition-colors text-sm font-medium">Close</button>
                     </div>
@@ -1337,20 +1344,35 @@
 
             // ── Quick View Modal ─────────────────────────
             const qvModal = document.getElementById('quick-view-modal');
+            let qvPreviouslyFocused = null;
             document.querySelectorAll('.quick-view-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.getElementById('qv-name').textContent = btn.dataset.name;
-                    document.getElementById('qv-price').textContent = btn.dataset.price;
-                    document.getElementById('qv-image').src = btn.dataset.image;
+                    const nameEl = document.getElementById('qv-name');
+                    const priceEl = document.getElementById('qv-price');
+                    const imgEl = document.getElementById('qv-image');
+                    nameEl.textContent = btn.dataset.name;
+                    priceEl.textContent = btn.dataset.price;
+                    imgEl.src = btn.dataset.image || imgEl.src;
+                    // store product id for add-to-cart
+                    qvModal.dataset.productId = btn.dataset.id || btn.dataset.productId || '';
+                    qvPreviouslyFocused = document.activeElement;
                     qvModal.classList.remove('hidden');
-                    requestAnimationFrame(() => qvModal.classList.add('active'));
+                    requestAnimationFrame(() => {
+                        qvModal.classList.add('active');
+                        qvModal.setAttribute('aria-hidden', 'false');
+                        // focus the inner panel for keyboard users
+                        const inner = qvModal.querySelector('[tabindex]');
+                        if (inner) inner.focus();
+                    });
                 });
             });
             document.getElementById('close-qv').addEventListener('click', closeQV);
             qvModal.addEventListener('click', e => { if (e.target === qvModal) closeQV(); });
             function closeQV() {
                 qvModal.classList.remove('active');
+                qvModal.setAttribute('aria-hidden', 'true');
                 setTimeout(() => qvModal.classList.add('hidden'), 300);
+                if (qvPreviouslyFocused && typeof qvPreviouslyFocused.focus === 'function') qvPreviouslyFocused.focus();
             }
 
             // ── Wishlist ─────────────────────────────────
@@ -1463,6 +1485,8 @@
             }, { threshold: 0.5 });
             statNums.forEach(n => statObserver.observe(n));
         </script>
+
+        <script src="./src/app.js"></script>
 
     </body>
 

@@ -319,6 +319,29 @@ html.dark #toggle-thumb {
   z-index: 2;
 }
 
+/* Enhanced premium visuals */
+.premium-btn {
+  transition: transform .28s cubic-bezier(.2,.9,.3,1), box-shadow .28s ease, background .28s ease;
+}
+.premium-btn:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(139,107,71,0.12), 0 2px 6px rgba(0,0,0,0.06);
+}
+.premium-btn:active { transform: translateY(-2px) scale(0.995); }
+
+/* Floating cart animation */
+.float-cart-btn button { animation: floatCartEntry .9s ease both; }
+@keyframes floatCartEntry {
+  0% { transform: translateY(24px) scale(.92); opacity: 0; }
+  60% { transform: translateY(-8px) scale(1.02); opacity: 1; }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Mini cart panel entrance */
+#mini-cart-panel { transform-origin: bottom right; transition: transform .25s cubic-bezier(.16,1,.3,1), opacity .25s ease; }
+#mini-cart-panel.hidden { opacity: 0; transform: scale(.98) translateY(8px); pointer-events: none; }
+#mini-cart-panel:not(.hidden) { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+
 /* ─── GRADIENT MESH HERO ───────────────────────────────── */
 .mesh-bg {
   position: absolute;
