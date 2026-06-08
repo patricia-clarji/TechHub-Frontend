@@ -71,6 +71,33 @@
 
                     </button>
 
+                    <div class="relative">
+
+                        <i id="wishlist-icon"
+                            class="fa-regular fa-heart cursor-pointer"></i>
+
+                        <span
+                            id="wishlist-count"
+                            class="
+                                absolute
+                                -top-2
+                                -right-2
+                                bg-[#8B6B47]
+                                text-white
+                                text-[10px]
+                                w-5
+                                h-5
+                                rounded-full
+                                flex
+                                items-center
+                                justify-center">
+
+                            0
+
+                        </span>
+
+                    </div>
+
                     <i class="fa-solid fa-cart-shopping cursor-pointer"></i>
                     <i class="fa-solid fa-user cursor-pointer"></i>
 
@@ -439,14 +466,48 @@
             <div class="grid grid-cols-4 gap-8 mt-12">
 
                 <div
-                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                    class="group bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
 
-                    <img
-                        src="https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=1200"
-                        class="rounded-lg h-48 w-full object-cover">
+                    <div class="relative">
+
+                        <img
+                            src="https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=1200"
+                            class="rounded-lg h-48 w-full object-cover">
+
+                        <div
+                            class="
+                        absolute
+                        inset-0
+                        bg-black/30
+                        opacity-0
+                        group-hover:opacity-100
+                        transition
+                        flex
+                        items-center
+                        justify-center">
+
+                            <button
+                                class="
+                        quick-view-btn
+                        bg-white
+                        px-4
+                        py-2
+                        rounded-xl"
+                                data-name="ProMax Ultra 5G"
+                                data-price="$899"
+                                data-image="https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=1200">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                                Quick View
+
+                            </button>
+
+                        </div>
+
+                    </div>
 
                     <div class="mt-4 flex justify-between items-end">
-
                         <div>
                             <h3
                                 class="font-[Playfair_Display] text-xl font-semibold">
@@ -457,6 +518,23 @@
                                 ★★★★★ 4.9 · $899
                             </p>
                         </div>
+
+                        <button
+                            class="
+                                wishlist-btn
+                                w-11
+                                h-11
+                                rounded-full
+                                border
+                                border-[#DDD1C4]
+                                flex
+                                items-center
+                                justify-center"
+                            data-product="ProMax Ultra 5G">
+
+                            <i class="fa-regular fa-heart"></i>
+
+                        </button>
 
                         <button
                             class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
@@ -471,13 +549,47 @@
                     </div>
 
                 </div>
-
                 <div
-                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                    class="group bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
 
-                    <img
-                        src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800"
-                        class="rounded-lg h-48 w-full object-cover">
+                    <div class="relative">
+
+                        <img
+                            src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800"
+                            class="rounded-lg h-48 w-full object-cover">
+
+                        <div
+                            class="
+                        absolute
+                        inset-0
+                        bg-black/30
+                        opacity-0
+                        group-hover:opacity-100
+                        transition
+                        flex
+                        items-center
+                        justify-center">
+
+                            <button
+                                class="
+                        quick-view-btn
+                        bg-white
+                        px-4
+                        py-2
+                        rounded-xl"
+                                data-name="EliteBook Pro"
+                                data-price="$1299"
+                                data-image="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                                Quick View
+
+                            </button>
+
+                        </div>
+
+                    </div>
 
                     <div class="mt-4 flex justify-between items-end">
 
@@ -493,38 +605,21 @@
                         </div>
 
                         <button
-                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
-                            flex items-center justify-center
-                            hover:bg-[#8B6B47] hover:text-white
-                            transition-all duration-300 hover:scale-110">
+                            class="
+                                wishlist-btn
+                                w-11
+                                h-11
+                                rounded-full
+                                border
+                                border-[#DDD1C4]
+                                flex
+                                items-center
+                                justify-center"
+                            data-product="EliteBook Pro">
 
-                            <i class="fa-solid fa-cart-shopping"></i>
+                            <i class="fa-regular fa-heart"></i>
 
                         </button>
-
-                    </div>
-
-                </div>
-
-                <div
-                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-
-                    <img
-                        src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800"
-                        class="rounded-lg h-48 w-full object-cover">
-
-                    <div class="mt-4 flex justify-between items-end">
-
-                        <div>
-                            <h3
-                                class="font-[Playfair_Display] text-xl font-semibold">
-                                GameForce Wireless
-                            </h3>
-
-                            <p class="mt-1">
-                                ★★★★★ 4.7 · $149
-                            </p>
-                        </div>
 
                         <button
                             class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
@@ -541,11 +636,132 @@
                 </div>
 
                 <div
-                    class="bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                    class="group bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
 
-                    <img
-                        src="https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=800"
-                        class="rounded-lg h-48 w-full object-cover">
+                    <div class="relative">
+
+                        <img
+                            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800"
+                            class="rounded-lg h-48 w-full object-cover">
+
+                        <div
+                            class="
+                        absolute
+                        inset-0
+                        bg-black/30
+                        opacity-0
+                        group-hover:opacity-100
+                        transition
+                        flex
+                        items-center
+                        justify-center">
+
+                            <button
+                                class="
+                        quick-view-btn
+                        bg-white
+                        px-4
+                        py-2
+                        rounded-xl"
+                                data-name="GameForce Wireless"
+                                data-price="$149"
+                                data-image="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                                Quick View
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 flex justify-between items-end">
+
+                        <div>
+                            <h3
+                                class="font-[Playfair_Display] text-xl font-semibold">
+                                GameForce Wireless
+                            </h3>
+
+                            <p class="mt-1">
+                                ★★★★★ 4.7 · $149
+                            </p>
+                        </div>
+
+                        <button
+                            class="
+                                wishlist-btn
+                                w-11
+                                h-11
+                                rounded-full
+                                border
+                                border-[#DDD1C4]
+                                flex
+                                items-center
+                                justify-center"
+                            data-product="GameForce Wireless">
+
+                            <i class="fa-regular fa-heart"></i>
+
+                        </button>
+
+                        <button
+                            class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
+                            flex items-center justify-center
+                            hover:bg-[#8B6B47] hover:text-white
+                            transition-all duration-300 hover:scale-110">
+
+                            <i class="fa-solid fa-cart-shopping"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="group bg-white rounded-lg p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+
+                    <div class="relative">
+
+                        <img
+                            src="https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=800"
+                            class="rounded-lg h-48 w-full object-cover">
+
+                        <div
+                            class="
+                        absolute
+                        inset-0
+                        bg-black/30
+                        opacity-0
+                        group-hover:opacity-100
+                        transition
+                        flex
+                        items-center
+                        justify-center">
+
+                            <button
+                                class="
+                        quick-view-btn
+                        bg-white
+                        px-4
+                        py-2
+                        rounded-xl"
+                                data-name="GameForce Wireless"
+                                data-price="$149"
+                                data-image="https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=800">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                                Quick View
+
+                            </button>
+
+                        </div>
+
+                    </div>
 
                     <div class="mt-4 flex justify-between items-end">
 
@@ -559,6 +775,23 @@
                                 ★★★★★ 4.6 · $79
                             </p>
                         </div>
+
+                        <button
+                            class="
+                                wishlist-btn
+                                w-11
+                                h-11
+                                rounded-full
+                                border
+                                border-[#DDD1C4]
+                                flex
+                                items-center
+                                justify-center"
+                            data-product="HomeHub Speaker">
+
+                            <i class="fa-regular fa-heart"></i>
+
+                        </button>
 
                         <button
                             class="w-11 h-11 rounded-full border border-[#DDD1C4] bg-white text-[#4A3A2A]
@@ -1133,9 +1366,184 @@
 
             </div>
 
+            <!--Toast-->
+            <div
+                id="quick-view-modal"
+                class="
+                    hidden
+                    fixed
+                    inset-0
+                    z-[120]
+                    bg-black/40
+                    backdrop-blur-sm">
+
+                <div
+                    class="
+                        max-w-4xl
+                        mx-auto
+                        mt-20
+                        bg-[var(--bg-card)]
+                        rounded-3xl
+                        overflow-hidden">
+
+                    <div class="grid grid-cols-2">
+
+                        <img
+                            id="modal-image"
+                            src
+                            class="w-full h-full object-cover">
+
+                        <div class="p-10">
+
+                            <button
+                                id="close-quick-view"
+                                class="float-right">
+
+                                <i class="fa-solid fa-xmark"></i>
+
+                            </button>
+
+                            <h2
+                                id="modal-name"
+                                class="text-4xl font-bold mt-10">
+                            </h2>
+
+                            <p class="mt-4">
+                                ★★★★★ 4.9
+                            </p>
+
+                            <p
+                                id="modal-price"
+                                class="text-3xl font-bold mt-6 text-[#8B6B47]">
+                            </p>
+
+                            <p class="mt-6 text-[var(--text-muted)]">
+
+                                Premium technology product designed for
+                                performance and reliability.
+
+                            </p>
+
+                            <button
+                                class="
+                                    mt-8
+                                    bg-[#8B6B47]
+                                    text-white
+                                    px-8
+                                    py-4
+                                    rounded-xl">
+
+                                Add To Cart
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div
+                id="toast"
+                class="
+                    fixed
+                    top-6
+                    right-6
+                    z-[999]
+                    translate-x-[120%]
+                    opacity-0
+                    transition-all
+                    duration-500
+                    cursor-pointer">
+
+                <div
+                    id="toast-content"
+                    class="
+                        bg-[var(--bg-card)]
+                        border
+                        border-[var(--border)]
+                        px-5
+                        py-4
+                        rounded-2xl
+                        shadow-xl
+                        flex
+                        items-center
+                        gap-3">
+
+                    <i
+                        id="toast-icon"
+                        class="fa-solid fa-heart text-[#8B6B47]">
+                    </i>
+
+                    <div>
+
+                        <div id="toast-message">
+                            Added to Wishlist
+                        </div>
+
+                        <div
+                            class="
+                text-xs
+                text-[var(--text-muted)]
+                mt-1">
+
+                            View Wishlist →
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </body>
 
         <script>
+
+            const quickViewModal =
+                document.getElementById("quick-view-modal");
+
+                document
+                .querySelectorAll(".quick-view-btn")
+                .forEach(button => {
+
+                    button.addEventListener("click", () => {
+
+                        document
+                        .getElementById("modal-name")
+                        .textContent =
+                        button.dataset.name;
+
+                        document
+                        .getElementById("modal-price")
+                        .textContent =
+                        button.dataset.price;
+
+                        document
+                        .getElementById("modal-image")
+                        .src =
+                        button.dataset.image;
+
+                        quickViewModal
+                        .classList
+                        .remove("hidden");
+
+                    });
+
+                });
+
+            document
+            .getElementById("close-quick-view")
+            .addEventListener("click", () => {
+
+                quickViewModal
+                .classList
+                .add("hidden");
+
+            });
 
             // Theme Toggle
 
@@ -1616,188 +2024,347 @@
 
             function getResponse(message){
 
-    const lower =
-    message.toLowerCase();
+            const lower =
+            message.toLowerCase();
 
-    // Shipping
+            // Shipping
 
-    if(
-        lower.includes("shipping") ||
-        lower.includes("delivery") ||
-        lower.includes("ship") ||
-        lower.includes("arrive")
-    ){
-        return "We provide fast nationwide shipping within 2–5 business days.";
-    }
+            if(
+                lower.includes("shipping") ||
+                lower.includes("delivery") ||
+                lower.includes("ship") ||
+                lower.includes("arrive")
+            ){
+                return "We provide fast nationwide shipping within 2–5 business days.";
+            }
 
-    // Returns
+            // Returns
 
-    if(
-        lower.includes("return") ||
-        lower.includes("refund")
-    ){
-        return "Returns are accepted within 30 days of purchase and refunds are processed within 5–7 business days.";
-    }
+            if(
+                lower.includes("return") ||
+                lower.includes("refund")
+            ){
+                return "Returns are accepted within 30 days of purchase and refunds are processed within 5–7 business days.";
+            }
 
-    // Warranty
+            // Warranty
 
-    if(
-        lower.includes("warranty") ||
-        lower.includes("guarantee")
-    ){
-        return "All products include official manufacturer warranty coverage.";
-    }
+            if(
+                lower.includes("warranty") ||
+                lower.includes("guarantee")
+            ){
+                return "All products include official manufacturer warranty coverage.";
+            }
 
-    // Payment
+            // Payment
 
-    if(
-        lower.includes("payment") ||
-        lower.includes("visa") ||
-        lower.includes("mastercard") ||
-        lower.includes("paypal")
-    ){
-        return "We accept Visa, Mastercard, PayPal, and cash on delivery.";
-    }
+            if(
+                lower.includes("payment") ||
+                lower.includes("visa") ||
+                lower.includes("mastercard") ||
+                lower.includes("paypal")
+            ){
+                return "We accept Visa, Mastercard, PayPal, and cash on delivery.";
+            }
 
-    // Support
+            // Support
 
-    if(
-        lower.includes("support") ||
-        lower.includes("help") ||
-        lower.includes("contact")
-    ){
-        return "Our support team is available 24/7 to assist you.";
-    }
+            if(
+                lower.includes("support") ||
+                lower.includes("help") ||
+                lower.includes("contact")
+            ){
+                return "Our support team is available 24/7 to assist you.";
+            }
 
-    // Laptops
+            // Laptops
 
-    if(
-        lower.includes("laptop") ||
-        lower.includes("computer") ||
-        lower.includes("notebook")
-    ){
-        return "Our featured laptop is the EliteBook Pro, designed for productivity, creativity, and professional workflows.";
-    }
+            if(
+                lower.includes("laptop") ||
+                lower.includes("computer") ||
+                lower.includes("notebook")
+            ){
+                return "Our featured laptop is the EliteBook Pro, designed for productivity, creativity, and professional workflows.";
+            }
 
-    // Smartphones
+            // Smartphones
 
-    if(
-        lower.includes("phone") ||
-        lower.includes("smartphone") ||
-        lower.includes("iphone") ||
-        lower.includes("android")
-    ){
-        return "Explore our premium smartphone collection featuring flagship devices from leading brands.";
-    }
+            if(
+                lower.includes("phone") ||
+                lower.includes("smartphone") ||
+                lower.includes("iphone") ||
+                lower.includes("android")
+            ){
+                return "Explore our premium smartphone collection featuring flagship devices from leading brands.";
+            }
 
-    // Gaming
+            // Gaming
 
-    if(
-        lower.includes("gaming") ||
-        lower.includes("gamer") ||
-        lower.includes("game")
-    ){
-        return "Check out our Gaming category and our featured GameForce Wireless product for the ultimate gaming experience.";
-    }
+            if(
+                lower.includes("gaming") ||
+                lower.includes("gamer") ||
+                lower.includes("game")
+            ){
+                return "Check out our Gaming category and our featured GameForce Wireless product for the ultimate gaming experience.";
+            }
 
-    // Smart Home
+            // Smart Home
 
-    if(
-        lower.includes("smart home") ||
-        lower.includes("home automation") ||
-        lower.includes("home device")
-    ){
-        return "Our Smart Home collection includes connected devices designed to simplify everyday living.";
-    }
+            if(
+                lower.includes("smart home") ||
+                lower.includes("home automation") ||
+                lower.includes("home device")
+            ){
+                return "Our Smart Home collection includes connected devices designed to simplify everyday living.";
+            }
 
-    // Deals
+            // Deals
 
-    if(
-        lower.includes("deal") ||
-        lower.includes("discount") ||
-        lower.includes("offer") ||
-        lower.includes("promotion")
-    ){
-        return "Visit our Deals & Promotions section to discover discounts and exclusive offers.";
-    }
+            if(
+                lower.includes("deal") ||
+                lower.includes("discount") ||
+                lower.includes("offer") ||
+                lower.includes("promotion")
+            ){
+                return "Visit our Deals & Promotions section to discover discounts and exclusive offers.";
+            }
 
-    // Flash Sale
+            // Flash Sale
 
-    if(
-        lower.includes("flash sale") ||
-        lower.includes("sale")
-    ){
-        return "Our Flash Sale Event currently features limited-time discounts on selected premium devices.";
-    }
+            if(
+                lower.includes("flash sale") ||
+                lower.includes("sale")
+            ){
+                return "Our Flash Sale Event currently features limited-time discounts on selected premium devices.";
+            }
 
-    // Products
+            // Products
 
-    if(
-        lower.includes("product") ||
-        lower.includes("recommend")
-    ){
-        return "Popular products include the ProMax Ultra 5G, EliteBook Pro, GameForce Wireless, and HomeHub Speaker.";
-    }
+            if(
+                lower.includes("product") ||
+                lower.includes("recommend")
+            ){
+                return "Popular products include the ProMax Ultra 5G, EliteBook Pro, GameForce Wireless, and HomeHub Speaker.";
+            }
 
-    // Brands
+            // Brands
 
-    if(
-        lower.includes("apple") ||
-        lower.includes("samsung") ||
-        lower.includes("sony") ||
-        lower.includes("dell") ||
-        lower.includes("lenovo") ||
-        lower.includes("asus")
-    ){
-        return "We carry products from leading technology brands including Apple, Samsung, Sony, Dell, Lenovo, and ASUS.";
-    }
+            if(
+                lower.includes("apple") ||
+                lower.includes("samsung") ||
+                lower.includes("sony") ||
+                lower.includes("dell") ||
+                lower.includes("lenovo") ||
+                lower.includes("asus")
+            ){
+                return "We carry products from leading technology brands including Apple, Samsung, Sony, Dell, Lenovo, and ASUS.";
+            }
 
-    // Newsletter
+            // Newsletter
 
-    if(
-        lower.includes("newsletter") ||
-        lower.includes("subscribe")
-    ){
-        return "Subscribe to our newsletter to receive exclusive deals, product launches, and promotions.";
-    }
+            if(
+                lower.includes("newsletter") ||
+                lower.includes("subscribe")
+            ){
+                return "Subscribe to our newsletter to receive exclusive deals, product launches, and promotions.";
+            }
 
-    // Cart
+            // Cart
 
-    if(
-        lower.includes("cart") ||
-        lower.includes("checkout")
-    ){
-        return "Add products to your cart and proceed to secure checkout whenever you're ready.";
-    }
+            if(
+                lower.includes("cart") ||
+                lower.includes("checkout")
+            ){
+                return "Add products to your cart and proceed to secure checkout whenever you're ready.";
+            }
 
-    // Greetings
+            // Greetings
 
-    if(
-        lower.includes("hello") ||
-        lower.includes("hi") ||
-        lower.includes("hey")
-    ){
-        return "Hello 👋 Welcome to TechHub. How can I assist you today?";
-    }
+            if(
+                lower.includes("hello") ||
+                lower.includes("hi") ||
+                lower.includes("hey")
+            ){
+                return "Hello 👋 Welcome to TechHub. How can I assist you today?";
+            }
 
-    return `
-        I can help with:
+            return `
+                I can help with:
 
-        • Products
-        • Shipping
-        • Returns
-        • Warranty
-        • Payments
-        • Deals
-        • Flash Sales
-        • Gaming
-        • Laptops
-        • Smartphones
-        • Smart Home
+                • Products
+                • Shipping
+                • Returns
+                • Warranty
+                • Payments
+                • Deals
+                • Flash Sales
+                • Gaming
+                • Laptops
+                • Smartphones
+                • Smart Home
 
-        Try asking about one of these topics.
-    `;
-}
+                Try asking about one of these topics.
+            `;
+        }
+
+
+            //Wishlist
+
+            function updateWishlistCount(){
+
+                document.getElementById("wishlist-count")
+                .textContent =
+                wishlist.length;
+
+            }
+
+            let wishlist =
+            JSON.parse(
+                localStorage.getItem("wishlist")
+            ) || [];
+
+            document
+            .querySelectorAll(".wishlist-btn")
+            .forEach(button => {
+
+                const product =
+                button.dataset.product;
+
+                const icon =
+                button.querySelector("i");
+
+                if(wishlist.some(item => item.name === product)){
+
+                    icon.classList.remove("fa-regular");
+                    icon.classList.add("fa-solid");
+
+                    icon.style.color =
+                    "#8B6B47";
+
+                }
+
+                button.addEventListener("click", () => {
+
+                    if(wishlist.some(item => item.name === product)){
+
+                    wishlist =
+                        wishlist.filter(
+                            item => item.name !== product
+                    );
+
+                        showToast(
+                            "Removed from Wishlist",
+                            "fa-solid fa-heart-crack text-[#8B6B47]"
+                        );
+
+                        icon.classList.remove("fa-solid");
+                        icon.classList.add("fa-regular");
+
+                        icon.style.color = "";
+
+                    }
+
+                    else{
+
+                        wishlist.push({
+
+                            name: product,
+
+                            image:
+                            button
+                            .closest(".group")
+                            .querySelector("img")
+                            .src
+
+                        });
+
+                        icon.classList.remove("fa-regular");
+                        icon.classList.add("fa-solid");
+
+                        icon.style.color =
+                        "#8B6B47";
+
+                        showToast(
+                            "Added to Wishlist",
+                            "fa-solid fa-heart text-[#8B6B47]"
+                        );
+
+                    }
+
+                    localStorage.setItem(
+                        "wishlist",
+                        JSON.stringify(wishlist)
+                    );
+
+                    updateWishlistCount();
+
+                });
+
+            });
+
+            updateWishlistCount();
+
+            //toast
+
+
+            function showToast(message, icon){
+
+            const toast =
+            document.getElementById("toast");
+
+            document.getElementById("toast-message")
+            .textContent = message;
+
+            document.getElementById("toast-icon")
+            .className = icon;
+
+            toast.classList.remove(
+                "translate-x-[120%]",
+                "opacity-0"
+            );
+
+            toast.classList.add(
+                "translate-x-0",
+                "opacity-100"
+            );
+
+            clearTimeout(toast.timeout);
+
+            toast.timeout = setTimeout(() => {
+
+                toast.classList.remove(
+                    "translate-x-0",
+                    "opacity-100"
+                );
+
+                toast.classList.add(
+                    "translate-x-[120%]",
+                    "opacity-0"
+                );
+
+            }, 2500);
+
+        }
+
+        document
+        .getElementById("toast")
+        .addEventListener("click", () => {
+
+            window.location.href =
+            "wishlist.html";
+
+        });
+            
+
+        document
+        .getElementById("wishlist-icon")
+        .addEventListener("click", () => {
+
+            window.location.href =
+            "wishlist.html";
+
+        });
+
         </script>
 
     </html>
