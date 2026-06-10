@@ -71,16 +71,21 @@
                     </button>
 
                     <div class="relative hidden sm:block">
-                        <i id="wishlist-icon"
-                            class="fa-regular fa-heart cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300"></i>
+                        <button id="wishlist-icon" class="relative text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300">
+                            <i class="fa-regular fa-heart text-sm"></i>
+                        </button>
                         <span id="wishlist-count"
                             class="absolute -top-2 -right-2.5 bg-[var(--accent)] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
                     </div>
 
-                    <i
-                        class="fa-solid fa-cart-shopping cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300 hidden sm:block"></i>
-                    <i
-                        class="fa-solid fa-user cursor-pointer text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300 hidden sm:block"></i>
+                    <button id="cart-icon"
+                        class="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300 hidden sm:block">
+                        <i class="fa-solid fa-cart-shopping text-sm"></i>
+                    </button>
+                    <button id="user-btn"
+                        class="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300 hidden sm:block">
+                        <i id="user-icon" class="fa-solid fa-user text-sm"></i>
+                    </button>
 
                     <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-switch">
@@ -521,7 +526,7 @@
                             alt="ProMax Ultra 5G">
                         <div
                             class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button class="quick-view-btn"
+                            <button class="quick-view-btn bg-white dark:bg-[var(--bg-card)] text-[var(--text-muted)] dark:text-white px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-300"
                                 data-name="ProMax Ultra 5G" data-price="$899"
                                 data-image="https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=1200">
                                 <i class="fa-solid fa-eye mr-1.5"></i> Quick
@@ -538,14 +543,11 @@
                                 class="text-[var(--text-muted)]">4.9 ·
                                 $899</span></p>
                         <div class="flex items-center gap-2 mt-3">
-                            <button class="wishlist-btn action-btn"
+                            <button class="wishlist-btn"
                                 data-product="ProMax Ultra 5G"><i
                                     class="fa-regular fa-heart text-xs"></i></button>
-                            <button class="action-btn"><i
+                            <button data-id="nova-x-5g" class="ml-auto action-btn bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn"><i
                                     class="fa-solid fa-cart-shopping text-xs"></i></button>
-                            <button
-                                class="ml-auto bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">Add
-                                to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -560,7 +562,7 @@
                             alt="EliteBook Pro">
                         <div
                             class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button class="quick-view-btn"
+                            <button class="quick-view-btn bg-white dark:bg-[var(--bg-card)] text-[var(--text-muted)] dark:text-white px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-300"
                                 data-name="EliteBook Pro" data-price="$1299"
                                 data-image="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800">
                                 <i class="fa-solid fa-eye mr-1.5"></i> Quick
@@ -576,14 +578,11 @@
                                 class="text-[var(--text-muted)]">4.8 ·
                                 $1299</span></p>
                         <div class="flex items-center gap-2 mt-3">
-                            <button class="wishlist-btn action-btn"
+                            <button class="wishlist-btn"
                                 data-product="EliteBook Pro"><i
                                     class="fa-regular fa-heart text-xs"></i></button>
-                            <button class="action-btn"><i
+                            <button data-id="aeroblade-14" class="ml-auto action-btn bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn"><i
                                     class="fa-solid fa-cart-shopping text-xs"></i></button>
-                            <button
-                                class="ml-auto bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">Add
-                                to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -598,7 +597,7 @@
                             alt="GameForce Wireless">
                         <div
                             class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button class="quick-view-btn"
+                            <button class="quick-view-btn bg-white dark:bg-[var(--bg-card)] text-[var(--text-muted)] dark:text-white px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-300"
                                 data-name="GameForce Wireless" data-price="$149"
                                 data-image="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800">
                                 <i class="fa-solid fa-eye mr-1.5"></i> Quick
@@ -616,14 +615,11 @@
                                 class="text-[var(--text-muted)]">4.7 ·
                                 $149</span></p>
                         <div class="flex items-center gap-2 mt-3">
-                            <button class="wishlist-btn action-btn"
+                            <button class="wishlist-btn"
                                 data-product="GameForce Wireless"><i
                                     class="fa-regular fa-heart text-xs"></i></button>
-                            <button class="action-btn"><i
+                            <button data-id="arc-gaming-pad" class="ml-auto action-btn bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn"><i
                                     class="fa-solid fa-cart-shopping text-xs"></i></button>
-                            <button
-                                class="ml-auto bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">Add
-                                to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -638,7 +634,7 @@
                             alt="HomeHub Speaker">
                         <div
                             class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button class="quick-view-btn"
+                            <button class="quick-view-btn bg-white dark:bg-[var(--bg-card)] text-[var(--text-muted)] dark:text-white px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-300"
                                 data-name="HomeHub Speaker" data-price="$79"
                                 data-image="https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=800">
                                 <i class="fa-solid fa-eye mr-1.5"></i> Quick
@@ -654,14 +650,11 @@
                                 class="text-[var(--text-muted)]">4.6 ·
                                 $79</span></p>
                         <div class="flex items-center gap-2 mt-3">
-                            <button class="wishlist-btn action-btn"
+                            <button class="wishlist-btn"
                                 data-product="HomeHub Speaker"><i
                                     class="fa-regular fa-heart text-xs"></i></button>
-                            <button class="action-btn"><i
+                            <button data-id="home-sync-hub" class="ml-auto action-btn bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn"><i
                                     class="fa-solid fa-cart-shopping text-xs"></i></button>
-                            <button
-                                class="ml-auto bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-xs font-semibold px-4 py-2 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-[var(--glow)] premium-btn">Add
-                                to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -950,9 +943,9 @@
                     </p>
                     <div
                         class="flex flex-col sm:flex-row justify-center gap-3 mt-8 max-w-lg mx-auto">
-                        <input type="email" placeholder="Enter your email"
+                        <input id="newsletter-email" type="email" placeholder="Enter your email"
                             class="newsletter-input flex-1">
-                        <button
+                        <button id="newsletter-submit"
                             class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-7 py-3 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-300 hover:shadow-xl hover:shadow-[var(--glow)] premium-btn">
                             Subscribe
                         </button>
@@ -960,6 +953,54 @@
                 </div>
             </div>
         </section>
+
+        <div id="auth-modal" class="fixed inset-0 z-[200] hidden bg-black/40 backdrop-blur-sm px-4 py-12">
+            <div class="mx-auto max-w-md bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-2xl font-[Playfair_Display] font-bold">Account</h3>
+                            <p id="auth-subtitle" class="text-[var(--text-muted)] text-sm mt-1">Sign in or create an account to save your wishlist and orders.</p>
+                        </div>
+                        <button id="auth-close" class="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-300"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="flex gap-2 mb-5 text-sm">
+                        <button id="login-tab" type="button" class="auth-tab flex-1 rounded-full py-3 bg-[var(--accent)] text-white font-semibold">Sign In</button>
+                        <button id="signup-tab" type="button" class="auth-tab flex-1 rounded-full py-3 bg-[var(--bg-muted)] text-[var(--text)] hover:bg-[var(--border)] transition-colors duration-300">Sign Up</button>
+                    </div>
+
+                    <div id="auth-error" class="hidden text-sm text-rose-400 mb-4"></div>
+
+                    <div id="signin-form">
+                        <label class="block text-sm mb-2">Email</label>
+                        <input id="signin-email" type="email" class="newsletter-input w-full mb-4" placeholder="you@example.com">
+                        <label class="block text-sm mb-2">Password</label>
+                        <input id="signin-password" type="password" class="newsletter-input w-full mb-6" placeholder="••••••••">
+                        <button id="signin-btn" class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-3 rounded-xl font-semibold transition-all duration-300">Sign In</button>
+                    </div>
+
+                    <div id="signup-form" class="hidden">
+                        <label class="block text-sm mb-2">Name</label>
+                        <input id="signup-name" type="text" class="newsletter-input w-full mb-4" placeholder="Your name">
+                        <label class="block text-sm mb-2">Email</label>
+                        <input id="signup-email" type="email" class="newsletter-input w-full mb-4" placeholder="you@example.com">
+                        <label class="block text-sm mb-2">Password</label>
+                        <input id="signup-password" type="password" class="newsletter-input w-full mb-6" placeholder="Create a password">
+                        <button id="signup-btn" class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-3 rounded-xl font-semibold transition-all duration-300">Create Account</button>
+                    </div>
+
+                    <div id="profile-view" class="hidden">
+                        <div class="rounded-3xl bg-[var(--bg-muted)] p-4 mb-4">
+                            <p class="text-sm text-[var(--text-muted)]">Logged in as</p>
+                            <p id="profile-name" class="font-semibold mt-1"></p>
+                            <p id="profile-email" class="text-[var(--text-muted)] text-sm mt-1"></p>
+                        </div>
+                        <button id="logout-btn" class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-3 rounded-xl font-semibold transition-all duration-300">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- ══════════════════════════════════════════════
             FOOTER
@@ -1218,13 +1259,7 @@
         });
 
         // ── Theme Toggle ────────────────────────────
-        const root = document.documentElement;
-        if (localStorage.getItem('theme') === 'dark') root.classList.add('dark');
-
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            root.classList.toggle('dark');
-            localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
-        });
+        // Handled by shared app.js in DOMContentLoaded
 
         // ── Navbar Scroll ───────────────────────────
         const header = document.querySelector('header');

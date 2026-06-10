@@ -148,6 +148,232 @@
         updateCartCount();
     }
 
+    function getWishlist() {
+        return JSON.parse(localStorage.getItem('wishlist') || '[]');
+    }
+
+    function saveWishlist(wishlist) {
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        updateWishlistCount();
+    }
+
+    function toggleWishlist(productName) {
+        const product = getProducts().find((p) => p.name === productName);
+        if (!product) return;
+        const wishlist = getWishlist();
+        const exists = wishlist.includes(product.id);
+        if (exists) {
+            saveWishlist(wishlist.filter((id) => id !== product.id));
+            showToast('Removed from wishlist', 'fa-heart-crack');
+        } else {
+            saveWishlist([...wishlist, product.id]);
+            showToast('Added to wishlist', 'fa-heart');
+        }
+    }
+
+    function updateWishlistCount() {
+        const count = getWishlist().length;
+        document.querySelectorAll('#wishlist-count').forEach((el) => (el.textContent = count));
+    }
+
+    function getUsers() {
+        return JSON.parse(localStorage.getItem('techhub-users') || '[]');
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem('techhub-users', JSON.stringify(users));
+    }
+
+    function getCurrentUser() {
+        return JSON.parse(localStorage.getItem('techhub-current-user') || 'null');
+    }
+
+    function setCurrentUser(user) {
+        localStorage.setItem('techhub-current-user', JSON.stringify(user));
+        updateAuthUI();
+    }
+
+    function clearCurrentUser() {
+        localStorage.removeItem('techhub-current-user');
+        updateAuthUI();
+    }
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function authLogin(email, password) {
+        const users = getUsers();
+        const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        if (!user) {
+            return { success: false, message: 'Email or password is incorrect.' };
+        }
+        setCurrentUser({ name: user.name, email: user.email });
+        return { success: true };
+    }
+
+    function authSignup(name, email, password) {
+        const users = getUsers();
+        if (!name.trim() || !validateEmail(email) || password.length < 6) {
+            return { success: false, message: 'Please enter a valid name, email, and password (6+ chars).' };
+        }
+        if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+            return { success: false, message: 'This email is already registered.' };
+        }
+        const newUser = { name: name.trim(), email: email.toLowerCase(), password };
+        saveUsers([...users, newUser]);
+        setCurrentUser({ name: newUser.name, email: newUser.email });
+        return { success: true };
+    }
+
+    function updateAuthUI() {
+        const userIcon = document.getElementById('user-icon');
+        const userBtn = document.getElementById('user-btn');
+        const currentUser = getCurrentUser();
+        if (!userIcon || !userBtn) return;
+        if (currentUser) {
+            userIcon.className = 'fa-solid fa-user-check text-sm';
+            userBtn.title = `Logged in as ${currentUser.name}`;
+        } else {
+            userIcon.className = 'fa-solid fa-user text-sm';
+            userBtn.title = 'Sign in or sign up';
+        }
+    }
+
+    function renderAuthModalState(activeTab = 'signin') {
+        const currentUser = getCurrentUser();
+        const signInForm = document.getElementById('signin-form');
+        const signUpForm = document.getElementById('signup-form');
+        const profileView = document.getElementById('profile-view');
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        if (!signInForm || !signUpForm || !profileView || !loginTab || !signupTab) return;
+
+        if (currentUser) {
+            signInForm.classList.add('hidden');
+            signUpForm.classList.add('hidden');
+            profileView.classList.remove('hidden');
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('profile-email').textContent = currentUser.email;
+            loginTab.classList.add('hidden');
+            signupTab.classList.add('hidden');
+            document.getElementById('auth-subtitle').textContent = 'Welcome back! Manage your account here.';
+            return;
+        }
+
+        loginTab.classList.remove('hidden');
+        signupTab.classList.remove('hidden');
+        profileView.classList.add('hidden');
+        document.getElementById('auth-subtitle').textContent = 'Sign in or create an account to save your wishlist and orders.';
+        if (activeTab === 'signup') {
+            signInForm.classList.add('hidden');
+            signUpForm.classList.remove('hidden');
+            loginTab.classList.remove('bg-[var(--accent)]');
+            loginTab.classList.add('bg-[var(--bg-muted)]', 'text-[var(--text)]');
+            signupTab.classList.remove('bg-[var(--bg-muted)]', 'text-[var(--text)]');
+            signupTab.classList.add('bg-[var(--accent)]', 'text-white');
+        } else {
+            signInForm.classList.remove('hidden');
+            signUpForm.classList.add('hidden');
+            signupTab.classList.remove('bg-[var(--accent)]', 'text-white');
+            signupTab.classList.add('bg-[var(--bg-muted)]', 'text-[var(--text)]');
+            loginTab.classList.remove('bg-[var(--bg-muted)]', 'text-[var(--text)]');
+            loginTab.classList.add('bg-[var(--accent)]', 'text-white');
+        }
+    }
+
+    function initializeAuthModal() {
+        const authModal = document.getElementById('auth-modal');
+        const userBtn = document.getElementById('user-btn');
+        const authClose = document.getElementById('auth-close');
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const signInBtn = document.getElementById('signin-btn');
+        const signUpBtn = document.getElementById('signup-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authError = document.getElementById('auth-error');
+        if (!authModal || !userBtn || !authClose || !loginTab || !signupTab || !signInBtn || !signUpBtn || !logoutBtn || !authError) return;
+
+        function closeModal() {
+            authModal.classList.add('hidden');
+            authError.classList.add('hidden');
+            authError.textContent = '';
+        }
+
+        function openModal(tab = 'signin') {
+            renderAuthModalState(tab);
+            authModal.classList.remove('hidden');
+        }
+
+        userBtn.addEventListener('click', () => {
+            const currentUser = getCurrentUser();
+            openModal(currentUser ? 'profile' : 'signin');
+        });
+        authClose.addEventListener('click', closeModal);
+        authModal.addEventListener('click', (event) => {
+            if (event.target === authModal) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !authModal.classList.contains('hidden')) closeModal();
+        });
+
+        loginTab.addEventListener('click', () => renderAuthModalState('signin'));
+        signupTab.addEventListener('click', () => renderAuthModalState('signup'));
+
+        signInBtn.addEventListener('click', () => {
+            const email = document.getElementById('signin-email').value.trim();
+            const password = document.getElementById('signin-password').value;
+            const result = authLogin(email, password);
+            if (!result.success) {
+                authError.textContent = result.message;
+                authError.classList.remove('hidden');
+                return;
+            }
+            authError.classList.add('hidden');
+            closeModal();
+            showToast('Signed in successfully!', 'fa-check');
+        });
+
+        signUpBtn.addEventListener('click', () => {
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const result = authSignup(name, email, password);
+            if (!result.success) {
+                authError.textContent = result.message;
+                authError.classList.remove('hidden');
+                return;
+            }
+            authError.classList.add('hidden');
+            closeModal();
+            showToast('Account created and signed in!', 'fa-check');
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            clearCurrentUser();
+            closeModal();
+            showToast('Signed out.', 'fa-right-from-bracket');
+        });
+
+        updateAuthUI();
+    }
+
+    function initializeHeaderActions() {
+        const cartIcon = document.getElementById('cart-icon');
+        const wishlistIcon = document.getElementById('wishlist-icon');
+        if (cartIcon) {
+            cartIcon.addEventListener('click', () => {
+                location.href = 'cart.html';
+            });
+        }
+        if (wishlistIcon) {
+            wishlistIcon.addEventListener('click', () => {
+                const count = getWishlist().length;
+                showToast(count ? `Wishlist has ${count} item${count > 1 ? 's' : ''}` : 'No items in wishlist yet', 'fa-heart');
+            });
+        }
+    }
+
     function addToCart(id, qty = 1) {
         const cart = getCart();
         const existing = cart.find((i) => i.id === id);
@@ -593,15 +819,15 @@
             const matches = getProducts().filter((product) => product.name.toLowerCase().includes(q) || product.category.toLowerCase().includes(q));
             results.innerHTML = matches.length
                 ? matches
-                      .map(
-                          (product) => `
+                    .map(
+                        (product) => `
                     <a href="product.html?id=${product.id}" class="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--bg-muted)] hover:bg-[var(--border)] transition-colors text-sm">
                         <span>${product.name}</span>
                         <span class="text-[var(--accent)] font-semibold">$${product.price}</span>
                     </a>
                 `,
-                      )
-                      .join('')
+                    )
+                    .join('')
                 : '<p class="text-[var(--text-muted)] text-sm text-center py-4">No products found.</p>';
         }
 
@@ -669,11 +895,17 @@
         initializeThemeToggle();
         initializeMobileMenu();
         initializeSearchModal();
+        initializeAuthModal();
+        initializeNewsletter();
+        initializeHeaderActions();
+        updateAuthUI();
+        initializeWishlistButtons();
         renderCategoryFilters();
         renderProductsGrid();
         renderProductDetail();
         renderCartRoot();
         updateCartCount();
+        updateWishlistCount();
         initializeQuickView();
         initializeChat();
 
