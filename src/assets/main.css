@@ -478,6 +478,7 @@ html.dark .mesh-blob {
 /* ─── HERO IMAGE FLOAT + GLOW ──────────────────────────── */
 .hero-img-wrap {
     position: relative;
+  animation: heroContinuousWobble 8s ease-in-out infinite alternate; /* Apply continuous animation to the wrapper */
 }
 
 .hero-img-wrap::before {
@@ -508,7 +509,7 @@ html.dark .mesh-blob {
     }
 }
 
-@keyframes glowPulse {
+@keyframes glowPulse{
     from {
         opacity: .5;
         transform: scale(1)
@@ -518,7 +519,7 @@ html.dark .mesh-blob {
         opacity: 1;
         transform: scale(1.05)
     }
-}
+} 
 
 /* ─── PARALLAX HERO IMAGE ──────────────────────────────── */
 .hero-parallax {
@@ -1863,4 +1864,9 @@ header nav a.nav-link:hover {
 
 .animate-glow-pulse {
     animation: glowPulseSubtle 4s ease-in-out infinite;
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }

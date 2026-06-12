@@ -28,7 +28,6 @@ const saleProducts = computed(() => {
         product.category?.toLowerCase() ===
         selectedCategory.value
     )
-    return products
 })
 
 const countdown = ref({
@@ -38,7 +37,7 @@ const countdown = ref({
     seconds: '00'
 })
 
-let interval
+let interval: ReturnType<typeof setInterval>
 let observer: IntersectionObserver | null = null
 
 const initObserver = () => {
@@ -51,25 +50,35 @@ const initObserver = () => {
         });
     }, { threshold: 0.1 });
     nextTick(() => {
-        document.querySelectorAll('.reveal').forEach(el => observer?.observe(el));
+        document
+            .querySelectorAll<HTMLElement>('.reveal')
+            .forEach(el => observer?.observe(el))
     });
 };
 
 onMounted(() => {
 
-    let saleEnd =
+    let saleEnd: string
+
+    const storedSaleEnd =
         localStorage.getItem('saleEnd')
 
-    if (!saleEnd) {
+    if (!storedSaleEnd) {
 
-        saleEnd =
+        saleEnd = String(
             Date.now() +
             72 * 60 * 60 * 1000
+        )
 
         localStorage.setItem(
             'saleEnd',
             saleEnd
         )
+
+    } else {
+
+        saleEnd = storedSaleEnd
+
     }
 
     const updateCountdown = () => {
@@ -144,13 +153,18 @@ onUnmounted(() => {
 })
 
 // Re-run observer logic when filtered products change
-watch(saleProducts, () => initObserver(), { deep: true });
+watch(saleProducts, async () => {
+
+    await nextTick()
+
+    initObserver()
+
+})
 </script>
 
 <template>
 
-<main
-class="
+    <main class="
 pt-28
 pb-24
 max-w-7xl
@@ -159,58 +173,52 @@ px-6
 lg:px-10">
 
 
-<!-- HERO -->
+        <!-- HERO -->
 
-<section
-class="
+        <section class="
 reveal
 text-center
 mb-20">
 
-    <span
-    class="section-badge">
+            <span class="section-badge">
 
-        Limited-Time Offers
+                Limited-Time Offers
 
-    </span>
+            </span>
 
-    <h1
-    class="
+            <h1 class="
     font-[Playfair_Display]
     text-5xl
     lg:text-6xl
     font-extrabold
     mt-6">
 
-        Exclusive TechHub Deals
+                Exclusive TechHub Deals
 
-    </h1>
+            </h1>
 
-    <p
-    class="
+            <p class="
     max-w-2xl
     mx-auto
     mt-6
     text-[var(--text-muted)]">
 
-        Save on premium laptops,
-        smartphones, gaming gear,
-        and smart home devices.
+                Save on premium laptops,
+                smartphones, gaming gear,
+                and smart home devices.
 
-    </p>
+            </p>
 
-    <!-- COUNTDOWN -->
+            <!-- COUNTDOWN -->
 
-    <div
-    class="
+            <div class="
     mt-10
     flex
     justify-center
     gap-4
     flex-wrap">
 
-        <div
-        class="
+                <div class="
         bg-[var(--bg-card)]
         border
         border-[var(--border)]
@@ -218,18 +226,17 @@ mb-20">
         px-6
         py-4">
 
-            <div class="text-3xl font-black">
-                {{ countdown.days }}
-            </div>
+                    <div class="text-3xl font-black">
+                        {{ countdown.days }}
+                    </div>
 
-            <div class="text-xs uppercase">
-                Days
-            </div>
+                    <div class="text-xs uppercase">
+                        Days
+                    </div>
 
-        </div>
+                </div>
 
-        <div
-        class="
+                <div class="
         bg-[var(--bg-card)]
         border
         border-[var(--border)]
@@ -237,18 +244,17 @@ mb-20">
         px-6
         py-4">
 
-            <div class="text-3xl font-black">
-                {{ countdown.hours }}
-            </div>
+                    <div class="text-3xl font-black">
+                        {{ countdown.hours }}
+                    </div>
 
-            <div class="text-xs uppercase">
-                Hours
-            </div>
+                    <div class="text-xs uppercase">
+                        Hours
+                    </div>
 
-        </div>
+                </div>
 
-        <div
-        class="
+                <div class="
         bg-[var(--bg-card)]
         border
         border-[var(--border)]
@@ -256,18 +262,17 @@ mb-20">
         px-6
         py-4">
 
-            <div class="text-3xl font-black">
-                {{ countdown.minutes }}
-            </div>
+                    <div class="text-3xl font-black">
+                        {{ countdown.minutes }}
+                    </div>
 
-            <div class="text-xs uppercase">
-                Minutes
-            </div>
+                    <div class="text-xs uppercase">
+                        Minutes
+                    </div>
 
-        </div>
+                </div>
 
-        <div
-        class="
+                <div class="
         bg-[var(--bg-card)]
         border
         border-[var(--border)]
@@ -275,24 +280,23 @@ mb-20">
         px-6
         py-4">
 
-            <div class="text-3xl font-black">
-                {{ countdown.seconds }}
+                    <div class="text-3xl font-black">
+                        {{ countdown.seconds }}
+                    </div>
+
+                    <div class="text-xs uppercase">
+                        Seconds
+                    </div>
+
+                </div>
+
             </div>
 
-            <div class="text-xs uppercase">
-                Seconds
-            </div>
+        </section>
 
-        </div>
+        <!-- DEAL STATS -->
 
-    </div>
-
-</section>
-
-<!-- DEAL STATS -->
-
-<section
-class="
+        <section class="
 reveal
 grid
 grid-cols-2
@@ -300,8 +304,7 @@ lg:grid-cols-4
 gap-6
 mb-16">
 
-    <div
-    class="
+            <div class="
     bg-[var(--bg-card)]
     border
     border-[var(--border)]
@@ -309,18 +312,17 @@ mb-16">
     p-6
     text-center">
 
-        <h3 class="text-3xl font-black">
-            125+
-        </h3>
+                <h3 class="text-3xl font-black">
+                    125+
+                </h3>
 
-        <p class="text-sm text-[var(--text-muted)]">
-            Products On Sale
-        </p>
+                <p class="text-sm text-[var(--text-muted)]">
+                    Products On Sale
+                </p>
 
-    </div>
+            </div>
 
-    <div
-    class="
+            <div class="
     bg-[var(--bg-card)]
     border
     border-[var(--border)]
@@ -328,18 +330,17 @@ mb-16">
     p-6
     text-center">
 
-        <h3 class="text-3xl font-black">
-            40%
-        </h3>
+                <h3 class="text-3xl font-black">
+                    40%
+                </h3>
 
-        <p class="text-sm text-[var(--text-muted)]">
-            Maximum Savings
-        </p>
+                <p class="text-sm text-[var(--text-muted)]">
+                    Maximum Savings
+                </p>
 
-    </div>
+            </div>
 
-    <div
-    class="
+            <div class="
     bg-[var(--bg-card)]
     border
     border-[var(--border)]
@@ -347,18 +348,17 @@ mb-16">
     p-6
     text-center">
 
-        <h3 class="text-3xl font-black">
-            72h
-        </h3>
+                <h3 class="text-3xl font-black">
+                    72h
+                </h3>
 
-        <p class="text-sm text-[var(--text-muted)]">
-            Flash Event
-        </p>
+                <p class="text-sm text-[var(--text-muted)]">
+                    Flash Event
+                </p>
 
-    </div>
+            </div>
 
-    <div
-    class="
+            <div class="
     bg-[var(--bg-card)]
     border
     border-[var(--border)]
@@ -366,22 +366,21 @@ mb-16">
     p-6
     text-center">
 
-        <h3 class="text-3xl font-black">
-            Free
-        </h3>
+                <h3 class="text-3xl font-black">
+                    Free
+                </h3>
 
-        <p class="text-sm text-[var(--text-muted)]">
-            Shipping
-        </p>
+                <p class="text-sm text-[var(--text-muted)]">
+                    Shipping
+                </p>
 
-    </div>
+            </div>
 
-</section>
+        </section>
 
-<!-- FILTERS -->
+        <!-- FILTERS -->
 
-<section
-class="
+        <section class="
 reveal
 flex
 flex-wrap
@@ -389,46 +388,36 @@ justify-center
 gap-3
 mb-14">
 
-    <button
-    v-for="category in categories"
-    :key="category.id"
-    @click="selectedCategory = category.id"
-    class="
+            <button v-for="category in categories" :key="category.id" @click="selectedCategory = category.id" class="
     px-5
     py-3
     rounded-full
     border
-    transition-all"
-    :class="selectedCategory === category.id
+    transition-all" :class="selectedCategory === category.id
         ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
         : 'bg-[var(--bg-card)] border-[var(--border)]'">
 
-        {{ category.icon }}
-        {{ category.label }}
+                {{ category.icon }}
+                {{ category.label }}
 
-    </button>
+            </button>
 
-</section>
+        </section>
 
-<!-- PRODUCTS -->
+        <!-- PRODUCTS -->
 
-<section
-class="
+        <section class="
 grid
 grid-cols-1
 sm:grid-cols-2
 lg:grid-cols-3
 gap-8">
 
-    <div
-    v-for="product in saleProducts"
-    :key="product.id"
-    class="
+            <div v-for="product in saleProducts" :key="product.id" class="
     reveal
     relative">
 
-        <div
-        class="
+                <div class="
         absolute
         top-4
         right-4
@@ -441,17 +430,16 @@ gap-8">
         py-2
         rounded-full">
 
-            SAVE 20%
+                    SAVE 20%
 
-        </div>
+                </div>
 
-        <ProductCard
-        :product="product" />
+                <ProductCard :product="product" />
 
-    </div>
+            </div>
 
-</section>
+        </section>
 
-</main>
+    </main>
 
 </template>

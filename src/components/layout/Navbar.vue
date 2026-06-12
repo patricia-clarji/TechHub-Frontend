@@ -51,14 +51,14 @@ const toggleDarkMode = () => {
         <div class="hidden lg:flex items-center gap-10">
             <router-link to="/" class="nav-link text-[10px] font-bold uppercase">Home</router-link>
             <router-link to="/products" class="nav-link text-[10px] font-bold uppercase">Products</router-link>
-            <router-link to="/categories" class="nav-link text-[10px] font-bold uppercase">Categories</router-link>
+            <router-link to="/contact" class="nav-link text-[10px] font-bold uppercase">Contact Us</router-link>
             <router-link to="/deals" class="nav-link text-[10px] font-bold uppercase">Deals</router-link>
             <router-link to="/about" class="nav-link text-[10px] font-bold uppercase">About</router-link>
         </div>
 
         <!-- Action Terminal -->
         <div class="flex items-center gap-3">
-            <button @click="productsStore.searchModalOpen = true" class="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors hidden sm:block">
+            <button @click="uiStore.toggleSearch()" class="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors hidden sm:block">
                 <i class="fa-solid fa-magnifying-glass text-sm"></i>
             </button>
 
@@ -78,10 +78,11 @@ const toggleDarkMode = () => {
             </button>
 
             <!-- Account -->
-            <button @click="userStore.currentUser ? $router.push('/account') : uiStore.toggleAuth()" 
-                class="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
+            <button @click="userStore.currentUser ? $router.push('/account') : uiStore.toggleAuth()"
+                class="group flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
                 <i class="fa-solid fa-circle-user text-sm"></i>
-                <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Terminal' : 'Access' }}</span>
+                <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Terminal' : 'Login' }}</span>
+                <i class="fa-solid fa-arrow-right text-[8px] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
             </button>
 
             <!-- Cart Trigger -->
@@ -109,15 +110,15 @@ const toggleDarkMode = () => {
         </Transition>
         <Transition name="slide-rtl">
             <div v-if="isMobileMenuOpen" class="fixed top-0 left-0 w-[80vw] max-w-[340px] h-full bg-[var(--bg)] border-r border-[var(--border)] z-[70] p-8 flex flex-col">
-                <button @click="isMobileMenuOpen = false" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-muted)]">
+                <button @click="isMobileMenuOpen = false" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-muted)] transition-colors">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
                 <div class="mb-12">
                     <p class="text-[9px] uppercase tracking-[0.3em] font-bold text-[var(--text-muted)]">Terminal Menu</p>
                 </div>
                 <div class="flex flex-col gap-8">
-                    <router-link v-for="link in ['Home', 'Products', 'Categories', 'Deals', 'About']" 
-                        :key="link" :to="link === 'Home' ? '/' : `/${link.toLowerCase()}`" 
+                    <router-link v-for="link in ['Home', 'Products', 'Contact Us', 'Deals', 'About']" 
+                        :key="link" :to="link === 'Home' ? '/' : (link === 'Contact Us' ? '/contact' : `/${link.replace(/\s+/g, '').toLowerCase()}`)" 
                         @click="isMobileMenuOpen = false"
                         class="font-[Playfair_Display] text-4xl font-bold flex items-center gap-4 hover:text-[var(--accent)] transition-colors">
                         <span class="text-[var(--accent)] text-xl">✦</span> {{ link }}

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 
 export const useUserStore = defineStore('user', () => {
     const currentUser = ref(null);
-    const authModalOpen = ref(false);
 
     const login = (email, password) => {
         // Mock login logic - in production, this would be an API call
@@ -31,7 +30,6 @@ export const useUserStore = defineStore('user', () => {
 
     return {
         currentUser,
-        authModalOpen,
         login,
         signup,
         logout

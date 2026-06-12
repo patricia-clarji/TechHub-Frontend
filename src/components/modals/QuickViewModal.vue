@@ -1,17 +1,19 @@
 <script setup>
 import { computed } from 'vue';
 import { useProductsStore } from '@/stores/products';
+import { useUIStore } from '@/stores/ui';
 import { useCartStore } from '@/stores/cart';
 
 const productsStore = useProductsStore();
+const uiStore = useUIStore();
 const cartStore = useCartStore();
 
 const product = computed(() => {
-    return productsStore.sampleProducts.find(p => p.id === productsStore.quickViewProductId);
+    return productsStore.sampleProducts.find(p => p.id === uiStore.quickViewProductId);
 });
 
 const close = () => {
-    productsStore.quickViewProductId = null;
+    uiStore.closeQuickView();
 };
 </script>
 

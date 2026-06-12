@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useProductsStore } from '@/stores/products';
 import ProductCard from '../../components/cards/ProductCard.vue';
 import { useCartStore } from '@/stores/cart';
+import WhyTechHubSection from '@/components/layout/WhyTechHubSection.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
 const router = useRouter();
@@ -20,13 +21,6 @@ const trustItems = [
     { icon: 'fa-shield-halved', title: 'Secure Checkout', desc: 'Protected transactions' },
     { icon: 'fa-award', title: 'Genuine Products', desc: 'Authorized brand partners' },
     { icon: 'fa-headset', title: 'Premium Support', desc: 'Assistance whenever needed' }
-];
-
-const whyItems = [
-    { emoji: '🚚', title: 'Fast Delivery', desc: 'Same-day dispatch on most orders.' },
-    { emoji: '🔒', title: 'Secure Payments', desc: 'Encrypted checkout with major payment methods.' },
-    { emoji: '🛡', title: 'Product Warranty', desc: 'Manufacturer-backed warranty included.' },
-    { emoji: '💬', title: '24/7 Support', desc: 'Expert assistance whenever you need it.' }
 ];
 
 const categories = [
@@ -168,7 +162,7 @@ onUnmounted(() => {
                         </router-link>
                     </div>
                 </div>
-                <div class="hidden lg:block relative hero-img">
+                <div class="hidden lg:block relative hero-img-wrap">
                     <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400" 
                         class="h-[580px] w-full object-cover rounded-[2.5rem] shadow-2xl relative z-10 hero-parallax" 
                         :style="{ transform: `translateY(${scrollY * 0.08}px)` }" alt="Tech Hub">
@@ -188,20 +182,7 @@ onUnmounted(() => {
         </section>
 
         <!-- Why TechHub Section -->
-        <section id="why-techhub" class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
-            <div class="reveal">
-                <span class="section-badge">Why TechHub</span>
-                <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6 mb-4">Everything You Need,<br> Nothing to Worry About</h2>
-                <p class="text-[var(--text-muted)] max-w-lg">TechHub delivers a seamless, premium shopping experience from start to finish.</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12">
-                <div v-for="(w, i) in whyItems" :key="i" class="reveal why-card transition-all" :class="`stagger-${i+1}`">
-                    <span class="why-emoji text-4xl">{{ w.emoji }}</span>
-                    <h3 class="font-bold text-xl mb-2">{{ w.title }}</h3>
-                    <p class="text-[var(--text-muted)] text-sm leading-relaxed">{{ w.desc }}</p>
-                </div>
-            </div>
-        </section>
+        <WhyTechHubSection />
 
         <!-- Categories Section -->
         <section id="categories" class="max-w-7xl mx-auto px-6 lg:px-10 py-24">
