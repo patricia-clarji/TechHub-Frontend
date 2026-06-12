@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import { useProductsStore } from '@/stores/products';
 import ProductCard from '@/components/cards/ProductCard.vue';
 
 const productsStore = useProductsStore();
+const route = useRoute();
 const selectedCategory = ref('All');
 const sortBy = ref('default');
 
@@ -17,12 +19,26 @@ const filteredProducts = computed(() => {
     return list;
 });
 
-onMounted(() => {
-    const observer = new IntersectionObserver((entries) => {
+let observer = null;
+
+const initObserver = () => {
+    if (observer) observer.disconnect();
+    observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    nextTick(() => {
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    });
+};
+
+onMounted(() => {
+    if (route.query.category) selectedCategory.value = route.query.category;
+    initObserver();
 });
+
+// Fix "disappearing" bug: Re-observe whenever products change
+watch(filteredProducts, () => initObserver(), { deep: true });
+watch(() => route.query.category, (newCat) => { if (newCat) selectedCategory.value = newCat; });
 </script>
 
 <template>

@@ -1,9 +1,12 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useProductsStore } from '@/stores/products';
 import ProductCard from '../../components/cards/ProductCard.vue';
 import { useCartStore } from '@/stores/cart';
+import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
+const router = useRouter();
 const productsStore = useProductsStore();
 const cartStore = useCartStore();
 
@@ -56,14 +59,36 @@ const finderOptions = [
 const activeFinder = ref(null);
 const selectFinder = (label) => activeFinder.value = label;
 
+const generateRecommendation = () => {
+    if (!activeFinder.value) return;
+    
+    const mapping = {
+        'Work': 'Laptops',
+        'Study': 'Laptops',
+        'Gaming': 'Gaming',
+        'Creative': 'Audio'
+    };
+
+    router.push({ name: 'Products', query: { category: mapping[activeFinder.value] } });
+};
+
 let observer = null;
 let timerInterval = null;
 const scrollY = ref(0);
 const animatedStats = ref(stats.map(s => ({ ...s, current: 0 })));
 
 const animateStats = () => {
-    animatedStats.value.forEach(s => {
-        s.current = s.target; // In production, use a tween library like GSAP or a simple interval
+    animatedStats.value.forEach((s, index) => {
+        let start = 0;
+        const end = s.target;
+        const duration = 2000; // 2 seconds
+        const increment = end / (duration / 16);
+        
+        const timer = setInterval(() => {
+            start += increment;
+            s.current = Math.floor(start);
+            if (start >= end) { s.current = end; clearInterval(timer); }
+        }, 16);
     });
 };
 
@@ -277,7 +302,7 @@ onUnmounted(() => {
                 </div>
 
                 <div class="text-center mt-16 relative z-10">
-                    <button class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-12 py-5 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-2xl">
+                    <button @click="generateRecommendation" class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-12 py-5 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-2xl">
                         Generate Recommendations
                     </button>
                 </div>
@@ -318,22 +343,7 @@ onUnmounted(() => {
         </section>
 
         <!-- Newsletter -->
-        <section class="max-w-7xl mx-auto px-6 lg:px-10 py-24">
-            <div class="newsletter-section bg-[var(--bg-muted)] rounded-[3rem] p-12 lg:p-24 text-center reveal overflow-hidden relative">
-                <div class="relative z-10">
-                    <span class="section-badge">Stay Updated</span>
-                    <h2 class="font-[Playfair_Display] text-4xl lg:text-6xl font-bold mt-8">Stay Updated With<br> the Latest Tech Deals</h2>
-                    <p class="mt-6 text-[var(--text-muted)] max-w-lg mx-auto">Subscribe to receive exclusive hardware provision alerts and new model launches.</p>
-                    
-                    <div class="flex flex-col sm:flex-row justify-center gap-3 mt-12 max-w-xl mx-auto">
-                        <input type="email" placeholder="Enter your email" class="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl px-8 py-4 text-sm focus:outline-none focus:border-[var(--accent)] transition-all">
-                        <button class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-10 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-xl">
-                            Subscribe
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <NewsletterSection />
     </main>
 </template>
 

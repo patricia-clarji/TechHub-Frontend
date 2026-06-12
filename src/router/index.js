@@ -12,7 +12,8 @@ const routes = [
     { path: '/faq', name: 'FAQ', component: () => import('@/pages/FAQ/index.vue') },
     { path: '/about', name: 'About', component: () => import('@/pages/About/index.vue') },
     { path: '/contact', name: 'Contact', component: () => import('@/pages/Contact/index.vue') },
-    { path: '/order-confirmation', name: 'OrderConfirmation', component: () => import('@/pages/OrderConfirmation/index.vue') }
+    { path: '/order-confirmation', name: 'OrderConfirmation', component: () => import('@/pages/OrderConfirmation/index.vue') },
+    { path: '/deals', name: 'Deals', component: () => import('@/pages/Deals/index.vue') }
 ];
 
 const router = createRouter({
