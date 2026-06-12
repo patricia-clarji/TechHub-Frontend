@@ -1,30 +1,71 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { useUIStore } from '@/stores/ui';
+import { useProductsStore } from '@/stores/products';
 
 const uiStore = useUIStore();
+const productsStore = useProductsStore();
+
 const messages = ref([
-    { text: "Hello! How can I assist you with premium electronics today?", isBot: true }
+    { text: "System Online. I am the TechHub Concierge. How can I facilitate your architectural provisions today?", isBot: true }
 ]);
 const inputMsg = ref("");
+const isTyping = ref(false);
+const chatContainer = ref(null);
 
-const suggestions = ["Warranty Policy", "Shipping Speed", "Gaming Products"];
+const suggestions = ["Verify Warranty", "Logistics Speed", "Recommend Laptop", "System Catalog"];
+
+const scrollToBottom = async () => {
+    await nextTick();
+    if (chatContainer.value) {
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    }
+};
+
+const getArchitecturalReply = (input) => {
+    const query = input.toLowerCase();
+    
+    // Dynamic Product Search
+    if (query.includes('recommend') || query.includes('best') || query.includes('find')) {
+        const category = ['laptop', 'phone', 'gaming', 'audio', 'smart home'].find(cat => query.includes(cat));
+        if (category) {
+            const found = productsStore.sampleProducts.filter(p => p.category.toLowerCase().includes(category))[0];
+            if (found) return `Analysis complete. For ${category} requirements, we recommend the ${found.name} ($${found.price}). It features ${found.features[0]}. Shall I provide details?`;
+        }
+        return "Specify a hardware category (e.g., Laptops, Gaming) for an optimized recommendation matrix.";
+    }
+
+    // Core Policy Responses
+    if (query.includes('warranty')) return "Standard deployment includes a 24-month enterprise-grade warranty. Priority support tokens are available for executive hardware tiers.";
+    if (query.includes('shipping') || query.includes('logistics')) return "Complimentary priority dispatch is initialized for all order aggregates exceeding $500. Expected transit duration: 2-4 logic days.";
+    if (query.includes('catalog') || query.includes('products')) return "The current provision catalog contains 14 active hardware modules across 6 luxury categories. Use the search terminal for specific ID lookup.";
+    if (query.includes('hello') || query.includes('hi')) return "Greetings. Operational status: Nominal. I am ready for inquiry processing.";
+    
+    return "Query parameters recognized, but no specific data node found. Contact our human terminal at support@techhub.com for deep-level technical assistance.";
+};
 
 const sendChat = (txt) => {
     const content = txt || inputMsg.value.trim();
     if (!content) return;
+
     messages.value.push({ text: content, isBot: false });
     if (!txt) inputMsg.value = "";
+    
+    scrollToBottom();
+    isTyping.value = true;
 
     setTimeout(() => {
-        let reply = "Our premium team responds within minutes! Let us know your contact info.";
-        const lower = content.toLowerCase();
-        if (lower.includes('warranty')) reply = "All devices feature a 2-year enterprise warranty coverage.";
-        if (lower.includes('shipping')) reply = "Complimentary courier dispatch on all orders over $500.";
-        if (lower.includes('gaming')) reply = "Check our top rated active mechanical input suites under Gaming.";
+        const reply = getArchitecturalReply(content);
         messages.value.push({ text: reply, isBot: true });
-    }, 600);
+        isTyping.value = false;
+        scrollToBottom();
+    }, 1200);
 };
+
+// Auto-scroll when window opens
+watch(() => uiStore.chatWindowOpen, (val) => {
+    if (val) scrollToBottom();
+});
 </script>
 
 <template>
@@ -42,12 +83,20 @@ const sendChat = (txt) => {
                 <p class="text-xs text-white/80 font-light">AI Assistants Online</p>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+            <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                 <div v-for="(m, i) in messages" :key="i" :class="m.isBot ? 'justify-start' : 'justify-end'"
                     class="flex">
                     <div :class="m.isBot ? 'bg-[var(--bg-muted)] text-[var(--text)]' : 'bg-[var(--accent)] text-white'"
                         class="max-w-[75%] rounded-2xl px-3 py-2 text-sm">
                         {{ m.text }}
+                    </div>
+                </div>
+                <!-- Typing Indicator -->
+                <div v-if="isTyping" class="flex justify-start">
+                    <div class="bg-[var(--bg-muted)] text-[var(--text-muted)] rounded-2xl px-4 py-2 text-xs flex gap-1 items-center">
+                        <span class="w-1 h-1 bg-[var(--text-muted)] rounded-full animate-bounce"></span>
+                        <span class="w-1 h-1 bg-[var(--text-muted)] rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                        <span class="w-1 h-1 bg-[var(--text-muted)] rounded-full animate-bounce [animation-delay:0.4s]"></span>
                     </div>
                 </div>
             </div>

@@ -39,7 +39,7 @@ const cartItems = computed(() => {
                     <p class="text-sm font-bold uppercase tracking-widest">Basket Empty</p>
                 </div>
                 
-                <div v-for="item in cartItems" :key="item.id" class="flex items-center gap-6 py-6 border-b border-[var(--border)]/40 last:border-0">
+                <div v-for="item in cartItems" :key="item.id" class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 py-6 border-b border-[var(--border)]/40 last:border-0">
                     <!-- LEFT: Image -->
                     <div class="w-20 h-20 bg-[var(--bg-muted)] rounded-xl overflow-hidden flex-none">
                         <img :src="item.img" class="w-full h-full object-cover" />

@@ -1870,3 +1870,9 @@ header nav a.nav-link:hover {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+@keyframes heroContinuousWobble {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    25% { transform: translateY(-8px) rotate(-0.5deg) scale(1.005); }
+    75% { transform: translateY(8px) rotate(0.5deg) scale(1.005); }
+}

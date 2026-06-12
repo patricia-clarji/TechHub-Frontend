@@ -28,7 +28,7 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
 
         <!-- Wishlist Toggle -->
         <button @click.stop="wishlistStore.toggleWishlist(product.id)" 
-            class="absolute top-4 right-4 z-10 w-10 h-10 bg-[var(--bg-card)]/80 backdrop-blur-md border border-[var(--border)] text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110">
+            class="absolute top-4 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110">
             <i :class="isInWishlist ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'"></i>
         </button>
 
@@ -77,5 +77,14 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
 }
 .product-card:hover {
     border-color: var(--accent);
+}
+.glass-panel-wishlist {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+html.dark .glass-panel-wishlist {
+    background: rgba(0, 0, 0, 0.3);
 }
 </style>
