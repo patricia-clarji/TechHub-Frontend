@@ -28,8 +28,8 @@ const executeOrder = () => {
     <main class="pt-32 max-w-5xl mx-auto px-6 space-y-12">
         <h1 class="font-[Playfair_Display] text-4xl font-bold text-center">Execution Checkout Pipeline</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            <div class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2rem] space-y-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <div class="lg:col-span-8 bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2rem] space-y-4 shadow-xl">
                 <h3 class="font-bold text-lg mb-2">Deployment Dispatch Metrics</h3>
                 <div class="space-y-3">
                     <div>
@@ -53,8 +53,8 @@ const executeOrder = () => {
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2rem] space-y-3">
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2rem] space-y-3 shadow-xl">
                     <h3 class="font-bold text-lg mb-2">Secure Clearing Architecture</h3>
                     <div>
                         <label class="block text-xs uppercase text-[var(--text-muted)] mb-1 font-medium">Corporate Line
@@ -65,7 +65,7 @@ const executeOrder = () => {
                     <div
                         class="pt-4 border-t border-[var(--border)] flex justify-between font-bold text-lg text-[var(--accent)]">
                         <span>Total Settlement</span>
-                        <span>${ {{ cartStore.totalAmount }} }</span>
+                        <span>$ {{ cartStore.subtotal }}</span>
                     </div>
                 </div>
 

@@ -4,11 +4,13 @@ import { useCartStore } from '../../stores/cart';
 import { useUserStore } from '../../stores/user';
 import { useProductsStore } from '../../stores/products';
 import { useWishlistStore } from '../../stores/wishlist';
+import { useUIStore } from '../../stores/ui';
 
 const cartStore = useCartStore();
 const userStore = useUserStore();
 const productsStore = useProductsStore();
 const wishlistStore = useWishlistStore();
+const uiStore = useUIStore();
 
 const isScrolled = ref(false);
 const isDark = ref(false);
@@ -76,14 +78,14 @@ const toggleDarkMode = () => {
             </button>
 
             <!-- Account -->
-            <button @click="userStore.currentUser ? $router.push('/account') : userStore.authModalOpen = true" 
+            <button @click="userStore.currentUser ? $router.push('/account') : uiStore.toggleAuth()" 
                 class="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
                 <i class="fa-solid fa-circle-user text-sm"></i>
                 <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Terminal' : 'Access' }}</span>
             </button>
 
             <!-- Cart Trigger -->
-            <button @click="cartStore.drawerOpen = true" class="relative group">
+            <button @click="uiStore.toggleCart()" class="relative group z-10">
                 <div class="bg-[var(--accent)] text-white p-3 rounded-full shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center">
                     <i class="fa-solid fa-cart-shopping text-sm"></i>
                 </div>

@@ -112,7 +112,7 @@ onUnmounted(() => {
 <template>
     <main class="overflow-hidden">
         <!-- Hero Section -->
-        <section id="home" class="relative min-h-screen flex items-center max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 overflow-hidden">
+        <section id="home" class="relative min-h-screen flex items-center max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-20 overflow-hidden">
             <div class="mesh-bg">
                 <div class="mesh-blob"></div>
             </div>
@@ -308,7 +308,7 @@ onUnmounted(() => {
         <!-- Stats Bar -->
         <section class="max-w-7xl mx-auto px-6 lg:px-10 py-20 border-t border-[var(--border)]">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-12 stats-grid reveal">
-                <div v-for="(s, i) in animatedStats" :key="i" class="text-center group">
+                <div v-for="(s, i) in animatedStats" :key="i" class="text-center group reveal" :class="`reveal-delay-${i+1}`">
                     <h2 class="font-[Playfair_Display] text-5xl lg:text-6xl text-[var(--accent)] font-bold mb-2 transition-transform group-hover:scale-110">
                         {{ s.current }}{{ s.suffix }}
                     </h2>

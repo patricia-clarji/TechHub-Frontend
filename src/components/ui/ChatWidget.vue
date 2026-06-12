@@ -28,7 +28,7 @@ const sendChat = (txt) => {
 </script>
 
 <template>
-    <div class="fixed bottom-6 right-6 z-50 font-sans">
+    <div class="fixed bottom-24 right-6 z-[100] font-sans">
         <button @click="uiStore.toggleChat()"
             class="w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 premium-btn"
             style="animation: chatbotPulse 2.5s infinite">

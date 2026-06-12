@@ -9,7 +9,7 @@
     <AuthModal />
     <QuickViewModal />
     <CartDrawer />
-    <ChatWidget v-if="uiStore.chatWindowOpen" />
+    <ChatWidget />
     <ToastNotification />
 
     <Navbar />
@@ -25,7 +25,7 @@
     <Footer />
 
     <!-- Floating Cart Toggle -->
-    <div v-if="!uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-50 float-cart-btn">
+    <div v-if="!uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-[100] float-cart-btn">
       <button @click="uiStore.toggleCart()" 
         class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-5 py-3.5 rounded-full shadow-2xl shadow-[var(--glow)] flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl premium-btn group">
         <i class="fa-solid fa-cart-shopping text-sm group-hover:scale-110 transition-transform duration-300"></i>
@@ -33,15 +33,6 @@
         <span class="bg-white text-[var(--accent)] w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">
           {{ cartStore.itemCount }}
         </span>
-      </button>
-    </div>
-
-    <!-- Chatbot Toggle -->
-    <div id="chatbot-container" class="fixed bottom-24 right-6 z-50">
-      <button @click="uiStore.toggleChat()"
-        class="w-14 h-14 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white transition-all duration-300 hover:-translate-y-1 shadow-2xl shadow-[var(--glow)] flex items-center justify-center premium-btn"
-        style="animation: chatbotPulse 2.5s infinite">
-        <i :class="uiStore.chatWindowOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-comments'" class="text-lg"></i>
       </button>
     </div>
   </div>
@@ -73,15 +64,18 @@ const handleMouseMove = (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
   if (dot.value) {
-    dot.value.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+    dot.value.style.left = mouseX + 'px';
+    dot.value.style.top = mouseY + 'px';
   }
 };
 
 const animateRing = () => {
-  ringX += (mouseX - ringX) * 0.12;
-  ringY += (mouseY - ringY) * 0.12;
+  // Smoother interpolation for the ring
+  ringX += (mouseX - ringX) * 0.15;
+  ringY += (mouseY - ringY) * 0.15;
   if (ring.value) {
-    ring.value.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+    ring.value.style.left = ringX + 'px';
+    ring.value.style.top = ringY + 'px';
   }
   requestAnimationFrame(animateRing);
 };
