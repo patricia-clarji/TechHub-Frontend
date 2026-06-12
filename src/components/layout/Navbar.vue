@@ -32,6 +32,12 @@ const toggleDarkMode = () => {
         isScrolled ? 'glass-panel py-3 shadow-lg' : 'bg-transparent'
     ]">
         <!-- Brand -->
+        <button @click="isMobileMenuOpen = true" class="lg:hidden flex flex-col gap-1.5 p-1 group">
+            <span class="w-5 h-0.5 bg-[var(--text)] rounded-full transition-all group-hover:w-6"></span>
+            <span class="w-6 h-0.5 bg-[var(--text)] rounded-full transition-all"></span>
+            <span class="w-4 h-0.5 bg-[var(--text)] rounded-full transition-all group-hover:w-6"></span>
+        </button>
+
         <router-link to="/" class="text-2xl font-black tracking-tighter flex items-center gap-2 group">
             <div class="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white transition-transform group-hover:rotate-12">
                 <i class="fa-solid fa-bolt-lightning text-sm"></i>
@@ -64,8 +70,8 @@ const toggleDarkMode = () => {
             <button @click="toggleDarkMode" class="theme-switch">
                 <div class="w-14 h-7 rounded-full bg-[var(--bg-muted)] border border-[var(--border)] relative flex items-center px-1">
                     <div :class="['w-5 h-5 bg-[var(--accent)] rounded-full transition-all duration-300 shadow-md', isDark ? 'translate-x-7' : 'translate-x-0']"></div>
-                    <i :class="['absolute text-[8px] transition-opacity', isDark ? 'left-2 opacity-100' : 'left-2 opacity-0', 'fa-solid fa-moon text-white']"></i>
-                    <i :class="['absolute text-[8px] transition-opacity', isDark ? 'right-2 opacity-0' : 'right-2 opacity-100', 'fa-solid fa-sun text-white']"></i>
+                    <i :class="['absolute text-[8px] transition-opacity', isDark ? 'left-2 opacity-100' : 'left-2 opacity-0', 'fa-solid fa-moon', isDark ? 'text-white' : 'text-black']"></i>
+                    <i :class="['absolute text-[8px] transition-opacity', isDark ? 'right-2 opacity-0' : 'right-2 opacity-100', 'fa-solid fa-sun', isDark ? 'text-white' : 'text-black']"></i>
                 </div>
             </button>
 

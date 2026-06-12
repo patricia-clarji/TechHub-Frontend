@@ -136,8 +136,5 @@ export const useProductsStore = defineStore('products', () => {
     });
 
     const searchQueries = ref('');
-    const quickViewProductId = ref(null);
-    const searchModalOpen = ref(false);
-
-    return { sampleProducts, categories, searchQueries, quickViewProductId, searchModalOpen };
+    return { sampleProducts, categories, searchQueries };
 });

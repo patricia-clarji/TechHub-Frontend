@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue';
+import { useUIStore } from '@/stores/ui';
 
-const isOpen = ref(false);
+const uiStore = useUIStore();
 const messages = ref([
     { text: "Hello! How can I assist you with premium electronics today?", isBot: true }
 ]);
@@ -27,14 +28,15 @@ const sendChat = (txt) => {
 </script>
 
 <template>
-    <div class="fixed bottom-6 left-6 z-50 font-sans">
-        <button @click="isOpen = !isOpen"
-            class="w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110">
-            <i :class="isOpen ? 'fa-solid fa-xmark text-lg' : 'fa-solid fa-comments text-lg'"></i>
+    <div class="fixed bottom-6 right-6 z-50 font-sans">
+        <button @click="uiStore.toggleChat()"
+            class="w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 premium-btn"
+            style="animation: chatbotPulse 2.5s infinite">
+            <i :class="uiStore.chatWindowOpen ? 'fa-solid fa-xmark text-lg' : 'fa-solid fa-comments text-lg'"></i>
         </button>
 
-        <div v-if="isOpen"
-            class="absolute bottom-18 left-0 w-80 sm:w-96 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[450px]">
+        <div v-if="uiStore.chatWindowOpen"
+            class="absolute bottom-20 right-0 w-80 sm:w-96 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[450px]">
             <div class="bg-[var(--accent)] p-4 text-white">
                 <h4 class="font-bold">TechHub Concierge</h4>
                 <p class="text-xs text-white/80 font-light">AI Assistants Online</p>

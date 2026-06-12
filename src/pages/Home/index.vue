@@ -40,10 +40,10 @@ const testimonials = [
 ];
 
 const stats = [
-    { target: 10000, label: 'Products', suffix: 'K+' },
-    { target: 50000, label: 'Customers', suffix: 'K+' },
-    { target: 500, label: 'Brands', suffix: '+' },
-    { target: 99, label: 'Satisfaction', suffix: '%' }
+    { display: '10', target: 10, label: 'Products', suffix: 'K+' },
+    { display: '50', target: 50, label: 'Customers', suffix: 'K+' },
+    { display: '500', target: 500, label: 'Brands', suffix: '+' },
+    { display: '99', target: 99, label: 'Satisfaction', suffix: '%' }
 ];
 
 const finderOptions = [
@@ -112,7 +112,7 @@ onUnmounted(() => {
 <template>
     <main class="overflow-hidden">
         <!-- Hero Section -->
-        <section id="home" class="relative min-h-screen flex items-center max-w-7xl mx-auto px-6 lg:px-10 pt-28 pb-20 overflow-hidden">
+        <section id="home" class="relative min-h-screen flex items-center max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 overflow-hidden">
             <div class="mesh-bg">
                 <div class="mesh-blob"></div>
             </div>
@@ -186,7 +186,8 @@ onUnmounted(() => {
                 <p class="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">Explore premium technology collections carefully curated for productivity, entertainment, and modern living.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div v-for="cat in categories" :key="cat.name" class="cat-card h-[420px] lg:h-[500px] reveal group relative overflow-hidden rounded-[2.5rem]">
+                <router-link v-for="cat in categories" :key="cat.name" 
+                    :to="{ name: 'Products', query: { category: cat.name } }" class="cat-card h-[420px] lg:h-[500px] reveal group relative overflow-hidden rounded-[2.5rem]">
                     <img :src="cat.img" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" :alt="cat.name">
                     <div class="cat-overlay"></div>
                     <div class="cat-content absolute bottom-0 left-0 right-0 p-10 text-white transform transition-transform duration-500 group-hover:translate-y-[-10px]">
@@ -196,7 +197,7 @@ onUnmounted(() => {
                         <p class="mt-4 text-white/70 max-w-xs text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500">{{ cat.desc }}</p>
                         <div class="cat-arrow"><i class="fa-solid fa-arrow-right text-xs"></i></div>
                     </div>
-                </div>
+                </router-link>
             </div>
         </section>
 
@@ -248,7 +249,7 @@ onUnmounted(() => {
                     </div>
 
                     <div class="mt-12">
-                        <router-link to="/products" class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-xl">
+                        <router-link to="/deals" class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-xl">
                             Shop the Sale
                         </router-link>
                     </div>

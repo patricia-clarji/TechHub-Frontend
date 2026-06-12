@@ -1,23 +1,23 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { useToastStore } from './toast';
+import { ref, watch } from 'vue';
 
 export const useWishlistStore = defineStore('wishlist', () => {
-    const productIds = ref(JSON.parse(localStorage.getItem('wishlist') || '[]'));
-    const toastStore = useToastStore();
+    const productIds = ref(JSON.parse(localStorage.getItem('wishlist_ids')) || []);
 
-    const toggleWishlist = (productId) => {
-        if (productIds.value.includes(productId)) {
-            productIds.value = productIds.value.filter(id => id !== productId);
-            toastStore.showToast('Removed from wishlist', 'fa-heart-crack');
+    const toggleWishlist = (id) => {
+        const index = productIds.value.indexOf(id);
+        if (index > -1) {
+            productIds.value.splice(index, 1);
         } else {
-            productIds.value.push(productId);
-            toastStore.showToast('Added to your wishlist!', 'fa-heart');
+            productIds.value.push(id);
         }
-        localStorage.setItem('wishlist', JSON.stringify(productIds.value));
     };
 
-    const count = computed(() => productIds.value.length);
+    const clearWishlist = () => productIds.value = [];
 
-    return { productIds, toggleWishlist, count };
+    watch(productIds, (newVal) => {
+        localStorage.setItem('wishlist_ids', JSON.stringify(newVal));
+    }, { deep: true });
+
+    return { productIds, toggleWishlist, clearWishlist };
 });

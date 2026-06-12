@@ -1,80 +1,93 @@
 <script setup>
-import { computed } from 'vue';
-import { useCartStore } from '../../stores/cart';
-import { useProductsStore } from '../../stores/products';
+import { computed, onMounted } from 'vue';
+import { useCartStore } from '@/stores/cart';
+import { useProductsStore } from '@/stores/products';
 
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
 
-const itemsWithDetails = computed(() => {
+const cartItems = computed(() => {
     return cartStore.items.map(item => {
-        const details = productsStore.sampleProducts.find(p => p.id === item.id);
-        return { ...details, ...item };
-    }).filter(i => i.name);
+        const product = productsStore.sampleProducts.find(p => p.id === item.id);
+        return {
+            ...product,
+            quantity: item.quantity
+        };
+    });
+});
+
+onMounted(() => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 });
 </script>
 
 <template>
-    <main class="pt-32 max-w-7xl mx-auto px-6 lg:px-10 space-y-12">
-        <h1 class="font-[Playfair_Display] text-4xl font-bold">Your Selection Basket</h1>
+    <main class="pt-32 pb-24 max-w-7xl mx-auto px-6 lg:px-10">
+        <div class="mb-12 reveal">
+            <span class="section-badge">Resource Allocation</span>
+            <h1 class="font-[Playfair_Display] text-5xl font-extrabold mt-6">Your Active Basket</h1>
+        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-            <div class="lg:col-span-2 space-y-4">
-                <div v-for="i in itemsWithDetails" :key="i.id"
-                    class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem]">
-                    <div class="flex items-center gap-4">
-                        <img :src="i.img" class="w-20 h-20 object-cover rounded-2xl" />
-                        <div>
-                            <h3 class="font-bold text-base">{{ i.name }}</h3>
-                            <p class="text-xs text-[var(--text-muted)]">{{ i.category }}</p>
+        <div v-if="cartItems.length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <!-- Cart Items List -->
+            <div class="lg:col-span-8 space-y-6">
+                <div v-for="item in cartItems" :key="item.id" class="reveal flex flex-col sm:flex-row gap-6 bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[2rem] transition-all hover:shadow-xl">
+                    <img :src="item.img" :alt="item.name" class="w-full sm:w-32 h-32 object-cover rounded-2xl">
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">{{ item.category }}</span>
+                                <h3 class="font-[Playfair_Display] text-xl font-bold mt-1">{{ item.name }}</h3>
+                            </div>
+                            <button @click="cartStore.removeFromCart(item.id)" class="text-[var(--text-muted)] hover:text-red-500 transition-colors">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-end mt-4">
+                            <div class="flex items-center bg-[var(--bg-muted)] rounded-xl p-1 border border-[var(--border)]">
+                                <button @click="cartStore.addToCart(item.id, -1)" :disabled="item.quantity <= 1" class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)] disabled:opacity-30">
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+                                <span class="w-8 text-center font-bold text-sm">{{ item.quantity }}</span>
+                                <button @click="cartStore.addToCart(item.id, 1)" class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)]">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <p class="font-black text-[var(--accent)] text-lg">$ {{ item.price * item.quantity }}</p>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                        <div class="flex items-center gap-2">
-                            <button @click="cartStore.updateQuantity(i.id, -1)"
-                                class="w-8 h-8 bg-[var(--bg-muted)] rounded-lg font-bold">-</button>
-                            <span class="w-6 text-center font-semibold text-sm">{{ i.quantity }}</span>
-                            <button @click="cartStore.updateQuantity(i.id, 1)"
-                                class="w-8 h-8 bg-[var(--bg-muted)] rounded-lg font-bold">+</button>
+            <!-- Order Summary -->
+            <aside class="lg:col-span-4 sticky top-32 reveal">
+                <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[2.5rem] p-8 space-y-6 shadow-xl">
+                    <h3 class="font-[Playfair_Display] text-2xl font-bold">Financial Summary</h3>
+                    <div class="space-y-4 pt-4 border-t border-[var(--border)]">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-[var(--text-muted)]">Subtotal Matrix</span>
+                            <span class="font-bold">$ {{ cartStore.subtotal }}</span>
                         </div>
-                        <span class="font-bold text-base">${ {{ i.price * i.quantity }} }</span>
-                        <button @click="cartStore.removeFromCart(i.id)" class="text-red-500 text-sm p-1"><i
-                                class="fa-solid fa-trash-can"></i></button>
+                        <div class="flex justify-between text-lg pt-4 border-t border-[var(--border)]">
+                            <span class="font-bold">Total Allocation</span>
+                            <span class="font-black text-[var(--accent)]">$ {{ cartStore.subtotal }}</span>
+                        </div>
                     </div>
+                    <router-link to="/checkout" class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
+                        Authorize Checkout
+                    </router-link>
                 </div>
+            </aside>
+        </div>
 
-                <p v-if="itemsWithDetails.length === 0"
-                    class="text-center text-sm py-16 text-[var(--text-muted)] bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem]">
-                    No items allocated in basket parameters.</p>
-            </div>
-
-            <div class="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[2rem] space-y-4">
-                <h3 class="font-bold text-lg border-b border-[var(--border)] pb-2">Order Configuration</h3>
-                <div class="flex justify-between text-sm">
-                    <span class="text-[var(--text-muted)]">Subtotal</span>
-                    <span class="font-semibold">${ {{ cartStore.subtotal }} }</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-[var(--text-muted)]">Freight Distribution</span>
-                    <span class="font-semibold">{{ cartStore.shippingCost === 0 ? 'Free Shipping' : '$' +
-                        cartStore.shippingCost }}</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-[var(--text-muted)]">Estimated Duties (8%)</span>
-                    <span class="font-semibold">${ {{ cartStore.estimatedTax }} }</span>
-                </div>
-                <div
-                    class="border-t border-[var(--border)] pt-4 flex justify-between font-bold text-lg text-[var(--accent)]">
-                    <span>Final Computation</span>
-                    <span>${ {{ cartStore.totalAmount }} }</span>
-                </div>
-
-                <button @click="$router.push('/checkout')" :disabled="itemsWithDetails.length === 0"
-                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] premium-btn disabled:opacity-50 text-white font-bold py-4 rounded-full text-center block transition-all shadow-md mt-4">
-                    Execute Checkout Pipeline
-                </button>
-            </div>
+        <div v-else class="text-center py-32 bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border)] reveal">
+            <p class="text-[var(--text-muted)] mb-8">Your deployment basket is currently empty.</p>
+            <router-link to="/products" class="inline-block bg-[var(--accent)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest premium-btn">Return to Catalog</router-link>
         </div>
     </main>
 </template>

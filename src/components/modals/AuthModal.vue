@@ -1,98 +1,60 @@
 <script setup>
 import { ref } from 'vue';
-import { useUserStore } from '../../stores/user';
+import { useUIStore } from '@/stores/ui';
+import { useUserStore } from '@/stores/user';
 
+const uiStore = useUIStore();
 const userStore = useUserStore();
-const activeTab = ref('login');
+const isLogin = ref(true);
 
-const loginEmail = ref('');
-const loginPass = ref('');
+const email = ref('');
+const password = ref('');
+const name = ref('');
 
-const signupName = ref('');
-const signupEmail = ref('');
-const signupPass = ref('');
-
-const errorMessage = ref('');
-
-const handleLogin = () => {
-    const res = userStore.login(loginEmail.value, loginPass.value);
-    if (res.success) {
-        userStore.authModalOpen = false;
+const handleSubmit = () => {
+    if (isLogin.value) {
+        userStore.login(email.value, password.value);
     } else {
-        errorMessage.value = res.message;
+        userStore.signup(name.value, email.value, password.value);
     }
-};
-
-const handleSignup = () => {
-    const res = userStore.signup(signupName.value, signupEmail.value, signupPass.value);
-    if (res.success) {
-        userStore.authModalOpen = false;
-    } else {
-        errorMessage.value = res.message;
-    }
+    uiStore.authModalOpen = false;
 };
 </script>
 
 <template>
-    <div v-if="userStore.authModalOpen"
-        class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div @click="userStore.authModalOpen = false" class="absolute inset-0"></div>
-        <div
-            class="bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border)] max-w-md w-full p-8 relative z-10 shadow-2xl flex flex-col">
-            <div class="flex justify-around mb-6 border-b border-[var(--border)] pb-2">
-                <button @click="activeTab = 'login'; errorMessage = ''"
-                    :class="activeTab === 'login' ? 'text-[var(--accent)] font-bold border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]'"
-                    class="pb-2 text-sm tracking-widest uppercase">Sign In</button>
-                <button @click="activeTab = 'signup'; errorMessage = ''"
-                    :class="activeTab === 'signup' ? 'text-[var(--accent)] font-bold border-b-2 border-[var(--accent)]' : 'text-[var(--text-muted)]'"
-                    class="pb-2 text-sm tracking-widest uppercase">Register</button>
+    <div v-if="uiStore.authModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/40">
+        <div @click="uiStore.authModalOpen = false" class="absolute inset-0"></div>
+        <div class="relative w-full max-w-md bg-[var(--bg-card)] border border-[var(--border)] rounded-[2.5rem] p-10 shadow-2xl overflow-hidden">
+            <!-- Decorative Header -->
+            <div class="mb-10 text-center">
+                <span class="section-badge mb-4">Enterprise Access</span>
+                <h2 class="font-[Playfair_Display] text-3xl font-bold">{{ isLogin ? 'Terminal Login' : 'Create Profile' }}</h2>
+                <p class="text-[var(--text-muted)] text-xs mt-2 uppercase tracking-widest">Architectural Security Enabled</p>
             </div>
 
-            <p v-if="errorMessage" class="text-xs text-red-500 bg-red-500/10 p-3 rounded-xl mb-4">{{ errorMessage }}</p>
+            <form @submit.prevent="handleSubmit" class="space-y-5">
+                <div v-if="!isLogin" class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-4">Full Identity</label>
+                    <input v-model="name" type="text" class="w-full bg-[var(--bg-muted)]/50 border border-[var(--border)] rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-[var(--accent)] transition-all" placeholder="John Doe" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-4">Email Channel</label>
+                    <input v-model="email" type="email" class="w-full bg-[var(--bg-muted)]/50 border border-[var(--border)] rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-[var(--accent)] transition-all" placeholder="secure@techhub.com" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-4">Access Token</label>
+                    <input v-model="password" type="password" class="w-full bg-[var(--bg-muted)]/50 border border-[var(--border)] rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-[var(--accent)] transition-all" placeholder="••••••••" />
+                </div>
 
-            <div v-if="activeTab === 'login'" class="space-y-4">
-                <div>
-                    <label
-                        class="block text-xs uppercase tracking-wider mb-1 font-medium text-[var(--text-muted)]">Email
-                        Address</label>
-                    <input v-model="loginEmail" type="email"
-                        class="w-full bg-[var(--bg-muted)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none" />
-                </div>
-                <div>
-                    <label
-                        class="block text-xs uppercase tracking-wider mb-1 font-medium text-[var(--text-muted)]">Password</label>
-                    <input v-model="loginPass" type="password"
-                        class="w-full bg-[var(--bg-muted)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none" />
-                </div>
-                <button @click="handleLogin"
-                    class="w-full bg-[var(--accent)] text-white py-3 rounded-full mt-4 premium-btn font-semibold">Sign
-                    In</button>
-            </div>
+                <button type="submit" class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
+                    {{ isLogin ? 'Authorize Session' : 'Register Terminal' }}
+                </button>
+            </form>
 
-            <div v-else class="space-y-4">
-                <div>
-                    <label class="block text-xs uppercase tracking-wider mb-1 font-medium text-[var(--text-muted)]">Full
-                        Name</label>
-                    <input v-model="signupName" type="text"
-                        class="w-full bg-[var(--bg-muted)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none" />
-                </div>
-                <div>
-                    <label
-                        class="block text-xs uppercase tracking-wider mb-1 font-medium text-[var(--text-muted)]">Email
-                        Address</label>
-                    <input v-model="signupEmail" type="email"
-                        class="w-full bg-[var(--bg-muted)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none" />
-                </div>
-                <div>
-                    <label
-                        class="block text-xs uppercase tracking-wider mb-1 font-medium text-[var(--text-muted)]">Password
-                        (6+ chars)</label>
-                    <input v-model="signupPass" type="password"
-                        class="w-full bg-[var(--bg-muted)] border border-[var(--border)] rounded-xl p-3 text-sm focus:outline-none" />
-                </div>
-                <button @click="handleSignup"
-                    class="w-full bg-[var(--accent)] text-white py-3 rounded-full mt-4 premium-btn font-semibold">Create
-                    Account</button>
+            <div class="mt-8 text-center">
+                <button @click="isLogin = !isLogin" class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                    {{ isLogin ? "Need a new deployment profile?" : "Already have an active token?" }}
+                </button>
             </div>
         </div>
     </div>

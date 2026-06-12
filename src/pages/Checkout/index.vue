@@ -20,7 +20,7 @@ const executeOrder = () => {
     }
     cartStore.clearCart();
     toastStore.showToast('Order processing pipeline initialized successfully!', 'fa-circle-check');
-    router.push('/account');
+    router.push('/order-confirmation');
 };
 </script>
 
