@@ -57,15 +57,23 @@ const executeOrder = () => {
                 <div class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2rem] space-y-3 shadow-xl">
                     <h3 class="font-bold text-lg mb-2">Secure Clearing Architecture</h3>
                     <div>
-                        <label class="block text-xs uppercase text-[var(--text-muted)] mb-1 font-medium">Corporate Line
-                            Card Number</label>
+                        <label class="block text-xs uppercase text-[var(--text-muted)] mb-1 font-medium">Corporate Line Card Number</label>
                         <input v-model="cardNumber" type="text" placeholder="•••• •••• •••• ••••"
                             class="w-full bg-[var(--bg)] border border-[var(--border)] p-3 rounded-xl text-sm focus:outline-none" />
                     </div>
-                    <div
-                        class="pt-4 border-t border-[var(--border)] flex justify-between font-bold text-lg text-[var(--accent)]">
+                    <div class="space-y-2 pt-4 border-t border-[var(--border)]">
+                        <div class="flex justify-between text-xs text-[var(--text-muted)] uppercase tracking-widest">
+                            <span>Gross Subtotal</span>
+                            <span>$ {{ cartStore.subtotal.toFixed(2) }}</span>
+                        </div>
+                        <div v-if="cartStore.discountTotal > 0" class="flex justify-between text-xs text-green-600 font-bold uppercase tracking-widest animate-pulse">
+                            <span>Promotional Credit Applied</span>
+                            <span>-$ {{ cartStore.discountTotal.toFixed(2) }}</span>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-[var(--border)] flex justify-between font-bold text-lg text-[var(--accent)] animate-glow-pulse">
                         <span>Total Settlement</span>
-                        <span>$ {{ cartStore.subtotal }}</span>
+                        <span class="settle-number">$ {{ cartStore.totalAmount.toFixed(2) }}</span>
                     </div>
                 </div>
 

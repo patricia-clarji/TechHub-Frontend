@@ -71,11 +71,17 @@ onMounted(() => {
                     <div class="space-y-4 pt-4 border-t border-[var(--border)]">
                         <div class="flex justify-between text-sm">
                             <span class="text-[var(--text-muted)]">Subtotal Matrix</span>
-                            <span class="font-bold">$ {{ cartStore.subtotal }}</span>
+                            <span class="font-bold">$ {{ cartStore.subtotal.toFixed(2) }}</span>
                         </div>
+                        <div v-if="cartStore.discountTotal > 0" class="flex justify-between text-sm text-green-600 font-bold">
+                            <span class="text-[var(--text-muted)]">Promotional Credit Applied</span>
+                            <span>-$ {{ cartStore.discountTotal.toFixed(2) }}</span>
+                        </div>
+                        <!-- Add a separator if there's a discount to visually group subtotal and discount -->
+                        <div v-if="cartStore.discountTotal > 0" class="border-t border-[var(--border)] pt-4"></div>
                         <div class="flex justify-between text-lg pt-4 border-t border-[var(--border)]">
                             <span class="font-bold">Total Allocation</span>
-                            <span class="font-black text-[var(--accent)]">$ {{ cartStore.subtotal }}</span>
+                            <span class="font-black text-[var(--accent)]">$ {{ cartStore.totalAmount.toFixed(2) }}</span>
                         </div>
                     </div>
                     <router-link to="/checkout" class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">

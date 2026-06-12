@@ -1,5 +1,5 @@
-<script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import ProductCard from '@/components/cards/ProductCard.vue'
 import { useProductsStore } from '@/stores/products'
 
@@ -17,7 +17,7 @@ const categories = [
 
 const saleProducts = computed(() => {
 
-    const products =
+    let products =
         productsStore.sampleProducts.slice(0, 8)
 
     if (selectedCategory.value === 'all') {
@@ -28,6 +28,7 @@ const saleProducts = computed(() => {
         product.category?.toLowerCase() ===
         selectedCategory.value
     )
+    return products
 })
 
 const countdown = ref({
@@ -38,7 +39,21 @@ const countdown = ref({
 })
 
 let interval
-let observer
+let observer: IntersectionObserver | null = null
+
+const initObserver = () => {
+    if (observer) observer.disconnect();
+    observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+    nextTick(() => {
+        document.querySelectorAll('.reveal').forEach(el => observer?.observe(el));
+    });
+};
 
 onMounted(() => {
 
@@ -117,45 +132,19 @@ onMounted(() => {
 
     updateCountdown()
 
-    interval =
-        setInterval(updateCountdown, 1000)
-
-    observer =
-        new IntersectionObserver(
-            entries => {
-
-                entries.forEach(entry => {
-
-                    if (
-                        entry.isIntersecting
-                    ) {
-
-                        entry.target.classList.add(
-                            'visible'
-                        )
-
-                    }
-
-                })
-
-            },
-            { threshold: 0.1 }
-        )
-
-    document
-        .querySelectorAll('.reveal')
-        .forEach(el =>
-            observer.observe(el)
-        )
+    interval = setInterval(updateCountdown, 1000)
+    initObserver();
 })
 
 onUnmounted(() => {
 
     clearInterval(interval)
 
-    observer?.disconnect()
-
+    if (observer) observer.disconnect();
 })
+
+// Re-run observer logic when filtered products change
+watch(saleProducts, () => initObserver(), { deep: true });
 </script>
 
 <template>

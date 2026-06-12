@@ -28,11 +28,25 @@ export const useCartStore = defineStore('cart', () => {
         }, 0);
     });
 
+    const discountTotal = computed(() => {
+        return items.value.reduce((total, item) => {
+            const product = productsStore.sampleProducts.find(p => p.id === item.id);
+            // Synchronized with Deals page logic (first 8 products are on sale)
+            const isSaleProduct = productsStore.sampleProducts.slice(0, 8).some(p => p.id === item.id);
+            if (product && isSaleProduct) {
+                return total + (product.price * item.quantity * 0.20);
+            }
+            return total;
+        }, 0);
+    });
+
+    const totalAmount = computed(() => subtotal.value - discountTotal.value);
+
     const itemCount = computed(() => items.value.reduce((total, item) => total + item.quantity, 0));
 
     watch(items, (newVal) => {
         localStorage.setItem('cart_items', JSON.stringify(newVal));
     }, { deep: true });
 
-    return { items, addToCart, removeFromCart, clearCart, subtotal, itemCount };
+    return { items, addToCart, removeFromCart, clearCart, subtotal, discountTotal, totalAmount, itemCount };
 });

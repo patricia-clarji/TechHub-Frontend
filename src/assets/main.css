@@ -1845,3 +1845,22 @@ header nav a.nav-link:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── PREMIUM SETTLEMENT ANIMATIONS ────────────────────── */
+@keyframes settleIn {
+    from { transform: translateY(15px); opacity: 0; filter: blur(8px); }
+    to { transform: translateY(0); opacity: 1; filter: blur(0); }
+}
+
+.settle-number {
+    animation: settleIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes glowPulseSubtle {
+    0%, 100% { text-shadow: 0 0 0px transparent; }
+    50% { text-shadow: 0 0 15px var(--glow); }
+}
+
+.animate-glow-pulse {
+    animation: glowPulseSubtle 4s ease-in-out infinite;
+}

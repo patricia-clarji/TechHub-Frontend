@@ -72,9 +72,15 @@ const cartItems = computed(() => {
 
             <!-- Footer -->
             <div class="p-8 bg-[var(--bg)] border-t border-[var(--border)] flex-none space-y-6 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                <div class="flex justify-between items-end">
-                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Subtotal Matrix</span>
-                    <span class="text-2xl font-black text-[var(--accent)]">$ {{ cartStore.subtotal }}</span>
+                <div class="space-y-2">
+                    <div v-if="cartStore.discountTotal > 0" class="flex justify-between text-[10px] text-green-600 font-bold uppercase tracking-widest">
+                        <span>Discounts applied</span>
+                        <span>-$ {{ cartStore.discountTotal.toFixed(2) }}</span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Total Amount</span>
+                        <span class="text-2xl font-black text-[var(--accent)]">$ {{ cartStore.totalAmount.toFixed(2) }}</span>
+                    </div>
                 </div>
                 <router-link to="/cart" @click="uiStore.cartDrawerOpen = false" 
                     class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn">
