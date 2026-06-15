@@ -2,9 +2,11 @@
 import { ref, watch } from 'vue';
 import { useUIStore } from '@/stores/ui';
 import { useUserStore } from '@/stores/user';
+import { useToastStore } from '@/stores/toast';
 
 const uiStore = useUIStore();
 const userStore = useUserStore();
+const toastStore = useToastStore();
 const isLogin = ref(true);
 
 const email = ref('');
@@ -12,6 +14,10 @@ const password = ref('');
 const name = ref('');
 const confirmPassword = ref('');
 const wasSubmitted = ref(false);
+
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const isForgotPassword = ref(false);
 
 const touched = ref({
     email: false,
@@ -54,6 +60,24 @@ watch(confirmPassword, (val) => {
     else errors.value.confirmPassword = '';
 });
 
+const resetForm = () => {
+    email.value = '';
+    password.value = '';
+    name.value = '';
+    confirmPassword.value = '';
+    isForgotPassword.value = false;
+    wasSubmitted.value = false;
+    showPassword.value = false;
+    showConfirmPassword.value = false;
+    touched.value = {
+        email: false,
+        name: false,
+        password: false,
+        confirmPassword: false
+    };
+    Object.keys(errors.value).forEach(k => errors.value[k] = '');
+};
+
 const handleSubmit = () => {
     // Final validation check before submission
     wasSubmitted.value = true;
@@ -75,29 +99,68 @@ const handleSubmit = () => {
         userStore.signup(name.value, email.value, password.value);
     }
     
+    resetForm();
     uiStore.authModalOpen = false;
 };
+
+const handleForgotPasswordSubmit = () => {
+    if (!email.value || !email.value.includes('@')) {
+        errors.value.email = 'Enter a valid email address';
+        return;
+    }
+    toastStore.showToast('Reset instructions transmitted to ' + email.value, 'fa-paper-plane');
+    resetForm();
+    uiStore.authModalOpen = false;
+};
+
+watch(() => uiStore.authModalOpen, (isOpen) => {
+    if (!isOpen) resetForm();
+});
 </script>
 
 <template>
     <div v-if="uiStore.authModalOpen"
         class="fixed inset-0 z-[120] flex items-center justify-center p-6 backdrop-blur-xl bg-black/40">
         <div @click="uiStore.authModalOpen = false" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-md bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-10 shadow-2xl overflow-hidden">
+        <div class="relative w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-10 shadow-2xl overflow-hidden transition-all duration-300">
             <!-- Decorative Header -->
             <div class="mb-8">
-                <h2 class="font-[Playfair_Display] text-3xl font-bold text-[var(--text)]">{{ isLogin ? 'Sign in' : 'Create account' }}</h2>
+                <h2 class="font-[Playfair_Display] text-3xl font-bold text-[var(--text)]">
+                    {{ isForgotPassword ? 'Password assistance' : (isLogin ? 'Sign in' : 'Create account') }}
+                </h2>
+                <p v-if="isForgotPassword" class="text-xs text-[var(--text-muted)] mt-2">
+                    Enter the email address associated with your TechHub account.
+                </p>
             </div>
 
-            <!-- Social Login Options -->
-            <div class="space-y-3 mb-6">
-                <button type="button" class="w-full flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 group-hover:scale-110 transition-transform">
-                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--text)]">Continue with Google</span>
+            <!-- Forgot Password Flow -->
+            <div v-if="isForgotPassword" class="space-y-5">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-[var(--text)] ml-1">Email Address</label>
+                    <input v-model="email" type="email"
+                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
+                        :class="errors.email ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'" />
+                    <p v-if="errors.email" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.email }}</p>
+                </div>
+                <button @click="handleForgotPasswordSubmit"
+                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
+                    Transmit Reset Token
                 </button>
-                <button type="button" class="w-full flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
+                <div class="text-center mt-4">
+                    <button @click="isForgotPassword = false" class="text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-widest">Return to Sign In</button>
+                </div>
+            </div>
+
+            <div v-else>
+                <!-- Social Login Options -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                <button type="button" class="flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 group-hover:scale-110 transition-transform">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text)]">Google</span>
+                </button>
+                <button type="button" class="flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
                     <i class="fa-brands fa-apple text-xl group-hover:scale-110 transition-transform text-[var(--text)]"></i>
-                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--text)]">Continue with Apple</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text)]">Apple</span>
                 </button>
             </div>
 
@@ -108,7 +171,7 @@ const handleSubmit = () => {
                 <div class="h-px flex-1 bg-[var(--border)]/60"></div>
             </div>
 
-            <form @submit.prevent="handleSubmit" class="space-y-5">
+                <form @submit.prevent="handleSubmit" class="space-y-5">
                 <!-- Email / Mobile -->
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-[var(--text)] ml-1">Enter mobile number or email</label>
@@ -132,29 +195,39 @@ const handleSubmit = () => {
                 </div>
 
                 <!-- Password -->
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Password (at least 6 characters)</label>
-                    <input v-model="password" type="password"
+                <div class="space-y-1 relative">
+                    <label class="text-xs font-bold text-[var(--text)] ml-1">Password</label>
+                    <input v-model="password" :type="showPassword ? 'text' : 'password'"
                         @blur="touched.password = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
+                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
                         :class="(errors.password && (touched.password || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
                         placeholder="At least 6 characters" />
+                    <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                        <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
                     
-                    <div v-if="!(errors.password && (touched.password || wasSubmitted))" class="flex items-center gap-2 mt-1 ml-1 text-[var(--text-muted)]">
-                        <i class="fa-solid fa-info text-[10px] w-4 h-4 rounded-full border border-[var(--border)] flex items-center justify-center"></i>
-                        <p class="text-[10px]">Passwords must be at least 6 characters.</p>
+                    <div class="flex justify-between items-start mt-1 px-1">
+                        <div v-if="!(errors.password && (touched.password || wasSubmitted))" class="flex items-center gap-2 text-[var(--text-muted)]">
+                            <i class="fa-solid fa-info text-[10px] w-4 h-4 rounded-full border border-[var(--border)] flex items-center justify-center"></i>
+                            <p class="text-[10px]">Passwords must be at least 6 characters.</p>
+                        </div>
+                        <p v-if="errors.password && (touched.password || wasSubmitted)" class="text-red-500 text-[10px]">{{ errors.password }}</p>
+                        
+                        <button v-if="isLogin" @click="isForgotPassword = true" type="button" class="text-[10px] font-bold text-[var(--accent)] hover:underline uppercase tracking-widest ml-auto">Forgot password?</button>
                     </div>
-                    <p v-if="errors.password && (touched.password || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.password }}</p>
                 </div>
 
                 <!-- Re-enter Password (Signup Only) -->
-                <div v-if="!isLogin" class="space-y-1">
+                <div v-if="!isLogin" class="space-y-1 relative">
                     <label class="text-xs font-bold text-[var(--text)] ml-1">Re-enter password</label>
-                    <input v-model="confirmPassword" type="password"
+                    <input v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'"
                         @blur="touched.confirmPassword = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
+                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
                         :class="(errors.confirmPassword && (touched.confirmPassword || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
                         placeholder="" />
+                    <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+                        <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
                     <p v-if="errors.confirmPassword && (touched.confirmPassword || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.confirmPassword }}</p>
                 </div>
 
@@ -181,6 +254,7 @@ const handleSubmit = () => {
             </div>
             <div v-else class="text-center text-[var(--text-muted)] text-[9px] mt-6 leading-relaxed">
                 By signing in, you agree to TechHub's <a href="#" class="text-[var(--accent)] hover:underline">Conditions of Use</a>.
+            </div>
             </div>
         </div>
     </div>

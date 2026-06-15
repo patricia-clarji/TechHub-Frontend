@@ -81,7 +81,7 @@ const toggleDarkMode = () => {
             <button @click="userStore.currentUser ? $router.push('/account') : uiStore.toggleAuth()"
                 class="group flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
                 <i class="fa-solid fa-circle-user text-sm"></i>
-                <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Terminal' : 'Login' }}</span>
+                <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Profile' : 'Login' }}</span>
                 <i class="fa-solid fa-arrow-right text-[8px] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
             </button>
 

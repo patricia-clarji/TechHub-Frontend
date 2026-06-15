@@ -33,13 +33,82 @@ const initObserver = () => {
     });
 };
 
+const updateSEO = (p) => {
+    if (!p) return;
+    
+    // 1. Dynamic Meta Tags
+    document.title = `${p.name} | TechHub - Premium Provisions`;
+    
+    const metaDescription = document.querySelector('meta[name="description"]') || document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    metaDescription.setAttribute('content', p.desc);
+    if (!document.querySelector('meta[name="description"]')) document.head.appendChild(metaDescription);
+
+    // 2. Open Graph Tags
+    const ogTags = {
+        'og:title': p.name,
+        'og:description': p.desc,
+        'og:image': p.img,
+        'og:type': 'product',
+        'og:url': window.location.href
+    };
+
+    Object.entries(ogTags).forEach(([property, content]) => {
+        let tag = document.querySelector(`meta[property="${property}"]`);
+        if (!tag) {
+            tag = document.createElement('meta');
+            tag.setAttribute('property', property);
+            document.head.appendChild(tag);
+        }
+        tag.setAttribute('content', content);
+    });
+
+    // 3. Structured Data (JSON-LD)
+    let scriptTag = document.getElementById('product-schema');
+    if (scriptTag) scriptTag.remove();
+
+    scriptTag = document.createElement('script');
+    scriptTag.id = 'product-schema';
+    scriptTag.type = 'application/ld+json';
+    
+    const schema = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": p.name,
+        "image": [p.img],
+        "description": p.desc,
+        "brand": { "@type": "Brand", "name": p.brand },
+        "offers": {
+            "@type": "Offer",
+            "priceCurrency": "USD",
+            "price": p.price,
+            "availability": p.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "url": window.location.href
+        }
+    };
+
+    if (p.reviews?.length > 0) {
+        schema.aggregateRating = {
+            "@type": "AggregateRating",
+            "ratingValue": p.averageRating,
+            "reviewCount": p.reviews.length
+        };
+    }
+
+    scriptTag.text = JSON.stringify(schema);
+    document.head.appendChild(scriptTag);
+};
+
 const product = computed(() => {
     // Ensure matching works even if types differ (string vs number)
     return productsStore.sampleProducts.find(p => String(p.id) === String(route.params.id));
 });
 
 watch(product, (newProd) => {
-    if (newProd) recentlyViewedStore.addProduct(newProd.id);
+    if (newProd) {
+        recentlyViewedStore.addProduct(newProd.id);
+        updateSEO(newProd);
+    }
 }, { immediate: true });
 
 const relatedProducts = computed(() => {
@@ -64,6 +133,8 @@ const goBack = () => router.back();
 onMounted(initObserver);
 onUnmounted(() => {
     if (observer) observer.disconnect();
+    const script = document.getElementById('product-schema');
+    if (script) script.remove();
 });
 
 // Re-run observer logic when the route ID changes (navigating between related products)

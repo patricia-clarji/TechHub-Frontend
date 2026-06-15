@@ -1,9 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { useCartStore } from '../../stores/cart';
-import { useWishlistStore } from '../../stores/wishlist';
-import { useProductsStore } from '../../stores/products';
-import { useUIStore } from '../../stores/ui';
+import { useCartStore } from '@/stores/cart';
+import { useWishlistStore } from '@/stores/wishlist';
+import { useProductsStore } from '@/stores/products';
 
 const props = defineProps({
     product: { type: Object, required: true }
@@ -12,7 +11,6 @@ const props = defineProps({
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
 const productsStore = useProductsStore();
-const uiStore = useUIStore();
 
 const isInWishlist = computed(() => wishlistStore.productIds.includes(props.product.id));
 </script>
@@ -28,17 +26,16 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
 
         <!-- Wishlist Toggle -->
         <button @click.stop="wishlistStore.toggleWishlist(product.id)" 
-            class="absolute top-4 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110">
+            class="absolute top-4 right-4 z-10 w-10 h-10 glass-panel text-[var(--text)] rounded-full flex items-center justify-center transition-all hover:scale-110">
             <i :class="isInWishlist ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'"></i>
         </button>
 
         <figure class="relative overflow-hidden aspect-square bg-[var(--bg-muted)]">
-            <img :src="product.img"
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+            <img :src="product.img" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
             
             <!-- Quick View Overlay -->
             <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                <button @click="uiStore.openQuickView(product.id)" 
+                <button @click="productsStore.quickViewProductId = product.id" 
                     class="bg-white/95 dark:bg-[var(--bg-card)]/95 text-[var(--text)] px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-2xl transition-all hover:scale-105">
                     Quick View
                 </button>
@@ -85,13 +82,10 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
 .product-card:hover {
     border-color: var(--accent);
 }
-.glass-panel-wishlist {
+.glass-panel {
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-}
-html.dark .glass-panel-wishlist {
-    background: rgba(0, 0, 0, 0.3);
 }
 </style>

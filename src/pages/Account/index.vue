@@ -27,8 +27,8 @@ const handleLogout = () => {
                 </div>
             </div>
             <button @click="handleLogout"
-                class="bg-[var(--bg-muted)] text-[var(--text)] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold">Disconnect
-                Token</button>
+                class="bg-[var(--bg-muted)] text-[var(--text)] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold">Log out
+                </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
