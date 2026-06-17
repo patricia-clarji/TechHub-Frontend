@@ -4,6 +4,7 @@ import { useCartStore } from '../../stores/cart';
 import { useUserStore } from '../../stores/user';
 import { useProductsStore } from '../../stores/products';
 import { useWishlistStore } from '../../stores/wishlist';
+import { useNotificationStore } from '../../stores/notifications';
 import { useUIStore } from '../../stores/ui';
 
 const cartStore = useCartStore();
@@ -11,11 +12,13 @@ const userStore = useUserStore();
 const productsStore = useProductsStore();
 const wishlistStore = useWishlistStore();
 const uiStore = useUIStore();
+const notificationStore = useNotificationStore();
 
 const isScrolled = ref(false);
 const isDark = ref(false);
 const isMobileMenuOpen = ref(false);
 const isAccountDropdownOpen = ref(false);
+const isNotificationsDropdownOpen = ref(false);
 
 onMounted(() => {
     window.addEventListener('scroll', () => {
@@ -83,6 +86,48 @@ const toggleDarkMode = () => {
                     </div>
                 </div>
             </Transition>
+
+            <!-- Notifications Trigger -->
+            <div class="relative">
+                <button @click="isNotificationsDropdownOpen = !isNotificationsDropdownOpen"
+                    class="relative text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <span v-if="notificationStore.unreadCount > 0"
+                        class="absolute -top-2 -right-2.5 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                        {{ notificationStore.unreadCount }}
+                    </span>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <Transition name="fade-pop">
+                    <div v-if="isNotificationsDropdownOpen"
+                        @click.away="isNotificationsDropdownOpen = false"
+                        class="absolute right-0 mt-3 w-80 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden py-2 z-[60]">
+                        <div class="px-4 py-3 border-b border-[var(--border)]/40 mb-2 flex justify-between items-center">
+                            <p class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">System Alerts</p>
+                            <button v-if="notificationStore.unreadCount > 0" @click="notificationStore.markAllAsRead()" class="text-[9px] text-[var(--accent)] hover:underline">Mark all as read</button>
+                        </div>
+                        <div v-if="notificationStore.notifications.length > 0" class="max-h-60 overflow-y-auto custom-scrollbar">
+                            <div v-for="notif in notificationStore.notifications" :key="notif.id"
+                                @click="notificationStore.markAsRead(notif.id)"
+                                class="flex items-start gap-3 px-4 py-3 hover:bg-[var(--bg-muted)] transition-colors cursor-pointer"
+                                :class="{'bg-[var(--bg-muted)]/50': !notif.read}">
+                                <i :class="{
+                                    'fa-solid fa-circle-info text-blue-500': notif.type === 'system',
+                                    'fa-solid fa-tag text-green-500': notif.type === 'promo',
+                                    'fa-solid fa-truck-fast text-orange-500': notif.type === 'order',
+                                    'fa-solid fa-heart text-red-500': notif.type === 'wishlist'
+                                }" class="text-xs mt-1"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs" :class="{'font-bold': !notif.read}">{{ notif.message }}</p>
+                                    <p class="text-[9px] text-[var(--text-muted)] mt-1">{{ notif.date }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-4 text-[var(--text-muted)] text-xs">No new system alerts.</div>
+                    </div>
+                </Transition>
+            </div>
 
             <!-- Wishlist Trigger -->
             <router-link to="/wishlist" class="relative text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors hidden sm:block">

@@ -16,7 +16,7 @@ export const useUserStore = defineStore('user', () => {
                 preferences: {
                     language: 'English',
                     currency: 'USD',
-                    notifications: { email: true, push: false, sms: true }
+                    notifications: { email: true, push: true, sms: false } // Default to push notifications
                 }
             };
             return { success: true };
@@ -32,7 +32,7 @@ export const useUserStore = defineStore('user', () => {
                 phone: '',
                 avatar: `https://ui-avatars.com/api/?name=${name}&background=8B6B47&color=fff`,
                 preferences: {
-                    language: 'English', currency: 'USD', notifications: { email: true, push: false, sms: true }
+                    language: 'English', currency: 'USD', notifications: { email: true, push: true, sms: false }
                 }
             };
             return { success: true };
