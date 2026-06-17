@@ -17,8 +17,21 @@ const handleLogout = () => {
             class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2.5rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <div class="flex items-center gap-4">
                 <div
-                    class="w-16 h-16 bg-[var(--accent)] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    {{ userStore.currentUser?.name?.charAt(0) || 'U' }}
+                    class="w-16 h-16 rounded-full overflow-hidden bg-[var(--accent)] flex items-center justify-center">
+
+                    <img
+                        v-if="userStore.currentUser?.avatar"
+                        :src="userStore.currentUser.avatar"
+                        alt="Profile"
+                        class="w-full h-full object-cover"
+                    >
+
+                    <span
+                        v-else
+                        class="text-white text-2xl font-bold">
+                        {{ userStore.currentUser?.name?.charAt(0) || 'U' }}
+                    </span>
+
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold">{{ userStore.currentUser?.name || 'Enterprise User Terminal' }}</h1>

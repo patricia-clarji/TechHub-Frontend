@@ -9,6 +9,7 @@ const routes = [
     { path: '/wishlist', name: 'Wishlist', component: () => import('@/pages/Wishlist/index.vue') },
     { path: '/checkout', name: 'Checkout', component: () => import('@/pages/Checkout/index.vue') },
     { path: '/account', name: 'Account', component: () => import('@/pages/Account/index.vue') },
+    {path: '/settings', name: 'Settings', component: () => import('@/pages/Settings/index.vue')},
     { path: '/faq', name: 'FAQ', component: () => import('@/pages/FAQ/index.vue') },
     { path: '/about', name: 'About', component: () => import('@/pages/About/index.vue') },
     { path: '/contact', name: 'Contact', component: () => import('@/pages/Contact/index.vue') },
