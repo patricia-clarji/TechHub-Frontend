@@ -15,6 +15,8 @@ const productsStore = useProductsStore();
 const uiStore = useUIStore();
 
 const isInWishlist = computed(() => wishlistStore.productIds.includes(props.product.id));
+const isComparing = computed(() => productsStore.compareIds.includes(props.product.id));
+const isLowStock = computed(() => props.product.stock > 0 && props.product.stock < 5);
 </script>
 
 <template>
@@ -30,6 +32,13 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
         <button @click.stop="wishlistStore.toggleWishlist(product.id)" 
             class="absolute top-4 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110">
             <i :class="isInWishlist ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'"></i>
+        </button>
+
+        <!-- Comparison Toggle -->
+        <button @click.stop="productsStore.toggleCompare(product.id)" 
+            class="absolute top-16 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110"
+            :class="{'bg-[var(--accent)]! text-white!': isComparing}">
+            <i class="fa-solid fa-layer-group text-xs"></i>
         </button>
 
         <figure class="relative overflow-hidden aspect-square bg-[var(--bg-muted)]">
@@ -48,6 +57,11 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
         <div class="p-6 flex flex-col flex-grow">
             <div class="flex items-center mb-2">
                 <span class="text-[9px] text-[var(--accent)] font-bold uppercase tracking-[0.2em]">✦ Provisioned Elite</span>
+                <!-- Low Stock Pulse -->
+                <span v-if="isLowStock" class="ml-auto flex items-center gap-1.5 text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                    Only {{ product.stock }} left
+                </span>
             </div>
             <router-link :to="`/products/${product.id}`"
                 class="font-[Playfair_Display] text-xl font-bold leading-tight text-[var(--text)] hover:text-[var(--accent)] mb-3 line-clamp-1 transition-colors">

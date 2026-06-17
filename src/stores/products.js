@@ -504,6 +504,22 @@ export const useProductsStore = defineStore('products', () => {
 
     const searchQueries = ref('');
 
+    // Comparison State
+    const compareIds = ref([]);
+    const toggleCompare = (productId) => {
+        const index = compareIds.value.indexOf(productId);
+        if (index > -1) {
+            compareIds.value.splice(index, 1);
+        } else if (compareIds.value.length < 3) {
+            compareIds.value.push(productId);
+        }
+    };
+
+    const compareProducts = computed(() => {
+        return sampleProducts.value.filter(p => compareIds.value.includes(p.id));
+    });
+
+    // Filtering Logic
     const filteredProducts = computed(() => {
         let products = [...productsWithAvgRating.value]; // Use products with average rating
 
@@ -565,5 +581,5 @@ export const useProductsStore = defineStore('products', () => {
         }
     };
 
-    return { sampleProducts: productsWithAvgRating, categories, brands, filters, sortBy, searchQueries, filteredProducts, resetFilters, submitReview };
+    return { sampleProducts: productsWithAvgRating, categories, brands, filters, sortBy, searchQueries, filteredProducts, resetFilters, submitReview, compareIds, toggleCompare, compareProducts };
 });

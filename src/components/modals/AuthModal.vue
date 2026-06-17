@@ -201,7 +201,7 @@ watch(() => uiStore.authModalOpen, (isOpen) => {
                         @blur="touched.password = true"
                         class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
                         :class="(errors.password && (touched.password || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="At least 6 characters" />
+                        placeholder="At least 6 characters" autocomplete="current-password" />
                     <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
                         <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                     </button>
@@ -224,7 +224,7 @@ watch(() => uiStore.authModalOpen, (isOpen) => {
                         @blur="touched.confirmPassword = true"
                         class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
                         :class="(errors.confirmPassword && (touched.confirmPassword || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="" />
+                        placeholder="" autocomplete="new-password" />
                     <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
                         <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                     </button>

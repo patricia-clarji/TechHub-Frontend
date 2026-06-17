@@ -31,7 +31,7 @@ const handleLogout = () => {
                 </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2">
                 <i class="fa-solid fa-box text-[var(--accent)] text-xl"></i>
                 <h3 class="font-bold text-sm">Deployment Logs</h3>
@@ -50,6 +50,11 @@ const handleLogout = () => {
                 <p class="text-xs text-[var(--text-muted)]">Refine network credential authentication profiles security
                     factors.</p>
             </div>
+            <router-link to="/settings" class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2 hover:border-[var(--accent)] transition-all group">
+                <i class="fa-solid fa-gear text-[var(--accent)] text-xl group-hover:rotate-90 transition-transform duration-500"></i>
+                <h3 class="font-bold text-sm">System Settings</h3>
+                <p class="text-xs text-[var(--text-muted)]">Configure your profile identity, security parameters, and system preferences.</p>
+            </router-link>
         </div>
     </main>
 </template>

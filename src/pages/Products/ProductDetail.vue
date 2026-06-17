@@ -13,6 +13,7 @@ import { useUIStore } from '@/stores/ui';
 import ProductGallery from '@/components/products/ProductGallery.vue';
 import ColorSelector from '@/components/products/ColorSelector.vue';
 import VariantSelector from '@/components/products/VariantSelector.vue';
+import ProductCard from '@/components/cards/ProductCard.vue';
 import ProductTabs from '@/components/products/ProductTabs.vue';
 
 const route = useRoute();
@@ -131,6 +132,17 @@ const product = computed(() => {
     return productsStore.sampleProducts.find(p => String(p.id) === String(route.params.id));
 });
 
+const getHighlightIcon = (text) => {
+    const low = text.toLowerCase();
+    if (low.includes('battery') || low.includes('charge')) return 'fa-battery-full';
+    if (low.includes('camera') || low.includes('lens')) return 'fa-camera';
+    if (low.includes('display') || low.includes('oled') || low.includes('screen')) return 'fa-display';
+    if (low.includes('fast') || low.includes('performance') || low.includes('chip')) return 'fa-bolt';
+    if (low.includes('warranty') || low.includes('secure')) return 'fa-shield-halved';
+    if (low.includes('wireless')) return 'fa-wifi';
+    return 'fa-microchip';
+};
+
 // Sync Color with Image
 watch(selectedColor, (newColor) => {
     if (newColor && typeof newColor.imgIndex === 'number') {
@@ -208,10 +220,24 @@ const relatedProducts = computed(() => {
         .slice(0, 3);
 });
 
+const recentlyViewedProducts = computed(() => {
+    return recentlyViewedStore.productIds
+        .filter(id => id !== product.value?.id)
+        .map(id => productsStore.sampleProducts.find(p => p.id === id))
+        .filter(p => !!p)
+        .slice(0, 4);
+});
+
 const handleAddToCart = () => {
     if (product.value) {
         cartStore.addToCart(product.value.id, selectedQuantity.value);
     }
+};
+
+const handleBuyNow = () => {
+    cartStore.clearCart();
+    cartStore.addToCart(product.value.id, selectedQuantity.value);
+    router.push('/cart');
 };
 
 const isWishlisted = computed(() => {
@@ -298,7 +324,7 @@ watch(() => route.params.id, () => {
                 <div class="grid grid-cols-2 gap-4">
                     <div v-for="highlight in product.features.slice(0,4)" :key="highlight" 
                         class="p-5 rounded-[2rem] bg-[var(--bg-card)] border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow group">
-                        <i class="fa-solid fa-microchip text-[var(--accent)] text-xl mb-3 group-hover:scale-110 transition-transform"></i>
+                        <i :class="['fa-solid', getHighlightIcon(highlight)]" class="text-[var(--accent)] text-xl mb-3 group-hover:scale-110 transition-transform"></i>
                         <h5 class="text-[10px] font-black uppercase tracking-widest">{{ highlight }}</h5>
                     </div>
                 </div>
@@ -328,7 +354,7 @@ watch(() => route.params.id, () => {
                             Integrate Module (Add to Cart)
                         </button>
                     </div>
-                    <button v-if="product.stock > 0" class="w-full mt-3 py-4 border-2 border-[var(--accent)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all">
+                    <button @click="handleBuyNow" v-if="product.stock > 0" class="w-full mt-3 py-4 border-2 border-[var(--accent)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all">
                         Immediate Checkout (Buy Now)
                     </button>
                 </div>
@@ -428,6 +454,24 @@ watch(() => route.params.id, () => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Recently Viewed -->
+        <section class="mt-32 pt-24 border-t border-[var(--border)] reveal" v-if="recentlyViewedProducts.length > 0">
+             <div class="flex items-end justify-between mb-12">
+                <div class="space-y-3">
+                    <span class="section-badge">Retrospective Matrix</span>
+                    <h2 class="font-[Playfair_Display] text-3xl font-bold">Recently Viewed</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <ProductCard 
+                    v-for="p in recentlyViewedProducts" 
+                    :key="p.id" 
+                    :product="p" 
+                />
             </div>
         </section>
 

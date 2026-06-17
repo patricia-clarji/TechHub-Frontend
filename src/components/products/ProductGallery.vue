@@ -7,12 +7,28 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+
+const touchStart = ref(0);
+const handleTouchStart = (e) => touchStart.value = e.touches[0].clientX;
+const handleTouchEnd = (e) => {
+    const delta = e.changedTouches[0].clientX - touchStart.value;
+    if (Math.abs(delta) > 50) {
+        if (delta > 0 && props.modelValue > 0) {
+            emit('update:modelValue', props.modelValue - 1);
+        } else if (delta < 0 && props.modelValue < props.images.length - 1) {
+            emit('update:modelValue', props.modelValue + 1);
+        }
+    }
+};
 </script>
 
 <template>
     <div class="space-y-4">
         <!-- Main Image View -->
-        <div class="relative aspect-square rounded-[2rem] overflow-hidden bg-[var(--bg-muted)] group cursor-zoom-in shadow-xl">
+        <div 
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
+            class="relative aspect-square rounded-[2rem] overflow-hidden bg-[var(--bg-muted)] group cursor-zoom-in shadow-xl">
             <img 
                 :src="images[modelValue]" 
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

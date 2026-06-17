@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { useWishlistStore } from '@/stores/wishlist';
 import { useProductsStore } from '@/stores/products';
+import { useUIStore } from '@/stores/ui';
 
 const props = defineProps({
     product: { type: Object, required: true }
@@ -11,6 +12,7 @@ const props = defineProps({
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
 const productsStore = useProductsStore();
+const uiStore = useUIStore();
 
 const isInWishlist = computed(() => wishlistStore.productIds.includes(props.product.id));
 </script>
@@ -35,7 +37,7 @@ const isInWishlist = computed(() => wishlistStore.productIds.includes(props.prod
             
             <!-- Quick View Overlay -->
             <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                <button @click="productsStore.quickViewProductId = product.id" 
+                <button @click="uiStore.openQuickView(product.id)" 
                     class="bg-white/95 dark:bg-[var(--bg-card)]/95 text-[var(--text)] px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-2xl transition-all hover:scale-105">
                     Quick View
                 </button>
