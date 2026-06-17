@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { useCartStore } from './cart';
 
 export const useUserStore = defineStore('user', () => {
-    const currentUser = ref(null);
+    const currentUser = ref(JSON.parse(localStorage.getItem('techhub_user')) || null);
 
     const login = (email, password) => {
         // Mock login logic - in production, this would be an API call
@@ -40,7 +41,9 @@ export const useUserStore = defineStore('user', () => {
     };
 
     const logout = () => {
+        const cartStore = useCartStore();
         currentUser.value = null;
+        cartStore.clearCart();
     };
 
     const updateProfile = (data) => {
@@ -54,6 +57,11 @@ export const useUserStore = defineStore('user', () => {
         currentUser.value.preferences = { ...currentUser.value.preferences, ...prefs };
         return { success: true };
     };
+
+    // Persistent Session Logic
+    watch(currentUser, (newVal) => {
+        localStorage.setItem('techhub_user', JSON.stringify(newVal));
+    }, { deep: true });
 
     return {
         currentUser,

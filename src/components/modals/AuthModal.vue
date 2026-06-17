@@ -14,6 +14,7 @@ const password = ref('');
 const name = ref('');
 const confirmPassword = ref('');
 const wasSubmitted = ref(false);
+const isProcessing = ref(false);
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -92,15 +93,21 @@ const handleSubmit = () => {
     if (hasErrors) {
         return;
     }
-
-    if (isLogin.value) {
-        userStore.login(email.value, password.value);
-    } else {
-        userStore.signup(name.value, email.value, password.value);
-    }
     
-    resetForm();
-    uiStore.authModalOpen = false;
+    isProcessing.value = true;
+
+    // Simulate network delay
+    setTimeout(() => {
+        if (isLogin.value) {
+            userStore.login(email.value, password.value);
+        } else {
+            userStore.signup(name.value, email.value, password.value);
+        }
+        resetForm();
+        uiStore.authModalOpen = false;
+        isProcessing.value = false;
+        toastStore.showToast(`System authentication established. Welcome, ${userStore.currentUser.name}.`, 'fa-user-check');
+    }, 1000);
 };
 
 const handleForgotPasswordSubmit = () => {

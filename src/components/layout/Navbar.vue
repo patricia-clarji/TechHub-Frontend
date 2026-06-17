@@ -15,6 +15,7 @@ const uiStore = useUIStore();
 const isScrolled = ref(false);
 const isDark = ref(false);
 const isMobileMenuOpen = ref(false);
+const isAccountDropdownOpen = ref(false);
 
 onMounted(() => {
     window.addEventListener('scroll', () => {
@@ -62,6 +63,27 @@ const toggleDarkMode = () => {
                 <i class="fa-solid fa-magnifying-glass text-sm"></i>
             </button>
 
+            <!-- Search Results Mini-Overlay -->
+            <Transition name="fade">
+                <div v-if="uiStore.searchBarOpen" class="fixed inset-0 top-[72px] bg-black/20 backdrop-blur-md z-[45] flex justify-center p-6">
+                    <div class="w-full max-w-2xl bg-[var(--bg-card)] rounded-[2rem] border border-[var(--border)] shadow-2xl h-fit max-h-[70vh] overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-[var(--border)]">
+                            <input v-model="productsStore.searchQueries" type="text" placeholder="Search for hardware IDs..." autofocus
+                                class="w-full bg-[var(--bg-muted)]/50 border border-[var(--border)] rounded-xl px-6 py-4 text-sm focus:outline-none focus:border-[var(--accent)]" />
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            <p class="text-[9px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-4 px-2">System Matches</p>
+                            <router-link v-for="p in productsStore.filteredProducts.slice(0, 5)" :key="p.id" :to="`/products/${p.id}`" @click="uiStore.toggleSearch()"
+                                class="flex items-center gap-4 p-3 rounded-2xl hover:bg-[var(--bg-muted)] transition-all group">
+                                <img :src="p.img" class="w-12 h-12 rounded-xl object-cover" />
+                                <div class="flex-1"><h4 class="text-xs font-bold">{{ p.name }}</h4><p class="text-[10px] text-[var(--text-muted)]">{{ p.category }}</p></div>
+                                <span class="text-xs font-black text-[var(--accent)]">$ {{ p.price }}</span>
+                            </router-link>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+
             <!-- Wishlist Trigger -->
             <router-link to="/wishlist" class="relative text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors hidden sm:block">
                 <i class="fa-regular fa-heart text-sm"></i>
@@ -78,12 +100,36 @@ const toggleDarkMode = () => {
             </button>
 
             <!-- Account -->
-            <button @click="userStore.currentUser ? $router.push('/account') : uiStore.toggleAuth()"
-                class="group flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
-                <i class="fa-solid fa-circle-user text-sm"></i>
-                <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.currentUser ? 'Profile' : 'Login' }}</span>
-                <i class="fa-solid fa-arrow-right text-[8px] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-            </button>
+            <div class="relative">
+                <button @click="userStore.currentUser ? isAccountDropdownOpen = !isAccountDropdownOpen : uiStore.toggleAuth()"
+                    class="group flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
+                    <i class="fa-solid fa-circle-user text-sm"></i>
+                    <span class="text-[10px] font-bold uppercase hidden sm:inline">
+                        {{ userStore.currentUser ? userStore.currentUser.name : 'Login' }}
+                    </span>
+                    <i v-if="userStore.currentUser" class="fa-solid fa-chevron-down text-[8px] transition-transform" :class="{'rotate-180': isAccountDropdownOpen}"></i>
+                    <i v-else class="fa-solid fa-arrow-right text-[8px] opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+                </button>
+
+                <!-- Account Dropdown Menu -->
+                <div v-if="isAccountDropdownOpen && userStore.currentUser" 
+                    class="absolute right-0 mt-3 w-56 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden py-2 z-[60] animate-[settleIn_0.3s_ease]">
+                    <div class="px-4 py-3 border-b border-[var(--border)]/40 mb-2">
+                        <p class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Active Session</p>
+                        <p class="text-xs font-bold truncate">{{ userStore.currentUser.email }}</p>
+                    </div>
+                    <router-link to="/account" @click="isAccountDropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--bg-muted)] transition-colors">
+                        <i class="fa-solid fa-gauge-high text-[var(--accent)]"></i> Dashboard
+                    </router-link>
+                    <router-link to="/settings" @click="isAccountDropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--bg-muted)] transition-colors">
+                        <i class="fa-solid fa-gear text-[var(--accent)]"></i> System Settings
+                    </router-link>
+                    <div class="h-px bg-[var(--border)]/40 my-2"></div>
+                    <button @click="userStore.logout(); isAccountDropdownOpen = false" class="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors">
+                        <i class="fa-solid fa-power-off"></i> Terminate Session
+                    </button>
+                </div>
+            </div>
 
             <!-- Cart Trigger -->
             <button @click="uiStore.toggleCart()" class="relative group z-10">
