@@ -4,4 +4,7 @@ package.json
 .vscode/
 .env
 .env.local
-dist/
+dist/dist/ 
+node_modules/ 
+.env 
+.env.local 
