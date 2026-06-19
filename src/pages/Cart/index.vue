@@ -36,25 +36,31 @@ onMounted(() => {
         <div v-if="cartItems.length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             <!-- Cart Items List -->
             <div class="lg:col-span-8 space-y-6">
-                <div v-for="item in cartItems" :key="item.id" class="reveal flex flex-col sm:flex-row gap-6 bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[2rem] transition-all hover:shadow-xl">
+                <div v-for="item in cartItems" :key="item.id"
+                    class="reveal flex flex-col sm:flex-row gap-6 bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[2rem] transition-all hover:shadow-xl">
                     <img :src="item.img" :alt="item.name" class="w-full sm:w-32 h-32 object-cover rounded-2xl">
                     <div class="flex-1 flex flex-col justify-between">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">{{ item.category }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)]">{{
+                                    item.category }}</span>
                                 <h3 class="font-[Playfair_Display] text-xl font-bold mt-1">{{ item.name }}</h3>
                             </div>
-                            <button @click="cartStore.removeFromCart(item.id)" class="text-[var(--text-muted)] hover:text-red-500 transition-colors">
+                            <button @click="cartStore.removeFromCart(item.id)"
+                                class="text-[var(--text-muted)] hover:text-red-500 transition-colors">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>
                         <div class="flex justify-between items-end mt-4">
-                            <div class="flex items-center bg-[var(--bg-muted)] rounded-xl p-1 border border-[var(--border)]">
-                                <button @click="cartStore.addToCart(item.id, -1)" :disabled="item.quantity <= 1" class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)] disabled:opacity-30">
+                            <div
+                                class="flex items-center bg-[var(--bg-muted)] rounded-xl p-1 border border-[var(--border)]">
+                                <button @click="cartStore.addToCart(item.id, -1)" :disabled="item.quantity <= 1"
+                                    class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)] disabled:opacity-30">
                                     <i class="fa-solid fa-minus"></i>
                                 </button>
                                 <span class="w-8 text-center font-bold text-sm">{{ item.quantity }}</span>
-                                <button @click="cartStore.addToCart(item.id, 1)" class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)]">
+                                <button @click="cartStore.addToCart(item.id, 1)"
+                                    class="w-8 h-8 flex items-center justify-center text-xs hover:text-[var(--accent)]">
                                     <i class="fa-solid fa-plus"></i>
                                 </button>
                             </div>
@@ -73,7 +79,8 @@ onMounted(() => {
                             <span class="text-[var(--text-muted)]">Subtotal Matrix</span>
                             <span class="font-bold">$ {{ cartStore.subtotal.toFixed(2) }}</span>
                         </div>
-                        <div v-if="cartStore.discountTotal > 0" class="flex justify-between text-sm text-green-600 font-bold">
+                        <div v-if="cartStore.discountTotal > 0"
+                            class="flex justify-between text-sm text-green-600 font-bold">
                             <span class="text-[var(--text-muted)]">Promotional Credit Applied</span>
                             <span>-$ {{ cartStore.discountTotal.toFixed(2) }}</span>
                         </div>
@@ -81,10 +88,12 @@ onMounted(() => {
                         <div v-if="cartStore.discountTotal > 0" class="border-t border-[var(--border)] pt-4"></div>
                         <div class="flex justify-between text-lg pt-4 border-t border-[var(--border)]">
                             <span class="font-bold">Total Allocation</span>
-                            <span class="font-black text-[var(--accent)]">$ {{ cartStore.totalAmount.toFixed(2) }}</span>
+                            <span class="font-black text-[var(--accent)]">$ {{ cartStore.totalAmount.toFixed(2)
+                                }}</span>
                         </div>
                     </div>
-                    <router-link to="/checkout" class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
+                    <router-link to="/checkout"
+                        class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
                         Authorize Checkout
                     </router-link>
                 </div>
@@ -93,7 +102,9 @@ onMounted(() => {
 
         <div v-else class="text-center py-32 bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border)] reveal">
             <p class="text-[var(--text-muted)] mb-8">Your deployment basket is currently empty.</p>
-            <router-link to="/products" class="inline-block bg-[var(--accent)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest premium-btn">Return to Catalog</router-link>
+            <router-link to="/products"
+                class="inline-block bg-[var(--accent)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest premium-btn">Return
+                to Catalog</router-link>
         </div>
     </main>
 </template>

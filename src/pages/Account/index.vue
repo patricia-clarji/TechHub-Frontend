@@ -23,19 +23,12 @@ watch(() => userStore.currentUser, (newUser) => {
         <div
             class="bg-[var(--bg-card)] border border-[var(--border)] p-8 rounded-[2.5rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <div class="flex items-center gap-4">
-                <div
-                    class="w-16 h-16 rounded-full overflow-hidden bg-[var(--accent)] flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full overflow-hidden bg-[var(--accent)] flex items-center justify-center">
 
-                    <img
-                        v-if="userStore.currentUser?.avatar"
-                        :src="userStore.currentUser.avatar"
-                        alt="Profile"
-                        class="w-full h-full object-cover"
-                    >
+                    <img v-if="userStore.currentUser?.avatar" :src="userStore.currentUser.avatar" alt="Profile"
+                        class="w-full h-full object-cover">
 
-                    <span
-                        v-else
-                        class="text-white text-2xl font-bold">
+                    <span v-else class="text-white text-2xl font-bold">
                         {{ userStore.currentUser?.name?.charAt(0) || 'U' }}
                     </span>
 
@@ -47,8 +40,9 @@ watch(() => userStore.currentUser, (newUser) => {
                 </div>
             </div>
             <button @click="handleLogout"
-                class="bg-[var(--bg-muted)] text-[var(--text)] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold">Log out
-                </button>
+                class="bg-[var(--bg-muted)] text-[var(--text)] px-6 py-2.5 rounded-full text-xs uppercase tracking-wider font-bold">Log
+                out
+            </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -70,10 +64,13 @@ watch(() => userStore.currentUser, (newUser) => {
                 <p class="text-xs text-[var(--text-muted)]">Refine network credential authentication profiles security
                     factors.</p>
             </div>
-            <router-link to="/settings" class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2 hover:border-[var(--accent)] transition-all group">
-                <i class="fa-solid fa-gear text-[var(--accent)] text-xl group-hover:rotate-90 transition-transform duration-500"></i>
+            <router-link to="/settings"
+                class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2 hover:border-[var(--accent)] transition-all group">
+                <i
+                    class="fa-solid fa-gear text-[var(--accent)] text-xl group-hover:rotate-90 transition-transform duration-500"></i>
                 <h3 class="font-bold text-sm">System Settings</h3>
-                <p class="text-xs text-[var(--text-muted)]">Configure your profile identity, security parameters, and system preferences.</p>
+                <p class="text-xs text-[var(--text-muted)]">Configure your profile identity, security parameters, and
+                    system preferences.</p>
             </router-link>
         </div>
     </main>

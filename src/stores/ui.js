@@ -12,10 +12,12 @@ export const useUIStore = defineStore('ui', () => {
     const toggleAuth = () => authModalOpen.value = !authModalOpen.value;
     const toggleCart = () => cartDrawerOpen.value = !cartDrawerOpen.value;
     const toggleChat = () => chatWindowOpen.value = !chatWindowOpen.value;
-    
+
     const openQuickView = (id) => quickViewProductId.value = id;
     const closeQuickView = () => quickViewProductId.value = null;
 
-    return { searchModalOpen, authModalOpen, cartDrawerOpen, chatWindowOpen, quickViewProductId, 
-             toggleSearch, toggleAuth, toggleCart, toggleChat, openQuickView, closeQuickView };
+    return {
+        searchModalOpen, authModalOpen, cartDrawerOpen, chatWindowOpen, quickViewProductId,
+        toggleSearch, toggleAuth, toggleCart, toggleChat, openQuickView, closeQuickView
+    };
 });
