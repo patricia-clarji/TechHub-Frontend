@@ -11,135 +11,135 @@ const toastStore = useToastStore()
 const activeTab = ref('profile')
 
 const profile = ref({
-  name: '',
-  email: '',
-  phone: ''
+    name: '',
+    email: '',
+    phone: ''
 })
 
 const passwords = ref({
-  current: '',
-  new: '',
-  confirm: ''
+    current: '',
+    new: '',
+    confirm: ''
 })
 
 const passwordErrors = ref({
-  current: '',
-  new: '',
-  confirm: ''
+    current: '',
+    new: '',
+    confirm: ''
 })
 
 const billing = ref({
-  cardName: '',
-  cardNumber: '',
-  expiry: '',
-  cvv: '',
-  address: ''
+    cardName: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    address: ''
 })
 
 const billingErrors = ref({
-  cardName: '',
-  cardNumber: '',
-  expiry: '',
-  cvv: '',
-  address: ''
+    cardName: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    address: ''
 })
 
 const notifications = ref({
-  orders: true,
-  promotions: false,
-  alerts: true
+    orders: true,
+    promotions: false,
+    alerts: true
 })
 
 const profilePreview = computed(() => {
-  return userStore.currentUser?.avatar
+    return userStore.currentUser?.avatar
 })
 
 // Sync form values with store data
 const syncFormValues = (newUser) => {
-  if (newUser) {
-    profile.value = {
-      name: newUser.name || '',
-      email: newUser.email || '',
-      phone: newUser.phone || ''
-    }
+    if (newUser) {
+        profile.value = {
+            name: newUser.name || '',
+            email: newUser.email || '',
+            phone: newUser.phone || ''
+        }
 
-    const userNotifs = newUser.notifications || newUser.preferences?.notifications
-    if (userNotifs) {
-      notifications.value = {
-        orders: userNotifs.orders !== undefined ? userNotifs.orders : true,
-        promotions: userNotifs.promotions !== undefined ? userNotifs.promotions : false,
-        alerts: userNotifs.alerts !== undefined ? userNotifs.alerts : true
-      }
-    }
+        const userNotifs = newUser.notifications || newUser.preferences?.notifications
+        if (userNotifs) {
+            notifications.value = {
+                orders: userNotifs.orders !== undefined ? userNotifs.orders : true,
+                promotions: userNotifs.promotions !== undefined ? userNotifs.promotions : false,
+                alerts: userNotifs.alerts !== undefined ? userNotifs.alerts : true
+            }
+        }
 
-    if (newUser.billing) {
-      billing.value = {
-        cardName: newUser.billing.cardName || '',
-        cardNumber: newUser.billing.cardNumber || '',
-        expiry: newUser.billing.expiry || '',
-        cvv: newUser.billing.cvv || '',
-        address: newUser.billing.address || ''
-      }
+        if (newUser.billing) {
+            billing.value = {
+                cardName: newUser.billing.cardName || '',
+                cardNumber: newUser.billing.cardNumber || '',
+                expiry: newUser.billing.expiry || '',
+                cvv: newUser.billing.cvv || '',
+                address: newUser.billing.address || ''
+            }
+        }
     }
-  }
 }
 
 watch(() => userStore.currentUser, (newUser) => {
-  if (!newUser) {
-    router.push('/')
-  } else {
-    syncFormValues(newUser)
-  }
+    if (!newUser) {
+        router.push('/')
+    } else {
+        syncFormValues(newUser)
+    }
 }, { immediate: true })
 
 function saveNotifications() {
-  const res = userStore.updateProfile({
-    notifications: notifications.value
-  })
-  if (res && res.success) {
-    toastStore.showToast('Notification preferences updated successfully.', 'fa-bell')
-  }
+    const res = userStore.updateProfile({
+        notifications: notifications.value
+    })
+    if (res && res.success) {
+        toastStore.showToast('Notification preferences updated successfully.', 'fa-bell')
+    }
 }
 
 function saveProfile() {
-  const res = userStore.updateProfile({
-    name: profile.value.name,
-    email: profile.value.email,
-    phone: profile.value.phone,
-    avatar: userStore.currentUser?.avatar,
-    notifications: notifications.value
-  })
-  if (res && res.success) {
-    toastStore.showToast('Profile settings updated successfully.', 'fa-user-check')
-  }
+    const res = userStore.updateProfile({
+        name: profile.value.name,
+        email: profile.value.email,
+        phone: profile.value.phone,
+        avatar: userStore.currentUser?.avatar,
+        notifications: notifications.value
+    })
+    if (res && res.success) {
+        toastStore.showToast('Profile settings updated successfully.', 'fa-user-check')
+    }
 }
 
 function handleImageUpload(event) {
-  const file = event.target.files[0]
+    const file = event.target.files[0]
 
-  if (!file) return
+    if (!file) return
 
-  const reader = new FileReader()
+    const reader = new FileReader()
 
-  reader.onload = () => {
-    const res = userStore.updateProfile({
-      avatar: reader.result
-    })
-    if (res && res.success) {
-      toastStore.showToast('Profile picture updated.', 'fa-image')
+    reader.onload = () => {
+        const res = userStore.updateProfile({
+            avatar: reader.result
+        })
+        if (res && res.success) {
+            toastStore.showToast('Profile picture updated.', 'fa-image')
+        }
     }
-  }
 
-  reader.readAsDataURL(file)
+    reader.readAsDataURL(file)
 }
 
 function removeProfilePicture() {
-  const res = userStore.updateProfile({
-    avatar: null
-  })
-  if (res && res.success) {
-    toastStore.showToast('Profile picture removed.', 'fa-trash-can')
-  }
+    const res = userStore.updateProfile({
+        avatar: null
+    })
+    if (res && res.success) {
+        toastStore.showToast('Profile picture removed.', 'fa-trash-can')
+    }
 }
 
 function saveBilling() {
@@ -155,7 +155,7 @@ function saveBilling() {
 
     if (!billing.value.cardName.trim()) {
         billingErrors.value.cardName =
-        'Card holder name is required'
+            'Card holder name is required'
         valid = false
     }
 
@@ -164,41 +164,41 @@ function saveBilling() {
 
     if (!cardNumber) {
         billingErrors.value.cardNumber =
-        'Card number is required'
+            'Card number is required'
         valid = false
     }
     else if (!/^\d+$/.test(cardNumber)) {
         billingErrors.value.cardNumber =
-        'Card number must contain only digits'
+            'Card number must contain only digits'
         valid = false
     }
     else if (cardNumber.length !== 16) {
         billingErrors.value.cardNumber =
-        'Card number must be 16 digits'
+            'Card number must be 16 digits'
         valid = false
     }
 
     if (
         !/^(0[1-9]|1[0-2])\/\d{2}$/
-        .test(billing.value.expiry)
+            .test(billing.value.expiry)
     ) {
         billingErrors.value.expiry =
-        'Use MM/YY format'
+            'Use MM/YY format'
         valid = false
     }
 
     if (
         !/^\d{3,4}$/
-        .test(billing.value.cvv)
+            .test(billing.value.cvv)
     ) {
         billingErrors.value.cvv =
-        'CVV must be 3 or 4 digits'
+            'CVV must be 3 or 4 digits'
         valid = false
     }
 
     if (!billing.value.address.trim()) {
         billingErrors.value.address =
-        'Billing address is required'
+            'Billing address is required'
         valid = false
     }
 
@@ -229,24 +229,24 @@ function updatePassword() {
 
     if (!passwords.value.current.trim()) {
         passwordErrors.value.current =
-        'Current password is required'
+            'Current password is required'
         valid = false
     }
 
     if (!passwords.value.new.trim()) {
         passwordErrors.value.new =
-        'New password is required'
+            'New password is required'
         valid = false
     }
     else if (passwords.value.new.length < 8) {
         passwordErrors.value.new =
-        'Password must be at least 8 characters'
+            'Password must be at least 8 characters'
         valid = false
     }
 
     if (!passwords.value.confirm.trim()) {
         passwordErrors.value.confirm =
-        'Please confirm your password'
+            'Please confirm your password'
         valid = false
     }
 
@@ -256,7 +256,7 @@ function updatePassword() {
         passwords.value.current === passwords.value.new
     ) {
         passwordErrors.value.new =
-        'New password must be different'
+            'New password must be different'
         valid = false
     }
 
@@ -266,7 +266,7 @@ function updatePassword() {
         passwords.value.new !== passwords.value.confirm
     ) {
         passwordErrors.value.confirm =
-        'Passwords do not match'
+            'Passwords do not match'
         valid = false
     }
 
@@ -286,45 +286,43 @@ function updatePassword() {
 }
 
 function deleteAccount() {
-  if (confirm("Are you sure you want to permanently delete your account? This action cannot be undone and you will be logged out.")) {
-    toastStore.showToast('Your account was permanently deleted.', 'fa-trash-can')
-    
-    setTimeout(() => {
-      userStore.deleteAccount()
-    }, 100)
-  }
+    if (confirm("Are you sure you want to permanently delete your account? This action cannot be undone and you will be logged out.")) {
+        toastStore.showToast('Your account was permanently deleted.', 'fa-trash-can')
+
+        setTimeout(() => {
+            userStore.deleteAccount()
+        }, 100)
+    }
 }
 </script>
 
 <template>
-  <main class="pt-32 pb-20 max-w-7xl mx-auto px-6">
+    <main class="pt-32 pb-20 max-w-7xl mx-auto px-6">
 
-    <!-- Header -->
+        <!-- Header -->
 
-    <div class="text-center mb-12">
-      <span class="section-badge">
-        ACCOUNT CENTER
-      </span>
+        <div class="text-center mb-12">
+            <span class="section-badge">
+                ACCOUNT CENTER
+            </span>
 
-      <h1 class="font-[Playfair_Display] text-5xl font-extrabold mt-4">
-        Settings
-      </h1>
+            <h1 class="font-[Playfair_Display] text-5xl font-extrabold mt-4">
+                Settings
+            </h1>
 
-      <p class="text-sm text-[var(--text-muted)] mt-4 max-w-xl mx-auto">
-        Manage your account information, security settings,
-        billing details and notification preferences.
-      </p>
-    </div>
+            <p class="text-sm text-[var(--text-muted)] mt-4 max-w-xl mx-auto">
+                Manage your account information, security settings,
+                billing details and notification preferences.
+            </p>
+        </div>
 
-    <!-- Profile Summary Card -->
+        <!-- Profile Summary Card -->
 
-    <div
-      class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-8 mb-8">
+        <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-8 mb-8">
 
-      <div class="flex items-center gap-6">
+            <div class="flex items-center gap-6">
 
-        <div
-            class="
+                <div class="
             w-32
             h-32
             rounded-full
@@ -334,119 +332,96 @@ function deleteAccount() {
             items-center
             justify-center">
 
-            <img
-                v-if="profilePreview"
-                :src="profilePreview"
-                alt="Profile"
-                class="w-full h-full object-cover"
-            >
-            <span
-                v-else
-                class="text-white text-5xl font-bold uppercase">
+                    <img v-if="profilePreview" :src="profilePreview" alt="Profile" class="w-full h-full object-cover">
+                    <span v-else class="text-white text-5xl font-bold uppercase">
 
-                {{ profile.name?.charAt(0) || 'U' }}
+                        {{ profile.name?.charAt(0) || 'U' }}
 
-            </span>
+                    </span>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold">
+                        {{ profile.name }}
+                    </h2>
+
+                    <p class="text-[var(--text-muted)]">
+                        {{ profile.email }}
+                    </p>
+                </div>
+
+            </div>
         </div>
 
-        <div>
-            <h2 class="text-2xl font-bold">
-            {{ profile.name }}
-            </h2>
+        <!-- Main Layout -->
 
-            <p class="text-[var(--text-muted)]">
-            {{ profile.email }}
-            </p>
-        </div>
+        <div class="flex flex-col lg:flex-row gap-8">
 
-        </div>
-    </div>
+            <!-- Sidebar -->
 
-    <!-- Main Layout -->
+            <aside class="lg:w-72 shrink-0 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-6">
 
-    <div class="flex flex-col lg:flex-row gap-8">
+                <h3 class="font-bold mb-6">
+                    Settings
+                </h3>
 
-      <!-- Sidebar -->
+                <div class="space-y-3">
 
-      <aside
-        class="lg:w-72 shrink-0 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-6">
+                    <button @click="activeTab = 'profile'"
+                        class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition" :class="activeTab === 'profile'
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'hover:bg-[var(--bg-muted)]'">
+                        Profile
+                    </button>
 
-        <h3 class="font-bold mb-6">
-          Settings
-        </h3>
+                    <button @click="activeTab = 'security'"
+                        class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition" :class="activeTab === 'security'
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'hover:bg-[var(--bg-muted)]'">
+                        Security
+                    </button>
 
-        <div class="space-y-3">
+                    <button @click="activeTab = 'billing'"
+                        class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition" :class="activeTab === 'billing'
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'hover:bg-[var(--bg-muted)]'">
+                        Billing
+                    </button>
 
-          <button
-            @click="activeTab = 'profile'"
-            class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition"
-            :class="activeTab === 'profile'
-              ? 'bg-[var(--accent)] text-white'
-              : 'hover:bg-[var(--bg-muted)]'"
-          >
-            Profile
-          </button>
+                    <button @click="activeTab = 'notifications'"
+                        class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition" :class="activeTab === 'notifications'
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'hover:bg-[var(--bg-muted)]'">
+                        Notifications
+                    </button>
 
-          <button
-            @click="activeTab = 'security'"
-            class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition"
-            :class="activeTab === 'security'
-              ? 'bg-[var(--accent)] text-white'
-              : 'hover:bg-[var(--bg-muted)]'"
-          >
-            Security
-          </button>
+                </div>
 
-          <button
-            @click="activeTab = 'billing'"
-            class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition"
-            :class="activeTab === 'billing'
-              ? 'bg-[var(--accent)] text-white'
-              : 'hover:bg-[var(--bg-muted)]'"
-          >
-            Billing
-          </button>
+            </aside>
 
-          <button
-            @click="activeTab = 'notifications'"
-            class="cursor-pointer w-full text-left px-4 py-3 rounded-xl transition"
-            :class="activeTab === 'notifications'
-              ? 'bg-[var(--accent)] text-white'
-              : 'hover:bg-[var(--bg-muted)]'"
-          >
-            Notifications
-          </button>
+            <!-- Content -->
 
-        </div>
+            <section class="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-8">
 
-      </aside>
+                <!-- Profile -->
 
-      <!-- Content -->
+                <div v-if="activeTab === 'profile'">
 
-      <section
-        class="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-8">
+                    <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
+                        Profile Settings
+                    </h2>
 
-        <!-- Profile -->
+                    <p class="text-[var(--text-muted)] mb-8">
+                        Update your personal information.
+                    </p>
 
-        <div v-if="activeTab === 'profile'">
+                    <div class="flex flex-col lg:flex-row gap-10">
 
-        <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
-            Profile Settings
-        </h2>
+                        <!-- Profile Panel -->
 
-        <p class="text-[var(--text-muted)] mb-8">
-            Update your personal information.
-        </p>
+                        <div class="w-full lg:w-64 flex flex-col items-center justify-center text-center shrink-0">
 
-        <div class="flex flex-col lg:flex-row gap-10">
-
-            <!-- Profile Panel -->
-
-            <div
-            class="w-full lg:w-64 flex flex-col items-center justify-center text-center shrink-0">
-
-                <div
-                    class="
+                            <div class="
                     w-32
                     h-32
                     rounded-full
@@ -456,23 +431,16 @@ function deleteAccount() {
                     items-center
                     justify-center">
 
-                    <img
-                        v-if="profilePreview"
-                        :src="profilePreview"
-                        alt="Profile"
-                        class="w-full h-full object-cover"
-                    >
-                    <span
-                        v-else
-                        class="text-white text-5xl font-bold uppercase">
+                                <img v-if="profilePreview" :src="profilePreview" alt="Profile"
+                                    class="w-full h-full object-cover">
+                                <span v-else class="text-white text-5xl font-bold uppercase">
 
-                        {{ profile.name?.charAt(0) || 'U' }}
+                                    {{ profile.name?.charAt(0) || 'U' }}
 
-                    </span>
-                </div>
+                                </span>
+                            </div>
 
-                <label
-                    class="
+                            <label class="
                     mt-5
                     cursor-pointer
                     px-5
@@ -486,18 +454,12 @@ function deleteAccount() {
                     hover:text-white
                     transition">
 
-                    Change Picture
+                                Change Picture
 
-                    <input
-                    type="file"
-                    class="hidden"
-                    @change="handleImageUpload"
-                    >
-                </label>
+                                <input type="file" class="hidden" @change="handleImageUpload">
+                            </label>
 
-                <button
-                    @click="removeProfilePicture"
-                    class="
+                            <button @click="removeProfilePicture" class="
                     mt-5
                     cursor-pointer
                     px-5
@@ -509,35 +471,30 @@ function deleteAccount() {
                     font-medium
                     hover:bg-[var(--accent)]
                     hover:text-white
-                    transition"
-                >
-                    Remove Picture
+                    transition">
+                                Remove Picture
 
-                </button>
+                            </button>
 
-            </div>
+                        </div>
 
-            <!-- Divider -->
+                        <!-- Divider -->
 
-            <div
-            class="hidden lg:block w-px bg-[var(--border)]">
-            </div>
+                        <div class="hidden lg:block w-px bg-[var(--border)]">
+                        </div>
 
-            <!-- Form -->
+                        <!-- Form -->
 
-            <div class="flex-1 pt-4">
+                        <div class="flex-1 pt-4">
 
-            <div class="space-y-6">
+                            <div class="space-y-6">
 
-                <div>
-                <label class="block mb-2 font-medium">
-                    Full Name
-                </label>
+                                <div>
+                                    <label class="block mb-2 font-medium">
+                                        Full Name
+                                    </label>
 
-                <input
-                    v-model="profile.name"
-                    type="text"
-                    class="
+                                    <input v-model="profile.name" type="text" class="
                     w-full
                     border
                     border-[var(--border)]
@@ -547,19 +504,15 @@ function deleteAccount() {
                     bg-transparent
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-[var(--accent)]"
-                >
-                </div>
+                    focus:ring-[var(--accent)]">
+                                </div>
 
-                <div>
-                <label class="block mb-2 font-medium">
-                    Email Address
-                </label>
+                                <div>
+                                    <label class="block mb-2 font-medium">
+                                        Email Address
+                                    </label>
 
-                <input
-                    v-model="profile.email"
-                    type="email"
-                    class="
+                                    <input v-model="profile.email" type="email" class="
                     w-full
                     border
                     border-[var(--border)]
@@ -569,19 +522,15 @@ function deleteAccount() {
                     bg-transparent
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-[var(--accent)]"
-                >
-                </div>
+                    focus:ring-[var(--accent)]">
+                                </div>
 
-                <div>
-                <label class="block mb-2 font-medium">
-                    Phone Number
-                </label>
+                                <div>
+                                    <label class="block mb-2 font-medium">
+                                        Phone Number
+                                    </label>
 
-                <input
-                    v-model="profile.phone"
-                    type="text"
-                    class="
+                                    <input v-model="profile.phone" type="text" class="
                     w-full
                     border
                     border-[var(--border)]
@@ -591,15 +540,12 @@ function deleteAccount() {
                     bg-transparent
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-[var(--accent)]"
-                >
-                </div>
+                    focus:ring-[var(--accent)]">
+                                </div>
 
-                <div class="pt-2">
+                                <div class="pt-2">
 
-                <button
-                    @click="saveProfile"
-                    class="
+                                    <button @click="saveProfile" class="
                     cursor-pointer
                     bg-[var(--accent)]
                     text-white
@@ -610,100 +556,83 @@ function deleteAccount() {
                     hover:opacity-90
                     transition">
 
-                    Save Changes
+                                        Save Changes
 
-                </button>
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
-            </div>
+                <!-- Security -->
 
-            </div>
+                <div v-if="activeTab === 'security'">
 
-        </div>
+                    <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
+                        Security Settings
+                    </h2>
 
-        </div>
+                    <p class="text-[var(--text-muted)] mb-8">
+                        Update your password and account security.
+                    </p>
 
-        <!-- Security -->
+                    <div class="space-y-6">
 
-        <div v-if="activeTab === 'security'">
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                Current Password
+                            </label>
 
-          <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
-            Security Settings
-          </h2>
+                            <input v-model="passwords.current" type="password"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="Enter Your Current Password">
 
-          <p class="text-[var(--text-muted)] mb-8">
-            Update your password and account security.
-          </p>
+                            <p v-if="passwordErrors.current" class="text-red-500 text-sm mt-1">
 
-          <div class="space-y-6">
+                                {{ passwordErrors.current }}
 
-            <div>
-                <label class="block mb-2 font-medium">
-                    Current Password
-                </label>
+                            </p>
+                        </div>
 
-                <input
-                    v-model="passwords.current"
-                    type="password"
-                    class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                    placeholder="Enter Your Current Password"
-                >
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                New Password
+                            </label>
 
-                <p
-                    v-if="passwordErrors.current"
-                    class="text-red-500 text-sm mt-1">
+                            <input v-model="passwords.new" type="password"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="Enter Your New Password">
 
-                    {{ passwordErrors.current }}
+                            <p v-if="passwordErrors.new" class="text-red-500 text-sm mt-1">
 
-                </p>
-            </div>
+                                {{ passwordErrors.new }}
 
-            <div>
-                <label class="block mb-2 font-medium">
-                    New Password
-                </label>
+                            </p>
+                        </div>
 
-                <input
-                    v-model="passwords.new"
-                    type="password"
-                    class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                    placeholder="Enter Your New Password"
-                >
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                Confirm Password
+                            </label>
 
-                <p
-                    v-if="passwordErrors.new"
-                    class="text-red-500 text-sm mt-1">
+                            <input v-model="passwords.confirm" type="password"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="Enter Your New Password Again">
 
-                    {{ passwordErrors.new }}
+                            <p v-if="passwordErrors.confirm" class="text-red-500 text-sm mt-1">
 
-                </p>
-            </div>
+                                {{ passwordErrors.confirm }}
 
-            <div>
-                <label class="block mb-2 font-medium">
-                    Confirm Password
-                </label>
+                            </p>
+                        </div>
 
-                <input
-                    v-model="passwords.confirm"
-                    type="password"
-                    class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                    placeholder="Enter Your New Password Again"
-                >
-
-                <p
-                    v-if="passwordErrors.confirm"
-                    class="text-red-500 text-sm mt-1">
-
-                    {{ passwordErrors.confirm }}
-
-                </p>
-            </div>
-
-            <button
-            @click="updatePassword"
-            class="
+                        <button @click="updatePassword" class="
             bg-[var(--accent)]
             text-white
             px-6
@@ -712,157 +641,127 @@ function deleteAccount() {
             font-medium
             hover:opacity-90
             transition
-            cursor-pointer"
-            >
-                Update Password
-            </button>
+            cursor-pointer">
+                            Update Password
+                        </button>
 
-          </div>
-
-          <!-- Danger Zone -->
-          <div class="mt-12 pt-8 border-t border-red-500/20">
-              <h3 class="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
-                  <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
-              </h3>
-              <p class="text-xs text-[var(--text-muted)] mb-4">
-                  Permanently delete your account and all associated settings, billing profiles, and data. This action is irreversible.
-              </p>
-              <button
-                  @click="deleteAccount"
-                  class="cursor-pointer bg-red-500/10 hover:bg-red-600 hover:text-white text-red-500 border border-red-500/30 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition"
-              >
-                  Delete Account
-              </button>
-          </div>
-
-        </div>
-
-        <!-- Billing -->
-
-        <div v-if="activeTab === 'billing'">
-
-            <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
-                Billing Details
-            </h2>
-
-            <p class="text-[var(--text-muted)] mb-8">
-                Manage your billing information.
-            </p>
-
-            <div class="space-y-5">
-
-                <div>
-                    <label class="block mb-2 font-medium">
-                        Card Holder Name
-                    </label>
-
-                    <input
-                        v-model="billing.cardName"
-                        type="text"
-                        class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                        placeholder="Enter Your Credit Card Name"
-                    >
-
-                    <p
-                        v-if="billingErrors.cardName"
-                        class="text-red-500 text-sm mt-1">
-
-                        {{ billingErrors.cardName }}
-
-                    </p>
-                </div>
-
-                <div>
-                    <label class="block mb-2 font-medium">
-                        Card Number
-                    </label>
-
-                    <input
-                        v-model="billing.cardNumber"
-                        type="text"
-                        class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                        placeholder="1234123412341234"
-                    >
-
-                    <p
-                        v-if="billingErrors.cardNumber"
-                        class="text-red-500 text-sm mt-1">
-
-                        {{ billingErrors.cardNumber }}
-
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-
-                    <div>
-                        <label class="block mb-2 font-medium">
-                        Expiry Date
-                        </label>
-
-                        <input
-                        v-model="billing.expiry"
-                        type="text"
-                        placeholder="MM/YY"
-                        class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                        >
-
-                        <p
-                        v-if="billingErrors.expiry"
-                        class="text-red-500 text-sm mt-1">
-
-                        {{ billingErrors.expiry }}
-
-                        </p>
                     </div>
 
-                    <div>
-                        <label class="block mb-2 font-medium">
-                        CVV
-                        </label>
-
-                        <input
-                        v-model="billing.cvv"
-                        type="text"
-                        placeholder="123"
-                        class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                        >
-
-                        <p
-                        v-if="billingErrors.cvv"
-                        class="text-red-500 text-sm mt-1">
-
-                        {{ billingErrors.cvv }}
-
+                    <!-- Danger Zone -->
+                    <div class="mt-12 pt-8 border-t border-red-500/20">
+                        <h3 class="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                        </h3>
+                        <p class="text-xs text-[var(--text-muted)] mb-4">
+                            Permanently delete your account and all associated settings, billing profiles, and data.
+                            This action is irreversible.
                         </p>
+                        <button @click="deleteAccount"
+                            class="cursor-pointer bg-red-500/10 hover:bg-red-600 hover:text-white text-red-500 border border-red-500/30 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition">
+                            Delete Account
+                        </button>
                     </div>
 
                 </div>
 
-                <div>
-                    <label class="block mb-2 font-medium">
-                        Billing Address
-                    </label>
+                <!-- Billing -->
 
-                    <textarea
-                        v-model="billing.address"
-                        rows="4"
-                        class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
-                        placeholder="Enter your billing address">
+                <div v-if="activeTab === 'billing'">
+
+                    <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
+                        Billing Details
+                    </h2>
+
+                    <p class="text-[var(--text-muted)] mb-8">
+                        Manage your billing information.
+                    </p>
+
+                    <div class="space-y-5">
+
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                Card Holder Name
+                            </label>
+
+                            <input v-model="billing.cardName" type="text"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="Enter Your Credit Card Name">
+
+                            <p v-if="billingErrors.cardName" class="text-red-500 text-sm mt-1">
+
+                                {{ billingErrors.cardName }}
+
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                Card Number
+                            </label>
+
+                            <input v-model="billing.cardNumber" type="text"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="1234123412341234">
+
+                            <p v-if="billingErrors.cardNumber" class="text-red-500 text-sm mt-1">
+
+                                {{ billingErrors.cardNumber }}
+
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block mb-2 font-medium">
+                                    Expiry Date
+                                </label>
+
+                                <input v-model="billing.expiry" type="text" placeholder="MM/YY"
+                                    class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent">
+
+                                <p v-if="billingErrors.expiry" class="text-red-500 text-sm mt-1">
+
+                                    {{ billingErrors.expiry }}
+
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="block mb-2 font-medium">
+                                    CVV
+                                </label>
+
+                                <input v-model="billing.cvv" type="text" placeholder="123"
+                                    class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent">
+
+                                <p v-if="billingErrors.cvv" class="text-red-500 text-sm mt-1">
+
+                                    {{ billingErrors.cvv }}
+
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div>
+                            <label class="block mb-2 font-medium">
+                                Billing Address
+                            </label>
+
+                            <textarea v-model="billing.address" rows="4"
+                                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-transparent"
+                                placeholder="Enter your billing address">
                     </textarea>
 
-                    <p
-                        v-if="billingErrors.address"
-                        class="text-red-500 text-sm mt-1">
+                            <p v-if="billingErrors.address" class="text-red-500 text-sm mt-1">
 
-                        {{ billingErrors.address }}
+                                {{ billingErrors.address }}
 
-                    </p>
-                    </div>
+                            </p>
+                        </div>
 
-                    <button
-                        @click="saveBilling"
-                        class="
+                        <button @click="saveBilling" class="
                         cursor-pointer
                         bg-[var(--accent)]
                         text-white
@@ -872,78 +771,73 @@ function deleteAccount() {
                         hover:opacity-90
                         transition">
 
-                        Save Billing Info
+                            Save Billing Info
 
-                    </button>
+                        </button>
 
-            </div>
-        </div>
+                    </div>
+                </div>
 
-        <!-- Notifications -->
+                <!-- Notifications -->
 
-        <div v-if="activeTab === 'notifications'">
+                <div v-if="activeTab === 'notifications'">
 
-            <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
-                Notifications
-            </h2>
+                    <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">
+                        Notifications
+                    </h2>
 
-            <p class="text-[var(--text-muted)] mb-8">
-                Choose how you want to be notified.
-            </p>
+                    <p class="text-[var(--text-muted)] mb-8">
+                        Choose how you want to be notified.
+                    </p>
 
-            <div class="space-y-8">
+                    <div class="space-y-8">
 
-            <div class="flex items-center justify-between">
-                <span>Order Updates</span>
+                        <div class="flex items-center justify-between">
+                            <span>Order Updates</span>
 
-                <button
-                @click="notifications.orders = !notifications.orders; saveNotifications()"
-                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
-                :class="notifications.orders ? 'bg-[var(--accent)]' : 'bg-gray-300'">
+                            <button @click="notifications.orders = !notifications.orders; saveNotifications()"
+                                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
+                                :class="notifications.orders ? 'bg-[var(--accent)]' : 'bg-gray-300'">
 
-                <span
-                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
-                    :class="notifications.orders ? 'translate-x-6' : ''">
-                </span>
+                                <span
+                                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
+                                    :class="notifications.orders ? 'translate-x-6' : ''">
+                                </span>
 
-                </button>
-            </div>
+                            </button>
+                        </div>
 
-            <div class="flex items-center justify-between">
-                <span>Promotional Offers</span>
+                        <div class="flex items-center justify-between">
+                            <span>Promotional Offers</span>
 
-                <button
-                @click="notifications.promotions = !notifications.promotions; saveNotifications()"
-                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
-                :class="notifications.promotions ? 'bg-[var(--accent)]' : 'bg-gray-300'">
+                            <button @click="notifications.promotions = !notifications.promotions; saveNotifications()"
+                                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
+                                :class="notifications.promotions ? 'bg-[var(--accent)]' : 'bg-gray-300'">
 
-                <span
-                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
-                    :class="notifications.promotions ? 'translate-x-6' : ''">
-                </span>
+                                <span
+                                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
+                                    :class="notifications.promotions ? 'translate-x-6' : ''">
+                                </span>
 
-                </button>
-            </div>
+                            </button>
+                        </div>
 
-            <div class="flex items-center justify-between">
-                <span>Security Alerts</span>
+                        <div class="flex items-center justify-between">
+                            <span>Security Alerts</span>
 
-                <button
-                @click="notifications.alerts = !notifications.alerts; saveNotifications()"
-                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
-                :class="notifications.alerts ? 'bg-[var(--accent)]' : 'bg-gray-300'">
+                            <button @click="notifications.alerts = !notifications.alerts; saveNotifications()"
+                                class="relative w-14 h-8 rounded-full cursor-pointer transition-colors duration-300"
+                                :class="notifications.alerts ? 'bg-[var(--accent)]' : 'bg-gray-300'">
 
-                <span
-                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
-                    :class="notifications.alerts ? 'translate-x-6' : ''">
-                </span>
+                                <span
+                                    class="absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300"
+                                    :class="notifications.alerts ? 'translate-x-6' : ''">
+                                </span>
 
-                </button>
-            </div>
+                            </button>
+                        </div>
 
-            <button
-                @click="saveNotifications"
-                class="
+                        <button @click="saveNotifications" class="
                 cursor-pointer
                 bg-[var(--accent)]
                 text-white
@@ -952,17 +846,17 @@ function deleteAccount() {
                 rounded-xl
                 hover:opacity-90
                 transition">
-                Save Preferences
-            </button>
+                            Save Preferences
+                        </button>
 
-            </div>
+                    </div>
+
+                </div>
+
+
+            </section>
 
         </div>
-        
 
-      </section>
-
-    </div>
-
-  </main>
+    </main>
 </template>
