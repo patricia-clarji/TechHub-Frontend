@@ -103,7 +103,7 @@ watch(() => userStore.currentUser, async () => {
                 <!-- Sidebar Navigation -->
                 <aside class="lg:col-span-3 space-y-2">
                     <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
-                        :class="activeTab === tab.id ? 'bg-[var(--accent)] text-white shadow-lg' : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--text)]'"
+                        :class="activeTab === tab.id ? 'bg-[var(--accent)] text-white shadow-lg translate-x-2' : 'bg-[var(--bg-card)] text-[var(--text-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--text)]'"
                         class="w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all duration-300">
                         <i :class="['fa-solid', tab.icon]" class="text-sm"></i>
                         <span>{{ tab.label }}</span>
@@ -277,6 +277,6 @@ watch(() => userStore.currentUser, async () => {
 
 <style scoped>
 .animate-in {
-    animation: settleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: settleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 </style>

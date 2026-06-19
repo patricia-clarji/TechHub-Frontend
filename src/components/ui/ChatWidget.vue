@@ -169,8 +169,8 @@ watch(() => uiStore.chatWindowOpen, (val) => {
 <template>
     <div class="fixed bottom-24 right-6 z-[100] font-sans">
         <button @click="uiStore.toggleChat()"
-            class="w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 premium-btn"
-            style="animation: chatbotPulse 2.5s infinite">
+            class="w-14 h-14 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white rounded-full flex items-center justify-center shadow-[0_10px_40px_rgba(139,107,71,0.3)] transition-all duration-500 hover:scale-110 hover:rotate-12 active:scale-90 premium-btn"
+            style="animation: chatbotPulse 3s infinite">
             <i :class="uiStore.chatWindowOpen ? 'fa-solid fa-chevron-down text-lg' : 'fa-solid fa-comments text-lg'"></i>
         </button>
 
