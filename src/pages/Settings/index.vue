@@ -1,18 +1,19 @@
 <script setup>
 import { useUserStore } from '@/stores/user'
-import { ref, computed } from 'vue'
+import { useToastStore } from '@/stores/toast'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
 const userStore = useUserStore()
+const toastStore = useToastStore()
 
 const activeTab = ref('profile')
 
 const profile = ref({
-  name: userStore.currentUser?.name || '',
-  email: userStore.currentUser?.email || '',
-  phone: userStore.currentUser?.phone || ''
+  name: '',
+  email: '',
+  phone: ''
 })
 
 const passwords = ref({
@@ -43,33 +44,74 @@ const billingErrors = ref({
   address: ''
 })
 
-const notifications = ref(
-    userStore.currentUser?.notifications || {
-    orders: true,
-    promotions: false,
-    alerts: true
-  }
-)
+const notifications = ref({
+  orders: true,
+  promotions: false,
+  alerts: true
+})
 
 const profilePreview = computed(() => {
   return userStore.currentUser?.avatar
 })
 
+// Sync form values with store data
+const syncFormValues = (newUser) => {
+  if (newUser) {
+    profile.value = {
+      name: newUser.name || '',
+      email: newUser.email || '',
+      phone: newUser.phone || ''
+    }
+
+    const userNotifs = newUser.notifications || newUser.preferences?.notifications
+    if (userNotifs) {
+      notifications.value = {
+        orders: userNotifs.orders !== undefined ? userNotifs.orders : true,
+        promotions: userNotifs.promotions !== undefined ? userNotifs.promotions : false,
+        alerts: userNotifs.alerts !== undefined ? userNotifs.alerts : true
+      }
+    }
+
+    if (newUser.billing) {
+      billing.value = {
+        cardName: newUser.billing.cardName || '',
+        cardNumber: newUser.billing.cardNumber || '',
+        expiry: newUser.billing.expiry || '',
+        cvv: newUser.billing.cvv || '',
+        address: newUser.billing.address || ''
+      }
+    }
+  }
+}
+
+watch(() => userStore.currentUser, (newUser) => {
+  if (!newUser) {
+    router.push('/')
+  } else {
+    syncFormValues(newUser)
+  }
+}, { immediate: true })
+
 function saveNotifications() {
-  userStore.updateProfile({
+  const res = userStore.updateProfile({
     notifications: notifications.value
   })
-
+  if (res && res.success) {
+    toastStore.showToast('Notification preferences updated successfully.', 'fa-bell')
+  }
 }
 
 function saveProfile() {
-  userStore.updateProfile({
+  const res = userStore.updateProfile({
     name: profile.value.name,
     email: profile.value.email,
     phone: profile.value.phone,
-    avatar: userStore.currentUser.avatar,
+    avatar: userStore.currentUser?.avatar,
     notifications: notifications.value
   })
+  if (res && res.success) {
+    toastStore.showToast('Profile settings updated successfully.', 'fa-user-check')
+  }
 }
 
 function handleImageUpload(event) {
@@ -80,22 +122,27 @@ function handleImageUpload(event) {
   const reader = new FileReader()
 
   reader.onload = () => {
-    userStore.updateProfile({
+    const res = userStore.updateProfile({
       avatar: reader.result
     })
+    if (res && res.success) {
+      toastStore.showToast('Profile picture updated.', 'fa-image')
+    }
   }
 
   reader.readAsDataURL(file)
 }
 
 function removeProfilePicture() {
-    userStore.updateProfile({
-        avatar: null
-    })
+  const res = userStore.updateProfile({
+    avatar: null
+  })
+  if (res && res.success) {
+    toastStore.showToast('Profile picture removed.', 'fa-trash-can')
+  }
 }
 
 function saveBilling() {
-
     billingErrors.value = {
         cardName: '',
         cardNumber: '',
@@ -157,10 +204,21 @@ function saveBilling() {
 
     if (!valid) return
 
+    const res = userStore.updateProfile({
+        billing: {
+            cardName: billing.value.cardName,
+            cardNumber: billing.value.cardNumber,
+            expiry: billing.value.expiry,
+            cvv: billing.value.cvv,
+            address: billing.value.address
+        }
+    })
+    if (res && res.success) {
+        toastStore.showToast('Billing details updated successfully.', 'fa-credit-card')
+    }
 }
 
 function updatePassword() {
-
     passwordErrors.value = {
         current: '',
         new: '',
@@ -214,13 +272,27 @@ function updatePassword() {
 
     if (!valid) return
 
-    alert('Password updated successfully!')
-
-    passwords.value = {
-        current: '',
-        new: '',
-        confirm: ''
+    const res = userStore.changePassword(passwords.value.current, passwords.value.new)
+    if (res && res.success) {
+        toastStore.showToast('Password updated successfully!', 'fa-lock')
+        passwords.value = {
+            current: '',
+            new: '',
+            confirm: ''
+        }
+    } else {
+        passwordErrors.value.current = res?.message || 'Password update failed.'
     }
+}
+
+function deleteAccount() {
+  if (confirm("Are you sure you want to permanently delete your account? This action cannot be undone and you will be logged out.")) {
+    toastStore.showToast('Your account was permanently deleted.', 'fa-trash-can')
+    
+    setTimeout(() => {
+      userStore.deleteAccount()
+    }, 100)
+  }
 }
 </script>
 
@@ -647,6 +719,22 @@ function updatePassword() {
 
           </div>
 
+          <!-- Danger Zone -->
+          <div class="mt-12 pt-8 border-t border-red-500/20">
+              <h3 class="text-xl font-bold text-red-500 mb-2 flex items-center gap-2">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+              </h3>
+              <p class="text-xs text-[var(--text-muted)] mb-4">
+                  Permanently delete your account and all associated settings, billing profiles, and data. This action is irreversible.
+              </p>
+              <button
+                  @click="deleteAccount"
+                  class="cursor-pointer bg-red-500/10 hover:bg-red-600 hover:text-white text-red-500 border border-red-500/30 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition"
+              >
+                  Delete Account
+              </button>
+          </div>
+
         </div>
 
         <!-- Billing -->
@@ -854,6 +942,7 @@ function updatePassword() {
             </div>
 
             <button
+                @click="saveNotifications"
                 class="
                 cursor-pointer
                 bg-[var(--accent)]

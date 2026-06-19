@@ -1,6 +1,7 @@
 <script setup>
 import { useUserStore } from '../../stores/user';
 import { useRouter } from 'vue-router';
+import { watch } from 'vue';
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -9,6 +10,12 @@ const handleLogout = () => {
     userStore.logout();
     router.push('/');
 };
+
+watch(() => userStore.currentUser, (newUser) => {
+    if (!newUser) {
+        router.push('/');
+    }
+}, { immediate: true });
 </script>
 
 <template>

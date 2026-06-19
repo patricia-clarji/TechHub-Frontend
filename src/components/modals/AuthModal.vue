@@ -98,15 +98,22 @@ const handleSubmit = () => {
 
     // Simulate network delay
     setTimeout(() => {
+        let res;
         if (isLogin.value) {
-            userStore.login(email.value, password.value);
+            res = userStore.login(email.value, password.value);
         } else {
-            userStore.signup(name.value, email.value, password.value);
+            res = userStore.signup(name.value, email.value, password.value);
         }
-        resetForm();
-        uiStore.authModalOpen = false;
-        isProcessing.value = false;
-        toastStore.showToast(`System authentication established. Welcome, ${userStore.currentUser.name}.`, 'fa-user-check');
+
+        if (res && res.success) {
+            resetForm();
+            uiStore.authModalOpen = false;
+            isProcessing.value = false;
+            toastStore.showToast(`System authentication established. Welcome, ${userStore.currentUser?.name || ''}.`, 'fa-user-check');
+        } else {
+            isProcessing.value = false;
+            toastStore.showToast(res?.message || 'Authentication failed.', 'fa-triangle-exclamation');
+        }
     }, 1000);
 };
 
