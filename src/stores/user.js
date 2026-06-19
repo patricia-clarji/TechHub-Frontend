@@ -6,8 +6,24 @@ export const useUserStore = defineStore('user', () => {
     const currentUser = ref(JSON.parse(localStorage.getItem('techhub_user')) || null);
 
     const login = (email, password) => {
-        // Mock login logic - in production, this would be an API call
-        if (email && password.length >= 6) {
+
+        if (!email || password.length < 6) {
+            return {
+                success: false,
+                message: 'Invalid credentials. Password must be 6+ characters.'
+            };
+        }
+
+        const savedUser =
+            JSON.parse(localStorage.getItem('techhub_user'));
+
+        if (
+            savedUser &&
+            savedUser.email === email
+        ) {
+            currentUser.value = savedUser;
+        }
+        else {
             currentUser.value = {
                 name: email.split('@')[0],
                 email: email,
@@ -16,12 +32,16 @@ export const useUserStore = defineStore('user', () => {
                 preferences: {
                     language: 'English',
                     currency: 'USD',
-                    notifications: { email: true, push: true, sms: false } // Default to push notifications
+                    notifications: {
+                        email: true,
+                        push: true,
+                        sms: false
+                    }
                 }
             };
-            return { success: true };
         }
-        return { success: false, message: 'Invalid credentials. Password must be 6+ characters.' };
+
+        return { success: true };
     };
 
     const signup = (name, email, password) => {
