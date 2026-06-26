@@ -11,6 +11,37 @@
     <CartDrawer />
     <ChatWidget />
     <ToastNotification />
+    <CompareModal />
+
+    <!-- Comparison Overlay (Premium Feature) -->
+    <Transition name="slide-up">
+      <div v-if="productsStore.compareIds.length > 0" 
+        class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-6">
+        <div class="bg-black/90 dark:bg-[var(--bg-card)]/90 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl flex items-center justify-between">
+          <div class="flex items-center gap-6">
+            <div class="flex -space-x-4">
+              <img v-for="p in productsStore.compareProducts" :key="p.id" 
+                :src="p.img" 
+                class="w-12 h-12 rounded-full border-2 border-black object-cover" />
+            </div>
+            <div>
+              <p class="text-white text-xs font-bold uppercase tracking-widest">Comparison Queue</p>
+              <p class="text-white/50 text-[10px] uppercase tracking-widest">{{ productsStore.compareIds.length }} / 3 Selected</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <button @click="productsStore.compareIds = []" class="text-white/60 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Clear</button>
+            <button 
+              @click="uiStore.compareModalOpen = true"
+              class="bg-[var(--accent)] text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest premium-btn"
+              :disabled="productsStore.compareIds.length < 2"
+            >
+              Run Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <Navbar />
 
@@ -51,6 +82,7 @@ import QuickViewModal from './components/modals/QuickViewModal.vue';
 import CartDrawer from './components/layout/CartDrawer.vue';
 import ChatWidget from './components/ui/ChatWidget.vue';
 import ToastNotification from './components/layout/ToastNotification.vue';
+import CompareModal from './components/modals/CompareModal.vue';
 
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
@@ -132,5 +164,16 @@ onUnmounted(() => {
 .page-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 20px);
 }
 </style>

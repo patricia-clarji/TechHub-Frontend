@@ -66,6 +66,12 @@ const generateRecommendation = () => {
     router.push({ name: 'Products', query: { category: mapping[activeFinder.value] } });
 };
 
+const filterByBrand = (brandName) => {
+    productsStore.resetFilters();
+    productsStore.filters.brands = [brandName];
+    router.push({ name: 'Products', query: { brand: brandName } });
+};
+
 let observer = null;
 let timerInterval = null;
 const scrollY = ref(0);
@@ -241,9 +247,10 @@ onUnmounted(() => {
             </div>
             <div class="brand-fade relative">
                 <div class="brand-track flex gap-8">
-                    <div v-for="(b, i) in [...['Apple', 'Samsung', 'Sony', 'Dell', 'Lenovo', 'ASUS'], ...['Apple', 'Samsung', 'Sony', 'Dell', 'Lenovo', 'ASUS']]"
+                    <div v-for="(b, i) in [...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan'], ...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan']]"
                         :key="i"
-                        class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all">
+                        @click="filterByBrand(b)"
+                        class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
                         {{ b }}
                     </div>
                 </div>
