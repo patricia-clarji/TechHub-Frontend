@@ -15,27 +15,27 @@
 
     <!-- Comparison Overlay (Premium Feature) -->
     <Transition name="slide-up">
-      <div v-if="productsStore.compareIds.length > 0" 
+      <div v-if="productsStore.compareIds.length > 0"
         class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-6">
-        <div class="bg-black/90 dark:bg-[var(--bg-card)]/90 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl flex items-center justify-between">
+        <div
+          class="bg-black/90 dark:bg-[var(--bg-card)]/90 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-6 shadow-2xl flex items-center justify-between">
           <div class="flex items-center gap-6">
             <div class="flex -space-x-4">
-              <img v-for="p in productsStore.compareProducts" :key="p.id" 
-                :src="p.img" 
+              <img v-for="p in productsStore.compareProducts" :key="p.id" :src="p.img"
                 class="w-12 h-12 rounded-full border-2 border-black object-cover" />
             </div>
             <div>
               <p class="text-white text-xs font-bold uppercase tracking-widest">Comparison Queue</p>
-              <p class="text-white/50 text-[10px] uppercase tracking-widest">{{ productsStore.compareIds.length }} / 3 Selected</p>
+              <p class="text-white/50 text-[10px] uppercase tracking-widest">{{ productsStore.compareIds.length }} / 3
+                Selected</p>
             </div>
           </div>
           <div class="flex items-center gap-4">
-            <button @click="productsStore.compareIds = []" class="text-white/60 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Clear</button>
-            <button 
-              @click="uiStore.compareModalOpen = true"
+            <button @click="productsStore.compareIds = []"
+              class="text-white/60 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">Clear</button>
+            <button @click="uiStore.compareModalOpen = true"
               class="bg-[var(--accent)] text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest premium-btn"
-              :disabled="productsStore.compareIds.length < 2"
-            >
+              :disabled="productsStore.compareIds.length < 2">
               Run Analysis
             </button>
           </div>
@@ -57,11 +57,12 @@
 
     <!-- Floating Cart Toggle -->
     <div v-if="!uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-[100] float-cart-btn">
-      <button @click="uiStore.toggleCart()" 
+      <button @click="uiStore.toggleCart()"
         class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-5 py-3.5 rounded-full shadow-2xl shadow-[var(--glow)] flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl premium-btn group">
         <i class="fa-solid fa-cart-shopping text-sm group-hover:scale-110 transition-transform duration-300"></i>
         <span class="text-sm font-semibold">Cart</span>
-        <span class="bg-white text-[var(--accent)] w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">
+        <span
+          class="bg-white text-[var(--accent)] w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">
           {{ cartStore.itemCount }}
         </span>
       </button>
@@ -117,8 +118,9 @@ const handleInteraction = (isHover) => {
 };
 
 onMounted(() => {
+  productsStore.fetchProducts();
   window.addEventListener('mousemove', handleMouseMove);
-  
+
   // Global event delegation for cursor scaling
   document.addEventListener('mouseover', (e) => {
     const target = e.target.closest('a, button, .cat-card, .product-card, .trust-card, .why-card');
@@ -138,7 +140,8 @@ onUnmounted(() => {
 </script>
 
 <style>
-#cursor-dot, #cursor-ring {
+#cursor-dot,
+#cursor-ring {
   position: fixed;
   top: 0;
   left: 0;
@@ -148,8 +151,19 @@ onUnmounted(() => {
   transform: translate3d(-50%, -50%, 0);
   will-change: transform;
 }
-#cursor-dot { width: 8px; height: 8px; background: var(--accent); }
-#cursor-ring { width: 36px; height: 36px; border: 1.5px solid var(--accent); opacity: 0.6; }
+
+#cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+}
+
+#cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--accent);
+  opacity: 0.6;
+}
 
 .page-enter-active,
 .page-leave-active {

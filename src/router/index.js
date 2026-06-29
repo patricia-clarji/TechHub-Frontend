@@ -6,6 +6,7 @@ import { useUIStore } from '@/stores/ui';
 const routes = [
     { path: '/', name: 'Home', component: Home },
     { path: '/products', name: 'Products', component: () => import('@/pages/Products/index.vue') },
+    { path: '/categories', name: 'Categories', component: () => import('@/pages/Products/index.vue') },
     { path: '/products/:id', name: 'ProductDetail', component: () => import('@/pages/Products/ProductDetail.vue') },
     { path: '/cart', name: 'Cart', component: () => import('@/pages/Cart/index.vue') },
     { path: '/wishlist', name: 'Wishlist', component: () => import('@/pages/Wishlist/index.vue') },

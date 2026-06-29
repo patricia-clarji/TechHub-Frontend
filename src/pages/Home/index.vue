@@ -4,14 +4,20 @@ import { useRouter } from 'vue-router';
 import { useProductsStore } from '@/stores/products';
 import ProductCard from '../../components/cards/ProductCard.vue';
 import { useCartStore } from '@/stores/cart';
+import { useOsimartCategoriesStore } from '@/stores/osimartCategories';
+import { useOsimartBannersStore } from '@/stores/osimartBanners';
 import WhyTechHubSection from '@/components/layout/WhyTechHubSection.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
 const router = useRouter();
 const productsStore = useProductsStore();
 const cartStore = useCartStore();
+const categoriesStore = useOsimartCategoriesStore();
+const bannersStore = useOsimartBannersStore();
 
-const featured = computed(() => productsStore.sampleProducts.slice(0, 4));
+const featured = computed(() => (productsStore.featuredProducts.length ? productsStore.featuredProducts : productsStore.sampleProducts).slice(0, 4));
+const activeBanner = computed(() => bannersStore.banners.find((banner) => banner.is_active) || bannersStore.banners[0] || null);
+
 
 const timeLeft = ref({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 const saleEnd = new Date(Date.now() + (3 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000));
@@ -23,12 +29,27 @@ const trustItems = [
     { icon: 'fa-headset', title: 'Premium Support', desc: 'Assistance whenever needed' }
 ];
 
-const categories = [
-    { name: 'Smartphones', sub: 'Premium Mobile', img: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200', desc: 'Flagship devices from Apple, Samsung and other leading brands.' },
-    { name: 'Laptops', sub: 'Productivity', img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=1200', desc: 'Powerful machines for creators, professionals and students.' },
-    { name: 'Gaming', sub: 'Entertainment', img: 'https://images.unsplash.com/photo-1603481546238-487240415921?w=1200', desc: 'Consoles, accessories and next-generation gaming gear.' },
-    { name: 'Smart Home', sub: 'Smart Living', img: 'https://images.unsplash.com/photo-1558002038-1055907df827?w=1200', desc: 'Connected devices that simplify everyday life.' }
-];
+const categories = computed(() => {
+    const apiCategories = categoriesStore.categories
+        .filter((category) => category.is_active)
+        .map((category) => ({
+            name: category.name,
+            sub: category.slug || category.name,
+            img: category.image || productsStore.sampleProducts.find((product) => product.category === category.name)?.img || '',
+            desc: category.description,
+        }));
+
+    if (apiCategories.length) return apiCategories;
+
+    return productsStore.categories
+        .filter((category) => category !== 'All')
+        .map((category) => ({
+            name: category,
+            sub: category,
+            img: productsStore.sampleProducts.find((product) => product.category === category)?.img || '',
+            desc: '',
+        }));
+});
 
 const testimonials = [
     { name: 'Sarah Johnson', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/women/44.jpg', text: "Fast shipping and excellent quality. My order arrived two days early and the packaging was perfect." },
@@ -117,6 +138,10 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
+    productsStore.fetchFeaturedProducts();
+    categoriesStore.fetchCategories();
+    bannersStore.fetchBanners({}, { force: true });
+
     timerInterval = setInterval(updateTimer, 1000);
     window.addEventListener('scroll', handleScroll);
     updateTimer();
@@ -154,25 +179,28 @@ onUnmounted(() => {
                 <div class="space-y-8 relative z-10 overflow-hidden">
                     <span class="section-badge hero-badge inline-flex">
                         <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] inline-block animate-ping mr-3"></span>
-                        Premium Electronics
+                        {{ activeBanner?.subtitle || 'Premium Electronics' }}
                     </span>
                     <h1
                         class="font-[Playfair_Display] text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.06] hero-title">
-                        Discover the<br>
-                        <em class="not-italic relative">
-                            <span class="relative z-10 text-[var(--accent)]">Latest Tech</span>
-                            <span
-                                class="absolute bottom-2 left-0 right-0 h-3 bg-[var(--accent)] opacity-10 -z-0 rounded"></span>
-                        </em><br />
-                        at Unbeatable<br />Prices
+                        <template v-if="activeBanner?.title">{{ activeBanner.title }}</template>
+                        <template v-else>
+                            Discover the<br>
+                            <em class="not-italic relative">
+                                <span class="relative z-10 text-[var(--accent)]">Latest Tech</span>
+                                <span
+                                    class="absolute bottom-2 left-0 right-0 h-3 bg-[var(--accent)] opacity-10 -z-0 rounded"></span>
+                            </em><br />
+                            at Unbeatable<br />Prices
+                        </template>
                     </h1>
                     <p class="text-[var(--text-muted)] text-lg leading-relaxed max-w-md hero-body">
-                        Shop premium electronics, gaming gear, laptops, smartphones, and accessories — all in one place.
+                        {{ activeBanner?.subtitle || 'Shop premium electronics, gaming gear, laptops, smartphones, and accessories — all in one place.' }}
                     </p>
                     <div class="flex flex-wrap gap-4 hero-btns">
                         <router-link to="/products"
                             class="group inline-flex items-center gap-3 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
-                            <span>Shop Now</span>
+                            <span>{{ activeBanner?.button || 'Shop Now' }}</span>
                             <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
                         </router-link>
                         <router-link to="/categories"
@@ -182,7 +210,7 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="hidden lg:block relative hero-img-wrap">
-                    <img src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400"
+                    <img :src="activeBanner?.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400'"
                         class="h-[580px] w-full object-cover rounded-[2.5rem] shadow-2xl relative z-10 hero-parallax"
                         :style="{ transform: `translateY(${scrollY * 0.08}px)` }" alt="Tech Hub">
                 </div>
@@ -219,7 +247,7 @@ onUnmounted(() => {
                 <router-link v-for="cat in categories" :key="cat.name"
                     :to="{ name: 'Products', query: { category: cat.name } }"
                     class="cat-card h-[420px] lg:h-[500px] reveal group relative overflow-hidden rounded-[2.5rem]">
-                    <img :src="cat.img"
+                    <img v-if="cat.img" :src="cat.img"
                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         :alt="cat.name">
                     <div class="cat-overlay"></div>
@@ -248,8 +276,7 @@ onUnmounted(() => {
             <div class="brand-fade relative">
                 <div class="brand-track flex gap-8">
                     <div v-for="(b, i) in [...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan'], ...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan']]"
-                        :key="i"
-                        @click="filterByBrand(b)"
+                        :key="i" @click="filterByBrand(b)"
                         class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
                         {{ b }}
                     </div>

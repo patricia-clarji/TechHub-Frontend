@@ -12,7 +12,7 @@ const cartItems = computed(() => {
     return cartStore.items.map(item => {
         const product = productsStore.sampleProducts.find(p => p.id === item.id);
         return { ...product, quantity: item.quantity };
-    });
+    }).filter(item => item.id);
 });
 </script>
 
@@ -92,6 +92,5 @@ const cartItems = computed(() => {
 </template>
 
 <style scoped>
-/* High z-index to ensure it covers chatbot and fixed buttons */
 .z-\[110\] { z-index: 110; }
 </style>

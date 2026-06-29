@@ -13,10 +13,11 @@ const cartItems = computed(() => {
             ...product,
             quantity: item.quantity
         };
-    });
+    }).filter(item => item.id);
 });
 
 onMounted(() => {
+    productsStore.fetchProducts();
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) entry.target.classList.add('visible');
@@ -89,7 +90,7 @@ onMounted(() => {
                         <div class="flex justify-between text-lg pt-4 border-t border-[var(--border)]">
                             <span class="font-bold">Total Allocation</span>
                             <span class="font-black text-[var(--accent)]">$ {{ cartStore.totalAmount.toFixed(2)
-                                }}</span>
+                            }}</span>
                         </div>
                     </div>
                     <router-link to="/checkout"
