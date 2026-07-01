@@ -33,10 +33,15 @@ osimart.interceptors.request.use((config) => {
             : `Bearer ${token}`;
     }
 
-    config.params = {
-        store: OSIMART_STORE_ID,
-        ...(config.params || {}),
-    };
+    // Always add store parameter to all requests
+    if (OSIMART_STORE_ID) {
+        config.params = {
+            store: OSIMART_STORE_ID,
+            ...(config.params || {}),
+        };
+    }
+
+    console.log(`Making ${config.method.toUpperCase()} request to:`, config.url, "with params:", config.params);
 
     return config;
 });
@@ -46,9 +51,33 @@ osimart.interceptors.request.use((config) => {
 // ============================================
 
 osimart.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log(`Response from ${response.config.url}:`, response.status);
+        return response;
+    },
     (error) => {
-        console.error("OSIMART ERROR:", error);
+        console.error("OSIMART ERROR:", {
+            message: error.message,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                params: error.config?.params,
+            }
+        });
+        
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+            console.warn("Authentication failed - check your token");
+        }
+        
+        // Handle not found errors
+        if (error.response?.status === 404) {
+            console.warn("Endpoint not found - check your URL");
+        }
+        
         return Promise.reject(error);
     }
 );
@@ -80,11 +109,16 @@ const firstDefined = (...values) =>
     );
 
 const extractList = (payload) => {
+    // Handle different response structures
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload?.results)) return payload.results;
     if (Array.isArray(payload?.data)) return payload.data;
     if (Array.isArray(payload?.items)) return payload.items;
     if (Array.isArray(payload?.objects)) return payload.objects;
+    // If it's a single object with a results property
+    if (payload?.results && typeof payload.results === 'object') {
+        return Array.isArray(payload.results) ? payload.results : [payload.results];
+    }
     return [];
 };
 
@@ -133,11 +167,18 @@ export const mediaAPI = {
 
 export const bannerAPI = {
     async list(params = {}) {
-        const response = await osimart.get("/banners/", {
-            params,
-        });
-
-        return extractList(response.data);
+        try {
+            const response = await osimart.get("/banners/", {
+                params,
+            });
+            console.log("BANNER RAW RESPONSE:", response.data);
+            const data = extractList(response.data);
+            console.log("BANNER PARSED DATA:", data);
+            return data;
+        } catch (error) {
+            console.error("BANNER ERROR:", error);
+            return [];
+        }
     },
 };
 
@@ -149,23 +190,38 @@ export const productAPI = {
     async list(params = {}) {
         try {
             const response = await osimart.get("/products/", {
-                params,
+                params: {
+                    ...params,
+                    // Add any default params here
+                },
             });
 
-            return extractList(response.data);
+            console.log("PRODUCT STATUS:", response.status);
+            console.log("PRODUCT RAW RESPONSE:", response.data);
+            
+            const data = extractList(response.data);
+            console.log("PRODUCT PARSED DATA:", data);
+            console.log("PRODUCT COUNT:", data.length);
+            
+            return data;
         } catch (error) {
-            console.error("Product API Error:", error);
+            console.error("PRODUCT ERROR:", error.response || error);
+            console.error("ERROR DATA:", error.response?.data);
+            console.error("ERROR STATUS:", error.response?.status);
             return [];
         }
     },
-
     async detail(id) {
         try {
             const response = await osimart.get(`/products/${id}/`);
+            console.log("PRODUCT DETAIL STATUS:", response.status);
+            console.log("PRODUCT DETAIL DATA:", response.data);
             return response.data;
         } catch (error) {
-            console.error("Product Detail Error:", error);
-            return null;
+            console.error("PRODUCT DETAIL ERROR:", error.response || error);
+            console.error("DATA:", error.response?.data);
+            console.error("STATUS:", error.response?.status);
+            throw error;
         }
     },
 };
@@ -181,9 +237,46 @@ export const categoryAPI = {
                 params,
             });
 
-            return extractList(response.data);
+            console.log("CATEGORY STATUS:", response.status);
+            console.log("CATEGORY RAW RESPONSE:", response.data);
+            
+            const data = extractList(response.data);
+            console.log("CATEGORY PARSED DATA:", data);
+            console.log("CATEGORY COUNT:", data.length);
+            
+            return data;
         } catch (error) {
-            console.error("Category API Error:", error);
+            console.error("CATEGORY ERROR:", error.response || error);
+            console.error("ERROR DATA:", error.response?.data);
+            console.error("ERROR STATUS:", error.response?.status);
+            return [];
+        }
+    },
+};
+
+// ============================================
+// BRAND API
+// ============================================
+
+export const brandAPI = {
+    async list(params = {}) {
+        try {
+            const response = await osimart.get("/brands/", {
+                params,
+            });
+
+            console.log("BRAND STATUS:", response.status);
+            console.log("BRAND RAW RESPONSE:", response.data);
+            
+            const data = extractList(response.data);
+            console.log("BRAND PARSED DATA:", data);
+            console.log("BRAND COUNT:", data.length);
+            
+            return data;
+        } catch (error) {
+            console.error("BRAND ERROR:", error.response || error);
+            console.error("ERROR DATA:", error.response?.data);
+            console.error("ERROR STATUS:", error.response?.status);
             return [];
         }
     },

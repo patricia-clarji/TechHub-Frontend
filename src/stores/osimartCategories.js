@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { mediaAPI } from '@/services/osimart';
+import { mediaAPI, categoryAPI } from '@/services/osimart';
 
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 
@@ -11,15 +11,19 @@ const toSlug = (value) => String(value || '')
     .replace(/^-+|-+$/g, '');
 
 const normalizeCategory = (raw = {}) => {
+    console.log("Normalizing category:", raw);
+    
     const name = pick(raw.name, raw.title, raw.label, raw.slug, 'Untitled Category');
 
     return {
-        id: pick(raw.id, raw.pk, raw.uuid, raw.slug, name),
+        id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.category_id),
         name,
         slug: pick(raw.slug, toSlug(name)),
-        description: pick(raw.description, raw.desc, raw.summary, ''),
-        image: mediaAPI.getImageUrl(pick(raw.image, raw.image_url, raw.thumbnail, raw.icon, raw.background)),
+        description: pick(raw.description, raw.desc, raw.summary, raw.about, ''),
+        image: mediaAPI.getImageUrl(pick(raw.image, raw.image_url, raw.thumbnail, raw.icon, raw.background, raw.banner_image)),
         is_active: Boolean(pick(raw.is_active, raw.active, raw.enabled, true)),
+        product_count: pick(raw.product_count, raw.products_count, raw.count, 0),
+        parent_id: pick(raw.parent_id, raw.parent, raw.parent_category, null),
         raw,
     };
 };
@@ -37,12 +41,49 @@ export const useOsimartCategoriesStore = defineStore('osimartCategories', () => 
         error.value = '';
 
         try {
-            const response = await categoryAPI.list(params);
-            categories.value = response.map(normalizeCategory).filter((category) => category.id);
+            const apiParams = {
+                page: 1,
+                page_size: 50,
+                ...params
+            };
+            
+            console.log("Fetching categories with params:", apiParams);
+            const response = await categoryAPI.list(apiParams);
+            
+            console.log("Categories response:", response);
+            
+            // Handle different response structures
+            let categoryData = response;
+            if (!Array.isArray(response)) {
+                categoryData = response.results || response.data || response.items || [];
+                console.log("Extracted categories from response:", categoryData);
+            }
+            
+            if (!Array.isArray(categoryData)) {
+                console.error("Category data is not an array:", categoryData);
+                return categories.value;
+            }
+            
+            console.log("Normalizing categories...");
+            const normalizedCategories = categoryData
+                .filter(item => item && typeof item === 'object')
+                .map(normalizeCategory)
+                .filter((category) => category.id && category.id !== '');
+            
+            console.log(`Normalized ${normalizedCategories.length} categories`);
+            
+            if (normalizedCategories.length > 0) {
+                categories.value = normalizedCategories;
+                console.log("Categories store updated successfully");
+            }
+            
             hasFetched.value = true;
             return categories.value;
         } catch (err) {
-            error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart categories.';
+            const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart categories.';
+            error.value = errorMsg;
+            console.error("Error fetching categories:", errorMsg);
+            console.error("Full error:", err);
             categories.value = [];
             return [];
         } finally {
@@ -50,10 +91,26 @@ export const useOsimartCategoriesStore = defineStore('osimartCategories', () => 
         }
     };
 
+    const getCategoryById = (id) => {
+        return categories.value.find(cat => String(cat.id) === String(id));
+    };
+
+    const getCategoryBySlug = (slug) => {
+        return categories.value.find(cat => cat.slug === slug);
+    };
+
+    const getActiveCategories = () => {
+        return categories.value.filter(cat => cat.is_active);
+    };
+
     return {
         categories,
         loading,
         error,
+        hasFetched,
         fetchCategories,
+        getCategoryById,
+        getCategoryBySlug,
+        getActiveCategories,
     };
 });

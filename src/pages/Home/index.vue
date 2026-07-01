@@ -6,6 +6,7 @@ import ProductCard from '../../components/cards/ProductCard.vue';
 import { useCartStore } from '@/stores/cart';
 import { useOsimartCategoriesStore } from '@/stores/osimartCategories';
 import { useOsimartBannersStore } from '@/stores/osimartBanners';
+import { useBrandsStore } from '@/stores/brands';
 import WhyTechHubSection from '@/components/layout/WhyTechHubSection.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
@@ -14,14 +15,27 @@ const productsStore = useProductsStore();
 const cartStore = useCartStore();
 const categoriesStore = useOsimartCategoriesStore();
 const bannersStore = useOsimartBannersStore();
+const brandsStore = useBrandsStore();
 
-const featured = computed(() => (productsStore.featuredProducts.length ? productsStore.featuredProducts : productsStore.sampleProducts).slice(0, 4));
-const activeBanner = computed(() => bannersStore.banners.find((banner) => banner.is_active) || bannersStore.banners[0] || null);
+// Computed properties
+const featured = computed(() => {
+    const featuredProducts = productsStore.featuredProducts.length
+        ? productsStore.featuredProducts
+        : productsStore.sampleProducts;
+    return featuredProducts.slice(0, 4);
+});
 
+const activeBanner = computed(() =>
+    bannersStore.banners.find((banner) => banner.is_active) ||
+    bannersStore.banners[0] ||
+    null
+);
 
+// Timer for flash sale
 const timeLeft = ref({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 const saleEnd = new Date(Date.now() + (3 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000));
 
+// Trust items
 const trustItems = [
     { icon: 'fa-truck-fast', title: 'Free Delivery', desc: 'Fast shipping nationwide' },
     { icon: 'fa-shield-halved', title: 'Secure Checkout', desc: 'Protected transactions' },
@@ -29,34 +43,55 @@ const trustItems = [
     { icon: 'fa-headset', title: 'Premium Support', desc: 'Assistance whenever needed' }
 ];
 
+// Categories from API with fallback
 const categories = computed(() => {
+    // Try to use API categories first
     const apiCategories = categoriesStore.categories
         .filter((category) => category.is_active)
+        .slice(0, 8) // Limit to 8 categories
         .map((category) => ({
             name: category.name,
             sub: category.slug || category.name,
             img: category.image || productsStore.sampleProducts.find((product) => product.category === category.name)?.img || '',
-            desc: category.description,
+            desc: category.description || `Explore our ${category.name} collection`,
         }));
 
-    if (apiCategories.length) return apiCategories;
+    if (apiCategories.length > 0) {
+        return apiCategories;
+    }
 
+    // Fallback to product-based categories
     return productsStore.categories
         .filter((category) => category !== 'All')
+        .slice(0, 8)
         .map((category) => ({
             name: category,
             sub: category,
             img: productsStore.sampleProducts.find((product) => product.category === category)?.img || '',
-            desc: '',
+            desc: `Discover premium ${category} products`,
         }));
 });
 
+// Brands from API with fallback
+const brandNames = computed(() => {
+    if (brandsStore.brands.length > 0) {
+        return brandsStore.brands
+            .filter(b => b.is_active)
+            .slice(0, 8)
+            .map(b => b.name);
+    }
+    // Fallback brands
+    return ['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan'];
+});
+
+// Testimonials
 const testimonials = [
     { name: 'Sarah Johnson', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/women/44.jpg', text: "Fast shipping and excellent quality. My order arrived two days early and the packaging was perfect." },
     { name: 'Michael Carter', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/men/32.jpg', text: "The best electronics store I've ever used. Genuine products, real prices, and outstanding customer care." },
     { name: 'Emma Rodriguez', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/women/68.jpg', text: "Amazing customer service and delivery. Needed help choosing a laptop and got expert advice instantly." }
 ];
 
+// Stats
 const stats = [
     { display: '10', target: 10, label: 'Products', suffix: 'K+' },
     { display: '50', target: 50, label: 'Customers', suffix: 'K+' },
@@ -64,6 +99,7 @@ const stats = [
     { display: '99', target: 99, label: 'Satisfaction', suffix: '%' }
 ];
 
+// Finder options
 const finderOptions = [
     { label: 'Work', emoji: '💼' },
     { label: 'Study', emoji: '📚' },
@@ -71,7 +107,15 @@ const finderOptions = [
     { label: 'Creative', emoji: '🎨' }
 ];
 
+// State
 const activeFinder = ref(null);
+const scrollY = ref(0);
+const animatedStats = ref(stats.map(s => ({ ...s, current: 0 })));
+const statsAnimated = ref(false);
+let observer = null;
+let timerInterval = null;
+
+// Methods
 const selectFinder = (label) => activeFinder.value = label;
 
 const generateRecommendation = () => {
@@ -93,12 +137,6 @@ const filterByBrand = (brandName) => {
     router.push({ name: 'Products', query: { brand: brandName } });
 };
 
-let observer = null;
-let timerInterval = null;
-const scrollY = ref(0);
-const animatedStats = ref(stats.map(s => ({ ...s, current: 0 })));
-const statsAnimated = ref(false);
-
 const animateStats = () => {
     if (statsAnimated.value) return;
     statsAnimated.value = true;
@@ -106,7 +144,7 @@ const animateStats = () => {
     animatedStats.value.forEach((s, index) => {
         let start = 0;
         const end = s.target;
-        const duration = 2000; // 2 seconds
+        const duration = 2000;
         const increment = end / (duration / 16);
 
         const timer = setInterval(() => {
@@ -125,23 +163,35 @@ const updateTimer = () => {
     const now = new Date();
     const diff = saleEnd - now;
 
-    timeLeft.value = {
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / 1000 / 60) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
-    };
+    if (diff > 0) {
+        timeLeft.value = {
+            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((diff / 1000 / 60) % 60),
+            seconds: Math.floor((diff / 1000) % 60)
+        };
+    }
 };
 
 const handleScroll = () => {
     scrollY.value = window.scrollY;
 };
 
-onMounted(() => {
-    productsStore.fetchFeaturedProducts();
-    categoriesStore.fetchCategories();
-    bannersStore.fetchBanners({}, { force: true });
+// Lifecycle
+onMounted(async () => {
+    try {
+        // Fetch all data in parallel
+        await Promise.all([
+            productsStore.fetchFeaturedProducts(),
+            categoriesStore.fetchCategories({}, { force: true }),
+            bannersStore.fetchBanners({}, { force: true }),
+            brandsStore.fetchBrands({}, { force: true })
+        ]);
+    } catch (error) {
+        console.error('Error loading home page data:', error);
+    }
 
+    // Start timer
     timerInterval = setInterval(updateTimer, 1000);
     window.addEventListener('scroll', handleScroll);
     updateTimer();
@@ -157,6 +207,7 @@ onMounted(() => {
             }
         });
     }, { threshold: 0.1 });
+
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 });
 
@@ -217,8 +268,6 @@ onUnmounted(() => {
             </div>
         </section>
 
-
-
         <!-- Trust Bar Section -->
         <section class="max-w-7xl mx-auto px-6 lg:px-10 py-16">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -267,22 +316,36 @@ onUnmounted(() => {
             </div>
         </section>
 
-        <!-- Brands Section -->
         <section class="py-24 overflow-hidden">
             <div class="text-center mb-14 reveal">
                 <span class="section-badge">Trusted Brands</span>
                 <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Powered By Industry Leaders</h2>
+                <p v-if="brandsStore.loading" class="text-[var(--text-muted)] mt-4">Loading brands...</p>
+                <p v-if="brandsStore.error" class="text-red-500 mt-4 text-sm">{{ brandsStore.error }}</p>
             </div>
-            <div class="brand-fade relative">
+
+            <div v-if="!brandsStore.loading && brandsStore.getActiveBrands().length > 0" class="brand-fade relative">
                 <div class="brand-track flex gap-8">
-                    <div v-for="(b, i) in [...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan'], ...['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan']]"
-                        :key="i" @click="filterByBrand(b)"
+                    <div v-for="brand in brandsStore.getActiveBrands().slice(0, 8)" :key="brand.id"
+                        @click="filterByBrand(brand.name)"
                         class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
-                        {{ b }}
+                        {{ brand.name }}
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="!brandsStore.loading && brandsStore.getActiveBrands().length === 0"
+                class="brand-fade relative">
+                <div class="brand-track flex gap-8">
+                    <div v-for="brand in ['Samsung', 'ASUS', 'Sony', 'Logitech', 'Dell', 'HP', 'Nova', 'Aero']"
+                        :key="brand" @click="filterByBrand(brand)"
+                        class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
+                        {{ brand }}
                     </div>
                 </div>
             </div>
         </section>
+
 
         <!-- Featured Products -->
         <section id="products" class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
@@ -290,6 +353,8 @@ onUnmounted(() => {
                 <div>
                     <span class="section-badge">Featured Products</span>
                     <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Hot Picks This Week</h2>
+                    <p v-if="productsStore.loading" class="text-[var(--text-muted)] mt-4">Loading products...</p>
+                    <p v-if="productsStore.error" class="text-red-500 mt-4 text-sm">{{ productsStore.error }}</p>
                 </div>
                 <router-link to="/products"
                     class="text-[var(--accent)] text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:gap-4 transition-all">
@@ -301,7 +366,6 @@ onUnmounted(() => {
                     :class="`reveal-delay-${i + 1}`" />
             </div>
         </section>
-
 
         <!-- Flash Sale Section -->
         <section class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
@@ -415,5 +479,37 @@ onUnmounted(() => {
     100% {
         transform: translateY(-20px) rotate(1deg);
     }
+}
+
+/* Add any additional styles here if needed */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-delay-1 {
+    transition-delay: 0.1s;
+}
+
+.reveal-delay-2 {
+    transition-delay: 0.2s;
+}
+
+.reveal-delay-3 {
+    transition-delay: 0.3s;
+}
+
+.reveal-delay-4 {
+    transition-delay: 0.4s;
+}
+
+.reveal-delay-5 {
+    transition-delay: 0.5s;
 }
 </style>

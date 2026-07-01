@@ -5,9 +5,10 @@ import { bannerAPI, mediaAPI, getOsimartStoreId } from '@/services/osimart';
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 const normalizeId = (value) => String(value || '').trim().toLowerCase();
 
-const normalizeBanner = (raw = {}) => ({
-    id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.title),
-    image: mediaAPI.getImageUrl(
+const normalizeBanner = (raw = {}) => {
+    console.log("Normalizing banner:", raw);
+    
+    const image = mediaAPI.getImageUrl(
         pick(
             raw.image,
             raw.image_url,
@@ -17,25 +18,35 @@ const normalizeBanner = (raw = {}) => ({
             raw.background,
             raw.cover,
             raw.file,
-            raw.media
+            raw.media,
+            raw.main_image
         )
-    ),
-    mobile_image: mediaAPI.getImageUrl(
+    );
+    
+    const mobile_image = mediaAPI.getImageUrl(
         pick(
             raw.mobile_image,
             raw.mobile,
             raw.mobile_banner,
-            raw.image
+            raw.image,
+            raw.image_url
         )
-    ),
-    title: pick(raw.title, raw.name, raw.heading, ''),
-    subtitle: pick(raw.subtitle, raw.description, raw.text, ''),
-    button: pick(raw.button_title, raw.button, raw.button_text, raw.cta, raw.cta_text, ''),
-    link: pick(raw.link, raw.url, raw.href, ''),
-    store: pick(raw.store, raw.store_id, raw.store_uuid, raw.store?.id, raw.store?.uuid, ''),
-    is_active: Boolean(pick(raw.is_active, raw.active, raw.enabled, true)),
-    raw,
-});
+    );
+
+    return {
+        id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.title),
+        image: image || mobile_image,
+        mobile_image: mobile_image || image,
+        title: pick(raw.title, raw.name, raw.heading, raw.banner_title, ''),
+        subtitle: pick(raw.subtitle, raw.description, raw.text, raw.banner_subtitle, ''),
+        button: pick(raw.button_title, raw.button, raw.button_text, raw.cta, raw.cta_text, raw.button_label, ''),
+        link: pick(raw.link, raw.url, raw.href, raw.button_link, ''),
+        store: pick(raw.store, raw.store_id, raw.store_uuid, raw.store?.id, raw.store?.uuid, ''),
+        is_active: Boolean(pick(raw.is_active, raw.active, raw.enabled, true)),
+        order: pick(raw.order, raw.position, raw.sort_order, 0),
+        raw,
+    };
+};
 
 export const useOsimartBannersStore = defineStore('osimartBanners', () => {
     const banners = ref([]);
@@ -50,47 +61,67 @@ export const useOsimartBannersStore = defineStore('osimartBanners', () => {
         error.value = '';
 
         try {
+            console.log("Fetching banners...");
             const response = await bannerAPI.list(params);
-            console.log("API RESPONSE:", response);
-            console.log("STORE ID:", getOsimartStoreId());
+            console.log("Banners API response:", response);
+            
             const storeId = normalizeId(getOsimartStoreId());
-            const normalized = response.map(normalizeBanner).filter((banner) => banner.id || banner.image);
+            console.log("Store ID:", storeId);
+            
+            const normalized = response
+                .filter(item => item && typeof item === 'object')
+                .map(normalizeBanner)
+                .filter((banner) => banner.id || banner.image);
+            
+            console.log(`Normalized ${normalized.length} banners`);
             console.table(
                 normalized.map((b) => ({
+                    id: b.id,
                     title: b.title,
                     store: b.store,
-                    image: b.image,
+                    image: b.image ? 'has image' : 'no image',
                 }))
             );
+            
+            // Filter banners by store ID if store is specified
             const storeBanners = normalized.filter(
                 (banner) =>
-                    banner.store &&
-                    normalizeId(banner.store) === storeId
+                    !banner.store || // If no store specified, include it
+                    (banner.store && normalizeId(banner.store) === storeId)
             );
 
-            banners.value =
-                storeBanners.length > 0
-                    ? storeBanners
-                    : normalized;
-            console.log("FINAL BANNERS:", banners.value);
+            banners.value = storeBanners.length > 0 ? storeBanners : normalized;
+            console.log(`Final banners: ${banners.value.length} banners loaded`);
+            
             hasFetched.value = true;
             return banners.value;
         } catch (err) {
-            error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart banners.';
+            const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart banners.';
+            error.value = errorMsg;
+            console.error("Error fetching banners:", errorMsg);
+            console.error("Full error:", err);
             banners.value = [];
             return [];
         } finally {
             loading.value = false;
         }
-
     };
 
+    const getActiveBanners = () => {
+        return banners.value.filter(banner => banner.is_active);
+    };
 
+    const getBannerById = (id) => {
+        return banners.value.find(banner => String(banner.id) === String(id));
+    };
 
     return {
         banners,
         loading,
         error,
+        hasFetched,
         fetchBanners,
+        getActiveBanners,
+        getBannerById,
     };
 });

@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { mediaAPI } from '@/services/osimart';
+import { mediaAPI, productAPI } from '@/services/osimart';
 import { fallbackProducts } from './fallbackProducts';
+import { useBrandsStore } from './brands';
 
 const toArray = (value) => {
     if (Array.isArray(value)) return value;
@@ -25,7 +26,15 @@ const toSlug = (value) => String(value || '')
 const normalizeCategory = (raw) => {
     if (!raw) return '';
     if (typeof raw === 'string') return raw;
-    return pick(raw.name, raw.title, raw.slug, raw.id, '');
+    return pick(
+        raw.name,
+        raw.title,
+        raw.slug,
+        raw.category_name,
+        raw.category?.name,
+        raw.id,
+        ''
+    );
 };
 
 const normalizeReviews = (raw) => toArray(pick(raw.reviews, raw.ratings, raw.feedback)).map((review, index) => ({
@@ -43,40 +52,44 @@ const normalizeImages = (raw) => {
         raw.image,
         raw.image_url,
         raw.thumbnail,
+        raw.mainImage,
+        raw.featured_image,
     ];
 
     return [...new Set(values.map((image) => mediaAPI.getImageUrl(image)).filter(Boolean))];
 };
 
 const normalizeProduct = (raw = {}) => {
-    const category = normalizeCategory(pick(raw.category, raw.category_name, raw.collection));
+    console.log("Normalizing product:", raw);
+
+    const category = normalizeCategory(pick(raw.category, raw.category_name, raw.collection, raw.category_data));
     const categoryId = pick(raw.category_id, raw.category?.id, raw.collection_id, raw.collection?.id, '');
     const categorySlug = pick(raw.category_slug, raw.category?.slug, raw.collection_slug, raw.collection?.slug, toSlug(category));
     const images = normalizeImages(raw);
     const reviews = normalizeReviews(raw);
-    const stock = toNumber(pick(raw.stock, raw.quantity, raw.available_quantity, raw.inventory), 0);
+    const stock = toNumber(pick(raw.stock, raw.quantity, raw.available_quantity, raw.inventory, raw.stock_quantity), 0);
     const isActive = pick(raw.is_active, raw.active, raw.enabled, true);
     const isInStock = pick(raw.inStock, raw.in_stock, raw.available, stock > 0);
 
     const normalized = {
-        id: pick(raw.id, raw.pk, raw.uuid, raw.slug),
-        name: pick(raw.name, raw.title, raw.product_name, 'Untitled Product'),
+        id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.product_id),
+        name: pick(raw.name, raw.title, raw.product_name, raw.productName, 'Untitled Product'),
         slug: pick(raw.slug, toSlug(pick(raw.name, raw.title, raw.product_name, raw.id))),
-        price: toNumber(pick(raw.price, raw.sale_price, raw.current_price, raw.unit_price), 0),
-        oldPrice: toNumber(pick(raw.oldPrice, raw.old_price, raw.compare_at_price, raw.original_price), 0),
-        description: pick(raw.description, raw.full_description, raw.desc, ''),
+        price: toNumber(pick(raw.price, raw.sale_price, raw.current_price, raw.unit_price, raw.regular_price), 0),
+        oldPrice: toNumber(pick(raw.oldPrice, raw.old_price, raw.compare_at_price, raw.original_price, raw.regular_price), 0),
+        description: pick(raw.description, raw.full_description, raw.desc, raw.long_description, ''),
         short_description: pick(raw.short_description, raw.shortDescription, raw.summary, raw.desc, raw.description, ''),
         image: images[0] || '',
         images,
         category,
         category_id: categoryId,
         category_slug: categorySlug,
-        badge: pick(raw.badge, raw.label, raw.tagline, ''),
+        badge: pick(raw.badge, raw.label, raw.tagline, raw.badge_text, ''),
         stock,
-        rating: toNumber(pick(raw.rating, raw.average_rating, raw.avg_rating), 0),
+        rating: toNumber(pick(raw.rating, raw.average_rating, raw.avg_rating, raw.avg_rating), 0),
         review_count: toNumber(pick(raw.review_count, raw.reviews_count, raw.rating_count, reviews.length), reviews.length),
-        tags: toArray(pick(raw.tags, raw.keywords)),
-        features: toArray(pick(raw.features, raw.highlights, raw.specifications_list)),
+        tags: toArray(pick(raw.tags, raw.keywords, raw.tag_list)),
+        features: toArray(pick(raw.features, raw.highlights, raw.specifications_list, raw.benefits)),
         variants: toArray(raw.variants).map((variant, index) => ({
             id: pick(variant.id, variant.pk, variant.sku, `variant-${index}`),
             name: pick(variant.name, variant.title, variant.sku, `Option ${index + 1}`),
@@ -85,12 +98,12 @@ const normalizeProduct = (raw = {}) => {
             ...variant,
         })),
         colors: toArray(raw.colors),
-        specifications: raw.specifications || raw.attributes || raw.metadata || {},
+        specifications: raw.specifications || raw.attributes || raw.metadata || raw.specs || {},
         reviews,
         is_active: Boolean(isActive),
         inStock: Boolean(isInStock),
-        brand: pick(raw.brand, raw.brand_name, raw.manufacturer, ''),
-        createdAt: pick(raw.createdAt, raw.created_at, raw.created, ''),
+        brand: pick(raw.brand, raw.brand_name, raw.manufacturer, raw.vendor, ''),
+        createdAt: pick(raw.createdAt, raw.created_at, raw.created, raw.date_created, ''),
         metadata: raw.metadata || {},
         raw,
     };
@@ -109,6 +122,9 @@ export const useProductsStore = defineStore('products', () => {
     const loading = ref(false);
     const error = ref('');
     const hasFetched = ref(false);
+    
+    // Store all categories separately so they don't disappear when filtering
+    const allCategories = ref(['All']);
 
     const filters = ref({
         category: 'All',
@@ -136,16 +152,47 @@ export const useProductsStore = defineStore('products', () => {
 
     const sampleProducts = productsWithAvgRating;
 
+    // Use allCategories instead of computing from products
     const categories = computed(() => {
-        const values = products.value
-            .map((product) => product.category)
-            .filter(Boolean);
-
-        return ['All', ...new Set(values)];
+        return allCategories.value;
     });
 
     const brands = computed(() => {
+        const brandsStore = useBrandsStore();
+        if (brandsStore.brands.length > 0) {
+            return brandsStore.getActiveBrands().map(b => b.name);
+        }
         return [...new Set(products.value.map((product) => product.brand).filter(Boolean))].sort();
+    });
+
+    // Brand filter options with counts for the sidebar
+    const brandFilterOptions = computed(() => {
+        const brandsStore = useBrandsStore();
+        const brandCounts = {};
+        
+        // Count products per brand
+        products.value.forEach(product => {
+            if (product.brand) {
+                brandCounts[product.brand] = (brandCounts[product.brand] || 0) + 1;
+            }
+        });
+        
+        // Get brands from API or fallback
+        let brandList = [];
+        if (brandsStore.brands.length > 0) {
+            brandList = brandsStore.getActiveBrands().map(b => b.name);
+        } else {
+            brandList = [...new Set(products.value.map((product) => product.brand).filter(Boolean))];
+        }
+        
+        // Return brands with counts, sorted alphabetically
+        return brandList
+            .sort()
+            .map(name => ({
+                name,
+                count: brandCounts[name] || 0,
+                active: filters.value.brands.includes(name)
+            }));
     });
 
     const filteredProducts = computed(() => {
@@ -201,18 +248,61 @@ export const useProductsStore = defineStore('products', () => {
         error.value = '';
 
         try {
-            const response = await productAPI.list(params);
-            const normalizedProducts = response.map(normalizeProduct).filter((product) => product.id);
+            const apiParams = {
+                page: 1,
+                page_size: 50,
+                ...params
+            };
+
+            console.log("Fetching products with params:", apiParams);
+            const response = await productAPI.list(apiParams);
+
+            console.log("Products response:", response);
+
+            let productData = response;
+            if (!Array.isArray(response)) {
+                productData = response.results || response.data || response.items || [];
+                console.log("Extracted products from response:", productData);
+            }
+
+            if (!Array.isArray(productData)) {
+                console.error("Product data is not an array:", productData);
+                return products.value;
+            }
+
+            console.log("Normalizing products...");
+            const normalizedProducts = productData
+                .filter(item => item && typeof item === 'object')
+                .map(normalizeProduct)
+                .filter((product) => product.id && product.id !== '');
+
+            console.log(`Normalized ${normalizedProducts.length} products`);
 
             if (normalizedProducts.length > 0) {
                 products.value = normalizedProducts;
-                featuredProducts.value = products.value.filter((product) => product.is_active).slice(0, 8);
+                featuredProducts.value = products.value
+                    .filter((product) => product.is_active)
+                    .slice(0, 8);
+                
+                // Update allCategories from ALL products (not filtered)
+                const categoryValues = products.value
+                    .map((product) => product.category)
+                    .filter(Boolean);
+                allCategories.value = ['All', ...new Set(categoryValues)];
+                
+                console.log("Products store updated successfully");
+                console.log("Categories:", allCategories.value);
+            } else {
+                console.warn("No products returned from API, using fallback");
             }
 
             hasFetched.value = true;
             return products.value;
         } catch (err) {
-            error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart products.';
+            const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart products.';
+            error.value = errorMsg;
+            console.error("Error fetching products:", errorMsg);
+            console.error("Full error:", err);
             return products.value;
         } finally {
             loading.value = false;
@@ -224,16 +314,25 @@ export const useProductsStore = defineStore('products', () => {
         error.value = '';
 
         try {
+            console.log("Fetching product detail for ID:", id);
             const response = await productAPI.detail(id);
-            singleProduct.value = response ? normalizeProduct(response) : null;
+            console.log("Product detail response:", response);
 
-            if (singleProduct.value && !products.value.some((product) => String(product.id) === String(singleProduct.value.id))) {
-                products.value = [singleProduct.value, ...products.value];
+            if (response) {
+                singleProduct.value = normalizeProduct(response);
+                console.log("Normalized product:", singleProduct.value);
+
+                if (singleProduct.value && !products.value.some((product) => String(product.id) === String(singleProduct.value.id))) {
+                    products.value = [singleProduct.value, ...products.value];
+                }
+            } else {
+                singleProduct.value = null;
             }
 
             return singleProduct.value;
         } catch (err) {
             error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart product.';
+            console.error("Error fetching product detail:", err);
             singleProduct.value = products.value.find((product) => String(product.id) === String(id)) || null;
             return singleProduct.value;
         } finally {
@@ -286,7 +385,9 @@ export const useProductsStore = defineStore('products', () => {
         error,
         sampleProducts,
         categories,
+        allCategories,
         brands,
+        brandFilterOptions,
         filters,
         sortBy,
         searchQueries,

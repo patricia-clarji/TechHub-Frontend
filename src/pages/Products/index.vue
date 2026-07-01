@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useProductsStore } from '@/stores/products';
 import { useUIStore } from '@/stores/ui';
-import FilterSidebar from '@/stores/FilterSidebar.vue';
+import FilterSidebar from '@/components/products/FilterSidebar.vue';
 import ProductCard from '@/components/cards/ProductCard.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
@@ -19,9 +19,15 @@ watch([() => productsStore.filters, () => productsStore.searchQueries], () => {
     setTimeout(() => isLoading.value = false, 400);
 }, { deep: true });
 
-// Sync category/brand from URL query if present (e.g. from Home page Finder / Trusted Brands)
+// Sync category/brand from URL query if present
 onMounted(() => {
     document.title = 'System Catalog | TechHub - High-End Hardware Provisions';
+    
+    // Fetch products if not already fetched
+    if (!productsStore.hasFetched) {
+        productsStore.fetchProducts();
+    }
+    
     if (route.query.category) {
         productsStore.filters.category = route.query.category;
     }
@@ -78,6 +84,12 @@ watch(() => route.query.brand, (newBrand) => {
                         <p class="text-xs text-[var(--text-muted)] mt-2 font-bold uppercase tracking-widest">
                             {{ productsStore.filteredProducts.length }} Active Modules Found
                         </p>
+                        <p v-if="productsStore.loading" class="text-xs text-[var(--text-muted)] mt-1">
+                            Loading provisions...
+                        </p>
+                        <p v-if="productsStore.error" class="text-xs text-red-500 mt-1">
+                            {{ productsStore.error }}
+                        </p>
                     </div>
 
                     <div class="hidden lg:flex items-center gap-4">
@@ -106,7 +118,7 @@ watch(() => route.query.brand, (newBrand) => {
 
                 <!-- Results -->
                 <div v-if="productsStore.filteredProducts.length > 0">
-                    <div v-if="isLoading" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <div v-if="isLoading || productsStore.loading" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                         <div v-for="n in 6" :key="n" class="h-[450px] bg-[var(--bg-muted)]/40 rounded-[2rem] animate-pulse"></div>
                     </div>
                     <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -142,4 +154,7 @@ watch(() => route.query.brand, (newBrand) => {
 <style scoped>
 .list-enter-active, .list-leave-active { transition: all 0.5s ease; }
 .list-enter-from, .list-leave-to { opacity: 0; transform: translateY(30px); }
+.animate-in {
+    animation: settleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 </style>
