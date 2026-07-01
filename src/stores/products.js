@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { mediaAPI, productAPI } from '@/services/osimart';
 import { fallbackProducts } from './fallbackProducts';
 import { useBrandsStore } from './brands';
+import { useOsimartCategoriesStore } from './osimartCategories';
 
 const toArray = (value) => {
     if (Array.isArray(value)) return value;
@@ -123,7 +124,7 @@ export const useProductsStore = defineStore('products', () => {
     const error = ref('');
     const hasFetched = ref(false);
     
-    // Store all categories separately so they don't disappear when filtering
+    // Initialize with fallback categories
     const allCategories = ref(['All']);
 
     const filters = ref({
@@ -152,7 +153,7 @@ export const useProductsStore = defineStore('products', () => {
 
     const sampleProducts = productsWithAvgRating;
 
-    // Use allCategories instead of computing from products
+    // Use allCategories
     const categories = computed(() => {
         return allCategories.value;
     });
@@ -165,19 +166,16 @@ export const useProductsStore = defineStore('products', () => {
         return [...new Set(products.value.map((product) => product.brand).filter(Boolean))].sort();
     });
 
-    // Brand filter options with counts for the sidebar
     const brandFilterOptions = computed(() => {
         const brandsStore = useBrandsStore();
         const brandCounts = {};
         
-        // Count products per brand
         products.value.forEach(product => {
             if (product.brand) {
                 brandCounts[product.brand] = (brandCounts[product.brand] || 0) + 1;
             }
         });
         
-        // Get brands from API or fallback
         let brandList = [];
         if (brandsStore.brands.length > 0) {
             brandList = brandsStore.getActiveBrands().map(b => b.name);
@@ -185,7 +183,6 @@ export const useProductsStore = defineStore('products', () => {
             brandList = [...new Set(products.value.map((product) => product.brand).filter(Boolean))];
         }
         
-        // Return brands with counts, sorted alphabetically
         return brandList
             .sort()
             .map(name => ({
@@ -241,6 +238,33 @@ export const useProductsStore = defineStore('products', () => {
         return result;
     });
 
+    // Function to update categories from products
+    const updateCategoriesFromProducts = () => {
+        const categoryValues = products.value
+            .map((product) => product.category)
+            .filter(Boolean);
+        const uniqueCategories = ['All', ...new Set(categoryValues)];
+        allCategories.value = uniqueCategories;
+        console.log("Updated categories:", allCategories.value);
+        return allCategories.value;
+    };
+
+    // Also get categories from the categories store
+    const updateCategoriesFromStore = () => {
+        const categoriesStore = useOsimartCategoriesStore();
+        if (categoriesStore.categories.length > 0) {
+            const categoryNames = categoriesStore.categories
+                .filter(cat => cat.is_active)
+                .map(cat => cat.name);
+            if (categoryNames.length > 0) {
+                allCategories.value = ['All', ...categoryNames];
+                console.log("Categories from API store:", allCategories.value);
+                return allCategories.value;
+            }
+        }
+        return null;
+    };
+
     const fetchProducts = async (params = {}, options = {}) => {
         if (loading.value || (hasFetched.value && !options.force)) return products.value;
 
@@ -256,7 +280,6 @@ export const useProductsStore = defineStore('products', () => {
 
             console.log("Fetching products with params:", apiParams);
             const response = await productAPI.list(apiParams);
-
             console.log("Products response:", response);
 
             let productData = response;
@@ -284,16 +307,24 @@ export const useProductsStore = defineStore('products', () => {
                     .filter((product) => product.is_active)
                     .slice(0, 8);
                 
-                // Update allCategories from ALL products (not filtered)
-                const categoryValues = products.value
-                    .map((product) => product.category)
-                    .filter(Boolean);
-                allCategories.value = ['All', ...new Set(categoryValues)];
-                
-                console.log("Products store updated successfully");
-                console.log("Categories:", allCategories.value);
+                // Update categories from products
+                updateCategoriesFromProducts();
             } else {
                 console.warn("No products returned from API, using fallback");
+                // Still update categories from fallback products
+                updateCategoriesFromProducts();
+            }
+
+            // Try to get categories from the categories store as well
+            const categoriesStore = useOsimartCategoriesStore();
+            if (categoriesStore.categories.length > 0) {
+                const categoryNames = categoriesStore.categories
+                    .filter(cat => cat.is_active)
+                    .map(cat => cat.name);
+                if (categoryNames.length > 0) {
+                    allCategories.value = ['All', ...categoryNames];
+                    console.log("Categories updated from API store:", allCategories.value);
+                }
             }
 
             hasFetched.value = true;
@@ -400,5 +431,7 @@ export const useProductsStore = defineStore('products', () => {
         fetchProducts,
         fetchProduct,
         fetchFeaturedProducts,
+        updateCategoriesFromProducts,
+        updateCategoriesFromStore,
     };
 });
