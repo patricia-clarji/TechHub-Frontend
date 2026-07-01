@@ -11,12 +11,32 @@ const productsStore = useProductsStore();
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
 
-const product = computed(() => {
-    return productsStore.sampleProducts.find(p => p.id === route.params.id);
-});
+const product = ref(null);
 
-const related = computed(() => {
-    return productsStore.sampleProducts.filter(p => p.category === product.value?.category && p.id !== product.value?.id).slice(0, 3);
+const fetchProductData = async () => {
+    const id = route.params.id;
+    if (!id) return;
+
+    productsStore.loading = true;
+    try {
+        await productsStore.fetchProduct(id);
+        product.value = productsStore.singleProduct;
+    } catch (error) {
+        console.error('Error fetching product:', error);
+    } finally {
+        productsStore.loading = false;
+    }
+};
+
+watch(() => route.params.id, () => {
+    fetchProductData();
+}, { immediate: true });
+
+const relatedProducts = computed(() => {
+    if (!product.value) return [];
+    return productsStore.sampleProducts
+        .filter(p => p.category === product.value.category && p.id !== product.value.id)
+        .slice(0, 3);
 });
 </script>
 
@@ -25,26 +45,30 @@ const related = computed(() => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             <div
                 class="aspect-square bg-[var(--bg-card)] rounded-[2.5rem] border border-[var(--border)] overflow-hidden shadow-xl reveal">
-                <img :src="product.img" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+                <img :src="product.img"
+                    class="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
             </div>
 
             <div class="space-y-8 reveal reveal-delay-1">
-                <span
-                    class="section-badge">{{
+                <span class="section-badge">{{
                     product.category }}</span>
                 <div>
                     <h1 class="font-[Playfair_Display] text-4xl sm:text-5xl font-extrabold text-[var(--text)] mb-4">{{
-                    product.name }}</h1>
+                        product.name }}</h1>
                     <div class="flex items-center gap-4">
                         <p class="text-3xl font-black text-[var(--accent)]">$ {{ product.price }}</p>
-                        <span class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest bg-[var(--bg-muted)] px-3 py-1 rounded-lg">MSRP Deployment</span>
+                        <span
+                            class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest bg-[var(--bg-muted)] px-3 py-1 rounded-lg">MSRP
+                            Deployment</span>
                     </div>
                 </div>
-                
+
                 <p class="text-sm text-[var(--text-muted)] leading-relaxed">{{ product.desc }}</p>
 
                 <div class="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-3xl space-y-4 shadow-sm">
-                    <h4 class="text-[10px] uppercase font-black tracking-[0.2em] text-[var(--text)] border-b border-[var(--border)] pb-2">Core Asset Capabilities
+                    <h4
+                        class="text-[10px] uppercase font-black tracking-[0.2em] text-[var(--text)] border-b border-[var(--border)] pb-2">
+                        Core Asset Capabilities
                     </h4>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <li v-for="f in product.features" :key="f"
@@ -71,7 +95,9 @@ const related = computed(() => {
         <section v-if="related.length > 0" class="space-y-8 reveal">
             <div class="flex items-end justify-between">
                 <h3 class="font-[Playfair_Display] text-3xl font-bold">Related Premium Gear</h3>
-                <router-link to="/products" class="text-xs font-bold uppercase tracking-widest text-[var(--accent)] hover:underline">View All Provisions</router-link>
+                <router-link to="/products"
+                    class="text-xs font-bold uppercase tracking-widest text-[var(--accent)] hover:underline">View All
+                    Provisions</router-link>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <ProductCard v-for="r in related" :key="r.id" :product="r" />

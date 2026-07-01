@@ -31,7 +31,38 @@ const activeImgIndex = ref(0);
 const selectedColor = ref(null);
 const selectedVariant = ref(null);
 
+// Product fetched from API
+const product = ref(null);
+const isLoading = ref(false);
+
+// Fetch product from API
+const fetchProductData = async () => {
+    const id = route.params.id;
+    if (!id) return;
+    
+    isLoading.value = true;
+    try {
+        await productsStore.fetchProduct(id);
+        product.value = productsStore.singleProduct;
+        
+        // Set default selections
+        if (product.value) {
+            selectedColor.value = product.value.colors?.[0] || null;
+            selectedVariant.value = product.value.variants?.find(v => v.stock > 0) || product.value.variants?.[0] || null;
+            
+            // Add to recently viewed
+            recentlyViewedStore.addProduct(product.value.id);
+            updateSEO(product.value);
+        }
+    } catch (error) {
+        console.error('Error fetching product:', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
 const stockStatus = computed(() => {
+    if (!product.value) return { label: 'Loading...', color: 'text-[var(--text-muted)]', icon: 'fa-spinner' };
     const stock = selectedVariant.value?.stock ?? product.value?.stock ?? 0;
     if (stock === 0) return { label: 'Out of Stock', color: 'text-red-500', icon: 'fa-circle-xmark' };
     if (stock < 5) return { label: `Only ${stock} left in stock`, color: 'text-orange-500', icon: 'fa-clock' };
@@ -55,7 +86,6 @@ const initObserver = () => {
         });
     }, { threshold: 0.1 });
 
-    // Use nextTick to ensure v-if has rendered the elements
     nextTick(() => {
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     });
@@ -64,7 +94,6 @@ const initObserver = () => {
 const updateSEO = (p) => {
     if (!p) return;
     
-    // 1. Dynamic Meta Tags
     document.title = `${p.name} | TechHub - Premium Provisions`;
     
     const metaDescription = document.querySelector('meta[name="description"]') || document.createElement('meta');
@@ -72,7 +101,6 @@ const updateSEO = (p) => {
     metaDescription.setAttribute('content', p.desc);
     if (!document.querySelector('meta[name="description"]')) document.head.appendChild(metaDescription);
 
-    // 2. Open Graph Tags
     const ogTags = {
         'og:title': p.name,
         'og:description': p.desc,
@@ -91,7 +119,6 @@ const updateSEO = (p) => {
         tag.setAttribute('content', content);
     });
 
-    // 3. Structured Data (JSON-LD)
     let scriptTag = document.getElementById('product-schema');
     if (scriptTag) scriptTag.remove();
 
@@ -127,11 +154,6 @@ const updateSEO = (p) => {
     document.head.appendChild(scriptTag);
 };
 
-const product = computed(() => {
-    // Ensure matching works even if types differ (string vs number)
-    return productsStore.sampleProducts.find(p => String(p.id) === String(route.params.id));
-});
-
 const getHighlightIcon = (text) => {
     const low = text.toLowerCase();
     if (low.includes('battery') || low.includes('charge')) return 'fa-battery-full';
@@ -143,7 +165,7 @@ const getHighlightIcon = (text) => {
     return 'fa-microchip';
 };
 
-// Sync Color with Image
+// Watch Color selection
 watch(selectedColor, (newColor) => {
     if (newColor && typeof newColor.imgIndex === 'number') {
         activeImgIndex.value = newColor.imgIndex;
@@ -152,21 +174,12 @@ watch(selectedColor, (newColor) => {
 
 // Review Logic
 const userRating = ref(0);
-
-// Initialize variant defaults
-watch(product, (newVal) => {
-    if (newVal) {
-        selectedColor.value = newVal.colors?.[0] || null;
-        selectedVariant.value = newVal.variants?.find(v => v.stock > 0) || newVal.variants?.[0] || null;
-    }
-}, { immediate: true });
-
 const hoverRating = ref(0);
 const userComment = ref('');
 
 const ratingDistribution = computed(() => {
     if (!product.value) return [];
-    const dist = [0, 0, 0, 0, 0]; // For 1, 2, 3, 4, 5 stars
+    const dist = [0, 0, 0, 0, 0];
     product.value.reviews.forEach(r => {
         if (r.rating >= 1 && r.rating <= 5) {
             dist[r.rating - 1]++;
@@ -176,7 +189,7 @@ const ratingDistribution = computed(() => {
     return dist.map((count, i) => ({
         stars: i + 1,
         percentage: (count / total) * 100
-    })).reverse(); // Reverse to show 5-star first
+    })).reverse();
 });
 
 const handleReviewSubmit = () => {
@@ -206,13 +219,6 @@ const hasUserReviewed = computed(() => {
     return product.value.reviews.some(review => review.userId === userStore.currentUser.id);
 });
 
-watch(product, (newProd) => {
-    if (newProd) {
-        recentlyViewedStore.addProduct(newProd.id);
-        updateSEO(newProd);
-    }
-}, { immediate: true });
-
 const relatedProducts = computed(() => {
     if (!product.value) return [];
     return productsStore.sampleProducts
@@ -235,6 +241,7 @@ const handleAddToCart = () => {
 };
 
 const handleBuyNow = () => {
+    if (!product.value) return;
     cartStore.clearCart();
     cartStore.addToCart(product.value.id, selectedQuantity.value);
     router.push('/cart');
@@ -246,17 +253,25 @@ const isWishlisted = computed(() => {
 
 const goBack = () => router.back();
 
-onMounted(initObserver);
+// Watch route params to fetch new product when navigating
+watch(() => route.params.id, () => {
+    selectedQuantity.value = 1;
+    fetchProductData();
+}, { immediate: true });
+
+onMounted(() => {
+    fetchProductData();
+    initObserver();
+});
+
 onUnmounted(() => {
     if (observer) observer.disconnect();
     const script = document.getElementById('product-schema');
     if (script) script.remove();
 });
 
-// Re-run observer logic when the route ID changes (navigating between related products)
-watch(() => route.params.id, () => {
-    selectedQuantity.value = 1; // Reset quantity when product changes
-    // Ensure product is updated before re-observing
+// Re-run observer logic when product loads
+watch(product, () => {
     nextTick(() => {
         initObserver();
     });
@@ -347,14 +362,14 @@ watch(() => route.params.id, () => {
                         </div>
                         
                         <button 
-                            @click="cartStore.addToCart(product.id, selectedQuantity)"
-                            :disabled="product.stock === 0"
+                            @click="handleAddToCart"
+                            :disabled="product.stock === 0 || stockStatus.label === 'Out of Stock'"
                             class="flex-1 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white font-bold uppercase tracking-widest text-[10px] py-5 rounded-2xl premium-btn shadow-lg disabled:opacity-50"
                         >
                             Integrate Module (Add to Cart)
                         </button>
                     </div>
-                    <button @click="handleBuyNow" v-if="product.stock > 0" class="w-full mt-3 py-4 border-2 border-[var(--accent)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all">
+                    <button @click="handleBuyNow" v-if="product.stock > 0 && stockStatus.label !== 'Out of Stock'" class="w-full mt-3 py-4 border-2 border-[var(--accent)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all">
                         Immediate Checkout (Buy Now)
                     </button>
                 </div>
@@ -500,6 +515,15 @@ watch(() => route.params.id, () => {
                 </router-link>
             </div>
         </section>
+    </main>
+
+    <!-- Loading State -->
+    <main v-else-if="isLoading" class="pt-48 pb-32 text-center space-y-8">
+        <div class="w-24 h-24 bg-[var(--bg-muted)] rounded-full flex items-center justify-center mx-auto text-[var(--text-muted)] animate-pulse">
+            <i class="fa-solid fa-microchip text-4xl opacity-20"></i>
+        </div>
+        <h1 class="font-[Playfair_Display] text-4xl font-bold">Loading Provision...</h1>
+        <p class="text-[var(--text-muted)] text-sm max-w-md mx-auto">Fetching hardware specifications from the catalog.</p>
     </main>
 
     <!-- 404 State -->

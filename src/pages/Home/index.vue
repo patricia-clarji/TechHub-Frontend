@@ -43,16 +43,16 @@ const trustItems = [
     { icon: 'fa-headset', title: 'Premium Support', desc: 'Assistance whenever needed' }
 ];
 
-// Categories from API with fallback
+// Categories from API only - no fallback
 const categories = computed(() => {
-    // Try to use API categories first
+    // Use API categories only
     const apiCategories = categoriesStore.categories
         .filter((category) => category.is_active)
-        .slice(0, 8) // Limit to 8 categories
+        .slice(0, 8)
         .map((category) => ({
             name: category.name,
             sub: category.slug || category.name,
-            img: category.image || productsStore.sampleProducts.find((product) => product.category === category.name)?.img || '',
+            img: category.image || '',
             desc: category.description || `Explore our ${category.name} collection`,
         }));
 
@@ -60,19 +60,11 @@ const categories = computed(() => {
         return apiCategories;
     }
 
-    // Fallback to product-based categories
-    return productsStore.categories
-        .filter((category) => category !== 'All')
-        .slice(0, 8)
-        .map((category) => ({
-            name: category,
-            sub: category,
-            img: productsStore.sampleProducts.find((product) => product.category === category)?.img || '',
-            desc: `Discover premium ${category} products`,
-        }));
+    // If API returns empty, return empty array - loading state will handle it
+    return [];
 });
 
-// Brands from API with fallback
+// Brands from API only - no fallback
 const brandNames = computed(() => {
     if (brandsStore.brands.length > 0) {
         return brandsStore.brands
@@ -80,8 +72,8 @@ const brandNames = computed(() => {
             .slice(0, 8)
             .map(b => b.name);
     }
-    // Fallback brands
-    return ['Nova', 'Galaxy', 'Pixel', 'Aero', 'Studio', 'Stealth', 'Pulse', 'Titan'];
+    // Return empty array if no brands from API
+    return [];
 });
 
 // Testimonials
@@ -228,9 +220,10 @@ onUnmounted(() => {
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full">
                 <div class="space-y-8 relative z-10 overflow-hidden">
+                    <!-- Hardcoded badge text - NOT from API -->
                     <span class="section-badge hero-badge inline-flex">
                         <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] inline-block animate-ping mr-3"></span>
-                        {{ activeBanner?.subtitle || 'Premium Electronics' }}
+                        Premium Electronics
                     </span>
                     <h1
                         class="font-[Playfair_Display] text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.06] hero-title">
@@ -245,6 +238,7 @@ onUnmounted(() => {
                             at Unbeatable<br />Prices
                         </template>
                     </h1>
+                    <!-- Description comes from API subtitle -->
                     <p class="text-[var(--text-muted)] text-lg leading-relaxed max-w-md hero-body">
                         {{ activeBanner?.subtitle || 'Shop premium electronics, gaming gear, laptops, smartphones, and accessories — all in one place.' }}
                     </p>
@@ -292,7 +286,16 @@ onUnmounted(() => {
                 <p class="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">Explore premium technology collections
                     carefully curated for productivity, entertainment, and modern living.</p>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+            <!-- Loading State -->
+            <div v-if="categoriesStore.loading" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div v-for="n in 4" :key="n"
+                    class="h-[420px] lg:h-[500px] bg-[var(--bg-muted)] rounded-[2.5rem] animate-pulse">
+                </div>
+            </div>
+
+            <!-- Categories Grid -->
+            <div v-else-if="categories.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <router-link v-for="cat in categories" :key="cat.name"
                     :to="{ name: 'Products', query: { category: cat.name } }"
                     class="cat-card h-[420px] lg:h-[500px] reveal group relative overflow-hidden rounded-[2.5rem]">
@@ -314,38 +317,36 @@ onUnmounted(() => {
                     </div>
                 </router-link>
             </div>
+
+            <!-- Empty State -->
+            <div v-else class="text-center py-12">
+                <p class="text-[var(--text-muted)]">No categories available</p>
+            </div>
         </section>
 
+        <!-- Brands Section -->
         <section class="py-24 overflow-hidden">
             <div class="text-center mb-14 reveal">
                 <span class="section-badge">Trusted Brands</span>
                 <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Powered By Industry Leaders</h2>
                 <p v-if="brandsStore.loading" class="text-[var(--text-muted)] mt-4">Loading brands...</p>
-                <p v-if="brandsStore.error" class="text-red-500 mt-4 text-sm">{{ brandsStore.error }}</p>
             </div>
 
-            <div v-if="!brandsStore.loading && brandsStore.getActiveBrands().length > 0" class="brand-fade relative">
+            <!-- Brands Display -->
+            <div v-if="brandNames.length > 0" class="brand-fade relative">
                 <div class="brand-track flex gap-8">
-                    <div v-for="brand in brandsStore.getActiveBrands().slice(0, 8)" :key="brand.id"
-                        @click="filterByBrand(brand.name)"
+                    <div v-for="(b, i) in brandNames" :key="i" @click="filterByBrand(b)"
                         class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
-                        {{ brand.name }}
+                        {{ b }}
                     </div>
                 </div>
             </div>
 
-            <div v-else-if="!brandsStore.loading && brandsStore.getActiveBrands().length === 0"
-                class="brand-fade relative">
-                <div class="brand-track flex gap-8">
-                    <div v-for="brand in ['Samsung', 'ASUS', 'Sony', 'Logitech', 'Dell', 'HP', 'Nova', 'Aero']"
-                        :key="brand" @click="filterByBrand(brand)"
-                        class="min-w-[180px] h-[90px] glass-panel rounded-2xl flex items-center justify-center font-bold text-xl opacity-40 hover:opacity-100 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all cursor-pointer">
-                        {{ brand }}
-                    </div>
-                </div>
+            <!-- Empty State -->
+            <div v-else-if="!brandsStore.loading" class="text-center">
+                <p class="text-[var(--text-muted)]">No brands available</p>
             </div>
         </section>
-
 
         <!-- Featured Products -->
         <section id="products" class="max-w-7xl mx-auto px-6 lg:px-10 py-12">
