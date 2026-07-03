@@ -1,5 +1,5 @@
 <script setup>
-import { useUserStore } from '../../stores/user';
+import { useUserStore } from '@/stores/auth/user';
 import { useRouter } from 'vue-router';
 import { watch } from 'vue';
 

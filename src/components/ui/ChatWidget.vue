@@ -1,9 +1,10 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUIStore } from '@/stores/ui';
-import { useProductsStore } from '@/stores/products';
-import { useUserStore } from '@/stores/user';
+import { useUIStore } from '@/stores/ui/ui';
+import { useProductsStore } from '@/stores/shop/products';
+import { useUserStore } from '@/stores/auth/user';
+import logger from '@/utils/logger';
 
 const uiStore = useUIStore();
 const productsStore = useProductsStore();
@@ -21,13 +22,26 @@ const showSuggestions = ref(true);
 const suggestions = ["Latest Deals", "Workstation Recommendations", "Shipping Policy", "Compare Smartphones"];
 
 // Simple Markdown-lite parser for bolding and line breaks
+// Escape incoming text before injecting limited HTML tags to avoid XSS
+const escapeHtml = (unsafe) => {
+    return (unsafe || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const formatMessage = (text) => {
-    if (!text) return "";
-    return text
-        .replace(/^### (.*$)/gim, '<h3 class="font-bold text-sm mt-3 mb-1 uppercase tracking-wider">$1</h3>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/^\s*[-*]\s+(.*)/gm, '<div class="flex gap-2 mb-1"><span class="text-[var(--accent)]">•</span><span>$1</span></div>')
-        .replace(/\n/g, '<br/>');
+    if (!text) return '';
+    // Work on escaped text
+    let t = escapeHtml(text);
+    // Allow a few safe tags by injecting them via replacement on escaped text
+    t = t.replace(/^### (.*$)/gim, '<h3 class="font-bold text-sm mt-3 mb-1 uppercase tracking-wider">$1</h3>');
+    t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    t = t.replace(/^\s*[-*]\s+(.*)/gm, '<div class="flex gap-2 mb-1"><span class="text-[var(--accent)]">•</span><span>$1</span></div>');
+    t = t.replace(/\n/g, '<br/>');
+    return t;
 };
 
 // Logic to detect if a product name is mentioned and return the object
@@ -135,7 +149,7 @@ const processAIStreaming = async (userPrompt, targetMsgIndex) => {
         messages.value[targetMsgIndex].product = detectProduct(messages.value[targetMsgIndex].text);
 
     } catch (error) {
-        console.error('Network or parsing error:', error);
+        logger.error('Network or parsing error:', error);
         messages.value[targetMsgIndex].text = "Neural Link Error: Connection to the AI Inference Node was interrupted.";
     }
 };

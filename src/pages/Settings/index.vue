@@ -1,6 +1,6 @@
 <script setup>
-import { useUserStore } from '@/stores/user'
-import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/auth/user'
+import { useToastStore } from '@/stores/ui/toast'
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 

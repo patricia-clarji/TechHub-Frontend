@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { bannerAPI, mediaAPI, getOsimartStoreId } from '@/services/osimart';
+import logger from '@/utils/logger';
 
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 const normalizeId = (value) => String(value || '').trim().toLowerCase();
 
 const normalizeBanner = (raw = {}) => {
-    console.log("Normalizing banner:", raw);
+    logger.debug('Normalizing banner:', raw);
     
     const image = mediaAPI.getImageUrl(
         pick(
@@ -61,27 +62,20 @@ export const useOsimartBannersStore = defineStore('osimartBanners', () => {
         error.value = '';
 
         try {
-            console.log("Fetching banners...");
+            logger.debug('Fetching banners...');
             const response = await bannerAPI.list(params);
-            console.log("Banners API response:", response);
+            logger.debug('Banners API response:', response);
             
             const storeId = normalizeId(getOsimartStoreId());
-            console.log("Store ID:", storeId);
+            logger.debug('Store ID:', storeId);
             
             const normalized = response
                 .filter(item => item && typeof item === 'object')
                 .map(normalizeBanner)
                 .filter((banner) => banner.id || banner.image);
             
-            console.log(`Normalized ${normalized.length} banners`);
-            console.table(
-                normalized.map((b) => ({
-                    id: b.id,
-                    title: b.title,
-                    store: b.store,
-                    image: b.image ? 'has image' : 'no image',
-                }))
-            );
+            logger.debug(`Normalized ${normalized.length} banners`);
+            logger.debug('Banner summary:', normalized.map((b) => ({ id: b.id, title: b.title, store: b.store, image: b.image ? 'has image' : 'no image' })));
             
             // Filter banners by store ID if store is specified
             const storeBanners = normalized.filter(
@@ -91,15 +85,15 @@ export const useOsimartBannersStore = defineStore('osimartBanners', () => {
             );
 
             banners.value = storeBanners.length > 0 ? storeBanners : normalized;
-            console.log(`Final banners: ${banners.value.length} banners loaded`);
+            logger.debug(`Final banners: ${banners.value.length} banners loaded`);
             
             hasFetched.value = true;
             return banners.value;
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart banners.';
             error.value = errorMsg;
-            console.error("Error fetching banners:", errorMsg);
-            console.error("Full error:", err);
+            logger.error('Error fetching banners:', errorMsg);
+            logger.error('Full error:', err);
             banners.value = [];
             return [];
         } finally {

@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { useWishlistStore } from '@/stores/wishlist';
-import { useProductsStore } from '@/stores/products';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useProductsStore } from '@/stores/shop/products';
 import ProductCard from '@/components/cards/ProductCard.vue';
 
 const wishlistStore = useWishlistStore();

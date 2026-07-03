@@ -1,9 +1,9 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/user';
-import { useToastStore } from '@/stores/toast';
-import { useUIStore } from '@/stores/ui';
+import { useUserStore } from '@/stores/auth/user';
+import { useToastStore } from '@/stores/ui/toast';
+import { useUIStore } from '@/stores/ui/ui';
 
 const userStore = useUserStore();
 const toastStore = useToastStore();

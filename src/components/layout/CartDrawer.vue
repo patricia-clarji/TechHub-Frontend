@@ -1,8 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { useUIStore } from '@/stores/ui';
-import { useCartStore } from '@/stores/cart';
-import { useProductsStore } from '@/stores/products';
+import { useUIStore } from '@/stores/ui/ui';
+import { useCartStore } from '@/stores/shop/cart';
+import { useProductsStore } from '@/stores/shop/products';
 
 const uiStore = useUIStore();
 const cartStore = useCartStore();

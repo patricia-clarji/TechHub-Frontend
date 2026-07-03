@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { mediaAPI, brandAPI } from '@/services/osimart';
+import logger from '@/utils/logger';
 
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 
 const normalizeBrand = (raw = {}) => {
-    console.log("Normalizing brand:", raw);
+    logger.debug('Normalizing brand:', raw);
     
-    // Handle the logo field - it could be a string, object, or null
     let logoUrl = '';
     if (raw.logo) {
         if (typeof raw.logo === 'string') {
@@ -54,28 +54,26 @@ export const useBrandsStore = defineStore('brands', () => {
                 ...params
             };
             
-            console.log("Fetching brands with params:", apiParams);
+            logger.debug('Fetching brands with params:', apiParams);
             const response = await brandAPI.list(apiParams);
-            
-            console.log("Brands response:", response);
+            logger.debug('Brands response:', response);
             
             // Handle different response structures
             let brandData = response;
             if (!Array.isArray(response)) {
                 brandData = response.results || response.data || response.items || [];
-                console.log("Extracted brands from response:", brandData);
+                logger.debug('Extracted brands from response:', brandData);
             }
             
             if (!Array.isArray(brandData)) {
-                console.error("Brand data is not an array:", brandData);
+                logger.error('Brand data is not an array:', brandData);
                 return brands.value;
             }
-            
-            console.log(`Raw brands count: ${brandData.length}`);
+            logger.debug(`Raw brands count: ${brandData.length}`);
             
             // Log each brand to see what we're getting
             brandData.forEach((brand, index) => {
-                console.log(`Brand ${index + 1}:`, {
+                logger.debug(`Brand ${index + 1}:`, {
                     id: brand.id,
                     name: brand.name,
                     slugified_name: brand.slugified_name,
@@ -84,17 +82,17 @@ export const useBrandsStore = defineStore('brands', () => {
                 });
             });
             
-            console.log("Normalizing brands...");
+            logger.debug('Normalizing brands...');
             const normalizedBrands = brandData
                 .filter(item => item && typeof item === 'object')
                 .map(normalizeBrand)
                 .filter((brand) => brand.id && brand.id !== '');
             
-            console.log(`Normalized ${normalizedBrands.length} brands`);
+            logger.debug(`Normalized ${normalizedBrands.length} brands`);
             
             // Log normalized brands with their names
             normalizedBrands.forEach((brand, index) => {
-                console.log(`Normalized brand ${index + 1}:`, {
+                logger.debug(`Normalized brand ${index + 1}:`, {
                     id: brand.id,
                     name: brand.name,
                     slug: brand.slug,
@@ -104,10 +102,10 @@ export const useBrandsStore = defineStore('brands', () => {
             
             if (normalizedBrands.length > 0) {
                 brands.value = normalizedBrands;
-                console.log("Brands store updated successfully");
-                console.log("Brand names:", brands.value.map(b => b.name));
+                logger.debug('Brands store updated successfully');
+                logger.debug('Brand names:', brands.value.map(b => b.name));
             } else {
-                console.warn("No brands returned from API");
+                logger.warn('No brands returned from API');
             }
             
             hasFetched.value = true;
@@ -115,8 +113,8 @@ export const useBrandsStore = defineStore('brands', () => {
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart brands.';
             error.value = errorMsg;
-            console.error("Error fetching brands:", errorMsg);
-            console.error("Full error:", err);
+            logger.error('Error fetching brands:', errorMsg);
+            logger.error('Full error:', err);
             brands.value = [];
             return [];
         } finally {
@@ -142,7 +140,7 @@ export const useBrandsStore = defineStore('brands', () => {
 
     const brandNames = computed(() => {
         const active = brands.value.filter(b => b.is_active);
-        console.log("Active brands for display:", active.map(b => b.name));
+        logger.debug('Active brands for display:', active.map(b => b.name));
         return active.slice(0, 8).map(b => b.name);
     });
 

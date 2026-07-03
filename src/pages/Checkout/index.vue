@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
-import { useCartStore } from '../../stores/cart';
-import { useToastStore } from '../../stores/toast';
+import { useCartStore } from '@/stores/shop/cart';
+import { useToastStore } from '@/stores/ui/toast';
 import { useRouter } from 'vue-router';
 
 const cartStore = useCartStore();

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { useUIStore } from '@/stores/ui';
-import { useUserStore } from '@/stores/user';
-import { useToastStore } from '@/stores/toast';
+import { useUIStore } from '@/stores/ui/ui';
+import { useUserStore } from '@/stores/auth/user';
+import { useToastStore } from '@/stores/ui/toast';
 
 const uiStore = useUIStore();
 const userStore = useUserStore();
@@ -79,7 +79,7 @@ const resetForm = () => {
     Object.keys(errors.value).forEach(k => errors.value[k] = '');
 };
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
     // Final validation check before submission
     wasSubmitted.value = true;
     if (!email.value) errors.value.email = 'Email is required';
@@ -93,28 +93,28 @@ const handleSubmit = () => {
     if (hasErrors) {
         return;
     }
-    
+    if (isProcessing.value) return; // prevent duplicate submissions
     isProcessing.value = true;
-
-    // Simulate network delay
-    setTimeout(() => {
+    try {
         let res;
         if (isLogin.value) {
-            res = userStore.login(email.value, password.value);
+            res = await userStore.login(email.value, password.value);
         } else {
-            res = userStore.signup(name.value, email.value, password.value);
+            res = await userStore.signup(name.value, email.value, password.value);
         }
 
         if (res && res.success) {
             resetForm();
             uiStore.authModalOpen = false;
-            isProcessing.value = false;
             toastStore.showToast(`System authentication established. Welcome, ${userStore.currentUser?.name || ''}.`, 'fa-user-check');
         } else {
-            isProcessing.value = false;
             toastStore.showToast(res?.message || 'Authentication failed.', 'fa-triangle-exclamation');
         }
-    }, 1000);
+    } catch (e) {
+        toastStore.showToast('Authentication error occurred.', 'fa-triangle-exclamation');
+    } finally {
+        isProcessing.value = false;
+    }
 };
 
 const handleForgotPasswordSubmit = () => {
@@ -245,8 +245,9 @@ watch(() => uiStore.authModalOpen, (isOpen) => {
                     <p v-if="errors.confirmPassword && (touched.confirmPassword || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.confirmPassword }}</p>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
+                <button type="submit" :disabled="isProcessing"
+                    :aria-busy="isProcessing"
+                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg disabled:opacity-60">
                     {{ isLogin ? 'Sign in' : 'Verify email' }}
                 </button>
             </form>

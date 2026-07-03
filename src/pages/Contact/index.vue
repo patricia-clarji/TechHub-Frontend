@@ -1,7 +1,7 @@
 <script setup>
 import emailjs from '@emailjs/browser'
 import { ref } from 'vue';
-import { useToastStore } from '../../stores/toast';
+import { useToastStore } from '@/stores/ui/toast';
 
 const toastStore = useToastStore();
 const senderName = ref('');

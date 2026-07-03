@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useCartStore } from '../../stores/cart';
-import { useUserStore } from '../../stores/user';
-import { useProductsStore } from '../../stores/products';
-import { useWishlistStore } from '../../stores/wishlist';
-import { useNotificationStore } from '../../stores/notifications';
-import { useUIStore } from '../../stores/ui';
+import { useCartStore } from '@/stores/shop/cart';
+import { useUserStore } from '@/stores/auth/user';
+import { useProductsStore } from '@/stores/shop/products';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useNotificationStore } from '@/stores/ui/notifications';
+import { useUIStore } from '@/stores/ui/ui';
 
 const cartStore = useCartStore();
 const userStore = useUserStore();

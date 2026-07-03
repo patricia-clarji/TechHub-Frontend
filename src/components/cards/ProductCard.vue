@@ -1,9 +1,9 @@
 <script setup>
 import { computed } from 'vue';
-import { useCartStore } from '../../stores/cart';
-import { useWishlistStore } from '../../stores/wishlist';
-import { useProductsStore } from '../../stores/products';
-import { useUIStore } from '../../stores/ui';
+import { useCartStore } from '@/stores/shop/cart';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useProductsStore } from '@/stores/shop/products';
+import { useUIStore } from '@/stores/ui/ui';
 
 const props = defineProps({
     product: { type: Object, required: true }

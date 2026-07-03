@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { useCartStore } from '@/stores/cart';
+import { useCartStore } from '@/stores/shop/cart';
 
 const props = defineProps({
     product: { type: Object, required: true },

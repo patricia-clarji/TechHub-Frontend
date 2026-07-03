@@ -1,12 +1,12 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useProductsStore } from '@/stores/products';
+import { useProductsStore } from '@/stores/shop/products';
 import ProductCard from '../../components/cards/ProductCard.vue';
-import { useCartStore } from '@/stores/cart';
-import { useOsimartCategoriesStore } from '@/stores/osimartCategories';
-import { useOsimartBannersStore } from '@/stores/osimartBanners';
-import { useBrandsStore } from '@/stores/brands';
+import { useCartStore } from '@/stores/shop/cart';
+import { useOsimartCategoriesStore } from '@/stores/catalog/osimartCategories';
+import { useOsimartBannersStore } from '@/stores/catalog/osimartBanners';
+import { useBrandsStore } from '@/stores/catalog/brands';
 import WhyTechHubSection from '@/components/layout/WhyTechHubSection.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
@@ -180,7 +180,7 @@ onMounted(async () => {
             brandsStore.fetchBrands({}, { force: true })
         ]);
     } catch (error) {
-        console.error('Error loading home page data:', error);
+        import('@/utils/logger').then(({ default: logger }) => logger.error('Error loading home page data:', error));
     }
 
     // Start timer

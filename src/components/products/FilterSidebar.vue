@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { useProductsStore } from '@/stores/products';
-import { useBrandsStore } from '@/stores/brands';
+import { useProductsStore } from '@/stores/shop/products';
+import { useBrandsStore } from '@/stores/catalog/brands';
 
 const productsStore = useProductsStore();
 const brandsStore = useBrandsStore();

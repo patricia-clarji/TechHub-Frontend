@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { useProductsStore } from '@/stores/products';
-import { useUIStore } from '@/stores/ui';
+import { useProductsStore } from '@/stores/shop/products';
+import { useUIStore } from '@/stores/ui/ui';
 import FilterSidebar from '@/components/products/FilterSidebar.vue';
 import ProductCard from '@/components/cards/ProductCard.vue';
 import NewsletterSection from '@/components/layout/NewsletterSection.vue';

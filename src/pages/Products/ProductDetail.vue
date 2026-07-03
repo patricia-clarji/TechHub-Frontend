@@ -1,13 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useProductsStore } from '@/stores/products';
-import { useCartStore } from '@/stores/cart';
-import { useWishlistStore } from '@/stores/wishlist';
-import { useRecentlyViewedStore } from '@/stores/recentlyViewed';
-import { useUserStore } from '@/stores/user';
-import { useToastStore } from '@/stores/toast';
-import { useUIStore } from '@/stores/ui';
+import { useProductsStore } from '@/stores/shop/products';
+import { useCartStore } from '@/stores/shop/cart';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useRecentlyViewedStore } from '@/stores/shop/recentlyViewed';
+import { useUserStore } from '@/stores/auth/user';
+import { useToastStore } from '@/stores/ui/toast';
+import { useUIStore } from '@/stores/ui/ui';
 
 // Atomic Pro Components
 import ProductGallery from '@/components/products/ProductGallery.vue';
@@ -55,7 +55,7 @@ const fetchProductData = async () => {
             updateSEO(product.value);
         }
     } catch (error) {
-        console.error('Error fetching product:', error);
+        import('@/utils/logger').then(({ default: logger }) => logger.error('Error fetching product:', error));
     } finally {
         isLoading.value = false;
     }

@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { mediaAPI, productAPI } from '@/services/osimart';
+import logger from '@/utils/logger';
 import { fallbackProducts } from './fallbackProducts';
-import { useBrandsStore } from './brands';
-import { useOsimartCategoriesStore } from './osimartCategories';
+import { useBrandsStore } from '@/stores/catalog/brands';
+import { useOsimartCategoriesStore } from '@/stores/catalog/osimartCategories';
 
 const toArray = (value) => {
     if (Array.isArray(value)) return value;
@@ -61,7 +62,7 @@ const normalizeImages = (raw) => {
 };
 
 const normalizeProduct = (raw = {}) => {
-    console.log("Normalizing product:", raw);
+    logger.debug('Normalizing product:', raw);
 
     const category = normalizeCategory(pick(raw.category, raw.category_name, raw.collection, raw.category_data));
     const categoryId = pick(raw.category_id, raw.category?.id, raw.collection_id, raw.collection?.id, '');
@@ -249,7 +250,7 @@ export const useProductsStore = defineStore('products', () => {
             .filter(Boolean);
         const uniqueCategories = ['All', ...new Set(categoryValues)];
         allCategories.value = uniqueCategories;
-        console.log("Updated categories:", allCategories.value);
+        logger.debug('Updated categories:', allCategories.value);
         return allCategories.value;
     };
 
@@ -266,30 +267,28 @@ export const useProductsStore = defineStore('products', () => {
                 ...params
             };
 
-            console.log("Fetching products with params:", apiParams);
+            logger.debug('Fetching products with params:', apiParams);
             const response = await productAPI.list(apiParams);
-
-            console.log("Products response:", response);
+            logger.debug('Products response:', response);
 
             let productData = response;
             if (!Array.isArray(response)) {
                 productData = response.results || response.data || response.items || [];
-                console.log("Extracted products from response:", productData);
+                logger.debug('Extracted products from response:', productData);
             }
 
             if (!Array.isArray(productData)) {
-                console.error("Product data is not an array:", productData);
+                logger.error('Product data is not an array:', productData);
                 // Keep existing products (could be fallback or previously loaded)
                 return products.value;
             }
-
-            console.log("Normalizing products...");
+            logger.debug('Normalizing products...');
             const normalizedProducts = productData
                 .filter(item => item && typeof item === 'object')
                 .map(normalizeProduct)
                 .filter((product) => product.id && product.id !== '');
 
-            console.log(`Normalized ${normalizedProducts.length} products`);
+            logger.debug(`Normalized ${normalizedProducts.length} products`);
 
             if (normalizedProducts.length > 0) {
                 // Success - use API data
@@ -300,10 +299,10 @@ export const useProductsStore = defineStore('products', () => {
 
                 // Update categories from products
                 updateCategoriesFromProducts();
-                console.log("Products store updated successfully with API data");
+                logger.debug('Products store updated successfully with API data');
             } else {
                 // API returned empty array - keep existing products (fallback or previous data)
-                console.warn("No products returned from API, keeping existing products");
+                logger.warn('No products returned from API, keeping existing products');
                 // Only update categories from existing products
                 updateCategoriesFromProducts();
             }
@@ -316,7 +315,7 @@ export const useProductsStore = defineStore('products', () => {
                     .map(cat => cat.name);
                 if (categoryNames.length > 0) {
                     allCategories.value = ['All', ...categoryNames];
-                    console.log("Categories updated from API store:", allCategories.value);
+                    logger.debug('Categories updated from API store:', allCategories.value);
                 }
             }
 
@@ -326,8 +325,8 @@ export const useProductsStore = defineStore('products', () => {
             // API call failed - keep existing products (fallback or previously loaded)
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart products.';
             error.value = errorMsg;
-            console.error("Error fetching products:", errorMsg);
-            console.error("Full error:", err);
+            logger.error('Error fetching products:', errorMsg);
+            logger.error('Full error:', err);
             // Don't replace products with fallback - keep what we have
             return products.value;
         } finally {
@@ -340,13 +339,13 @@ export const useProductsStore = defineStore('products', () => {
         error.value = '';
 
         try {
-            console.log("Fetching product detail for ID:", id);
+            logger.debug('Fetching product detail for ID:', id);
             const response = await productAPI.detail(id);
-            console.log("Product detail response:", response);
+            logger.debug('Product detail response:', response);
 
             if (response) {
                 singleProduct.value = normalizeProduct(response);
-                console.log("Normalized product:", singleProduct.value);
+                logger.debug('Normalized product:', singleProduct.value);
 
                 if (singleProduct.value && !products.value.some((product) => String(product.id) === String(singleProduct.value.id))) {
                     products.value = [singleProduct.value, ...products.value];
@@ -358,7 +357,7 @@ export const useProductsStore = defineStore('products', () => {
             return singleProduct.value;
         } catch (err) {
             error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart product.';
-            console.error("Error fetching product detail:", err);
+            logger.error('Error fetching product detail:', err);
             singleProduct.value = products.value.find((product) => String(product.id) === String(id)) || null;
             return singleProduct.value;
         } finally {

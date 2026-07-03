@@ -72,9 +72,9 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { useCartStore } from '@/stores/cart';
-import { useUIStore } from '@/stores/ui';
-import { useProductsStore } from '@/stores/products';
+import { useCartStore } from '@/stores/shop/cart';
+import { useUIStore } from '@/stores/ui/ui';
+import { useProductsStore } from '@/stores/shop/products';
 import Navbar from './components/layout/Navbar.vue';
 import Footer from './components/layout/Footer.vue';
 import SearchModal from './components/modals/SearchModal.vue';

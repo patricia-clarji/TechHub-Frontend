@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { mediaAPI, categoryAPI } from '@/services/osimart';
+import logger from '@/utils/logger';
 
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 
@@ -11,7 +12,7 @@ const toSlug = (value) => String(value || '')
     .replace(/^-+|-+$/g, '');
 
 const normalizeCategory = (raw = {}) => {
-    console.log("Normalizing category:", raw);
+    logger.debug('Normalizing category:', raw);
     
     const name = pick(raw.name, raw.title, raw.label, raw.slug, 'Untitled Category');
 
@@ -47,34 +48,32 @@ export const useOsimartCategoriesStore = defineStore('osimartCategories', () => 
                 ...params
             };
             
-            console.log("Fetching categories with params:", apiParams);
+            logger.debug('Fetching categories with params:', apiParams);
             const response = await categoryAPI.list(apiParams);
-            
-            console.log("Categories response:", response);
+            logger.debug('Categories response:', response);
             
             // Handle different response structures
             let categoryData = response;
             if (!Array.isArray(response)) {
                 categoryData = response.results || response.data || response.items || [];
-                console.log("Extracted categories from response:", categoryData);
+                logger.debug('Extracted categories from response:', categoryData);
             }
             
             if (!Array.isArray(categoryData)) {
-                console.error("Category data is not an array:", categoryData);
+                logger.error('Category data is not an array:', categoryData);
                 return categories.value;
             }
-            
-            console.log("Normalizing categories...");
+            logger.debug('Normalizing categories...');
             const normalizedCategories = categoryData
                 .filter(item => item && typeof item === 'object')
                 .map(normalizeCategory)
                 .filter((category) => category.id && category.id !== '');
             
-            console.log(`Normalized ${normalizedCategories.length} categories`);
+            logger.debug(`Normalized ${normalizedCategories.length} categories`);
             
             if (normalizedCategories.length > 0) {
                 categories.value = normalizedCategories;
-                console.log("Categories store updated successfully");
+                logger.debug('Categories store updated successfully');
             }
             
             hasFetched.value = true;
@@ -82,8 +81,8 @@ export const useOsimartCategoriesStore = defineStore('osimartCategories', () => 
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart categories.';
             error.value = errorMsg;
-            console.error("Error fetching categories:", errorMsg);
-            console.error("Full error:", err);
+            logger.error('Error fetching categories:', errorMsg);
+            logger.error('Full error:', err);
             categories.value = [];
             return [];
         } finally {

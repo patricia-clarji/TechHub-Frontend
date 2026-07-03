@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import ProductCard from '@/components/cards/ProductCard.vue'
-import { useProductsStore } from '@/stores/products'
+import { useProductsStore } from '@/stores/shop/products'
 
 const productsStore = useProductsStore()
 
