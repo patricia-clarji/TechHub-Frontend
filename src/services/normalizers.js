@@ -1,5 +1,5 @@
 import { mediaAPI } from '@/services/osimart';
-import { toArray, firstDefined, toNumber, toSlug, safeString } from '@/utils/helpers';
+import { toArray, toNumber, toSlug, safeString } from '@/utils/helpers';
 
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 

@@ -1,11 +1,9 @@
 <template>
   <div class="min-h-screen flex flex-col relative">
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <!-- Custom Premium Cursor -->
     <div id="cursor-dot" ref="dot"></div>
     <div id="cursor-ring" ref="ring"></div>
 
-    <!-- Global Premium Overlays -->
     <template v-if="!isAdmin">
       <SearchModal />
       <AuthModal />
@@ -16,7 +14,6 @@
     </template>
     <ToastNotification />
 
-    <!-- Comparison Overlay (Premium Feature) -->
     <Transition v-if="!isAdmin" name="slide-up">
       <div v-if="productsStore.compareIds.length > 0"
         class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-6">
@@ -49,7 +46,7 @@
     <Navbar v-if="!isAdmin" />
 
     <main id="main-content" class="flex-grow" tabindex="-1">
-      <router-view v-slot="{ Component, route }">
+      <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
           <component :is="Component" />
         </transition>
@@ -58,7 +55,6 @@
 
     <Footer v-if="!isAdmin" />
 
-    <!-- Floating Cart Toggle -->
     <div v-if="!isAdmin && !uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-[100] float-cart-btn">
       <button @click="uiStore.toggleCart()"
         class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-5 py-3.5 rounded-full shadow-2xl shadow-[var(--glow)] flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl premium-btn group">
@@ -110,7 +106,6 @@ const handleMouseMove = (e) => {
 };
 
 const animateRing = () => {
-  // Smoother interpolation for the ring
   ringX += (mouseX - ringX) * 0.15;
   ringY += (mouseY - ringY) * 0.15;
   if (ring.value) {
@@ -162,7 +157,6 @@ onMounted(() => {
   if (!isAdmin.value) productsStore.fetchProducts();
   window.addEventListener('mousemove', handleMouseMove);
 
-  // Global event delegation for cursor scaling
   document.addEventListener('mouseover', handleMouseOver);
   document.addEventListener('mouseout', handleMouseOut);
   document.addEventListener('keydown', handleKeydown);

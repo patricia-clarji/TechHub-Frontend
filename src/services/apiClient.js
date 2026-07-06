@@ -34,8 +34,8 @@ client.interceptors.request.use((request) => {
 
   if (config.API.STORE_ID) {
     request.params = {
-      store: config.API.STORE_ID,
       ...(request.params || {}),
+      store: config.API.STORE_ID,
     };
   }
 

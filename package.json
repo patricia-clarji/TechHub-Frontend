@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:api": "npm run verify:api",
+    "test:e2e": "playwright test",
+    "verify:api": "node scripts/verify-osimart-drf-api.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "preview": "vite preview"
   },
@@ -17,9 +22,16 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
     "@vitejs/plugin-vue": "^6.0.6",
+    "eslint": "^10.6.0",
+    "eslint-plugin-vue": "^10.9.2",
+    "globals": "^17.7.0",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.0",
-    "vite": "^8.0.8"
+    "vite": "^8.0.8",
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

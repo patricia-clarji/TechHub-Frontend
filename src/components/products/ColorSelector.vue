@@ -1,5 +1,8 @@
 <script setup>
-defineProps(['colors', 'modelValue']);
+defineProps({
+  colors: { type: Array, default: () => [] },
+  modelValue: { type: Object, default: null },
+});
 defineEmits(['update:modelValue']);
 </script>
 

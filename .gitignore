@@ -6,3 +6,10 @@ dist/dist/
 .env.*
 !.env.example
 dist/
+coverage/
+playwright-report/
+test-results/
+reports/
+coverage/
+playwright-report/
+test-results/

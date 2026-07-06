@@ -116,9 +116,12 @@ prerendering or migrate public catalog routes to SSR.
 The lazy-loaded admin workspace is available at `/admin` and redirects to `/admin/overview`. Routes:
 
 - `/admin/overview`
+- `/admin/analytics`
 - `/admin/products`, `/admin/products/new`, `/admin/products/:id/edit`
 - `/admin/categories`, `/admin/brands`, `/admin/orders`, `/admin/customers`
-- `/admin/banners`, `/admin/promotions`, `/admin/inventory`, `/admin/reviews`
+- `/admin/order-statuses`, `/admin/shipping-countries`
+- `/admin/banners`, `/admin/promotions`, `/admin/media`, `/admin/markets`, `/admin/online-store`
+- `/admin/inventory`, `/admin/reviews`
 - `/admin/settings`
 
 It includes a responsive sidebar/drawer, top navigation, breadcrumbs, dark mode, workspace search, live catalog
@@ -143,14 +146,36 @@ Before production admin access is enabled, the backend must provide:
    and settings, including validated media uploads.
 5. Pagination, filtering, optimistic-concurrency/version checks, and stable validation-error contracts.
 
+The full Django admin API contract is documented in [`docs/admin-api-contract.md`](docs/admin-api-contract.md). Existing
+DRF GET resources are registered in `src/services/adminResources.js` and rendered through the generic admin
+list/detail pages. Automated unit and e2e test code lives under `__test__/`.
+
 Never add an admin password, private token, OAuth secret, or privileged Osimart credential to `.env`, any `VITE_*`
 variable, source code, localStorage, or the delivered client bundle. For a public deployment, remove or server-block
 `/admin/*` until staff authentication is connected if the client does not want the read-only catalog workspace visible.
+
+### Sale/demo readiness checklist
+
+- Configure `.env` from `.env.example`; leave `VITE_OSIMART_ADMIN_URL` blank until staff endpoints exist.
+- Install the Playwright browser once on each test machine with `npm exec playwright install chromium`.
+- Run `npm install`, `npm run test:api`, `npm test`, `npm run lint`, `npm run test:e2e`, and `npm run build`.
+- Review `reports/osimart-api-smoke.json` after `npm run test:api`; any `405` or `500` response is a backend/API gap, not a frontend success.
+- Confirm all admin routes render on desktop and mobile.
+- Confirm private modules show “Backend API required” and never show fabricated records.
+- Confirm write/destructive controls remain disabled until staging staff CRUD endpoints pass E2E tests.
+- Confirm public catalog reads use the intended store id and no localhost or private token is bundled.
+- Confirm CDN/server headers, CORS, CSRF, CSP, HSTS, rate limits, and audit logging are configured.
+- Confirm client-approved legal copy, shipping rules, payment/COD terms, contact ownership, and currency/market rules.
 
 ### Admin test checklist
 
 ```bash
 npm ci
+npm run test:api
+npm test
+npm run lint
+npm exec playwright install chromium
+npm run test:e2e
 npm run build
 npm run dev
 ```

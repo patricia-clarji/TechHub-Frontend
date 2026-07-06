@@ -39,12 +39,19 @@ import { useRoute, useRouter } from 'vue-router';
 const route = useRoute(); const router = useRouter(); const drawerOpen = ref(false); const search = ref('');
 const dark = ref(document.documentElement.classList.contains('dark'));
 const navigation = [
-  ['Overview','/admin/overview','fa-solid fa-chart-pie'], ['Products','/admin/products','fa-solid fa-box'],
-  ['Categories','/admin/categories','fa-solid fa-grid-2'], ['Brands','/admin/brands','fa-solid fa-copyright'],
-  ['Orders','/admin/orders','fa-solid fa-receipt'], ['Customers','/admin/customers','fa-solid fa-users'],
-  ['Banners','/admin/banners','fa-regular fa-image'], ['Promotions','/admin/promotions','fa-solid fa-tags'],
-  ['Inventory','/admin/inventory','fa-solid fa-warehouse'], ['Reviews','/admin/reviews','fa-regular fa-star'],
-  ['Settings','/admin/settings','fa-solid fa-sliders'],
+  ['Home','/admin/overview','fa-solid fa-house'], ['Analytics','/admin/analytics','fa-solid fa-chart-pie'], ['Products','/admin/products','fa-solid fa-box'],
+  ['Product Variants','/admin/product-variants','fa-solid fa-boxes-stacked'], ['Categories','/admin/categories','fa-solid fa-grid-2'],
+  ['Collections','/admin/collections','fa-solid fa-layer-group'], ['Brands','/admin/brands','fa-solid fa-copyright'],
+  ['Variant Types','/admin/variant-types','fa-solid fa-sliders'], ['Orders','/admin/orders','fa-solid fa-receipt'],
+  ['Checkout','/admin/checkout','fa-solid fa-cash-register'], ['Cart','/admin/cart','fa-solid fa-cart-shopping'],
+  ['Customers','/admin/customers','fa-solid fa-users'], ['Customer Addresses','/admin/customer-addresses','fa-solid fa-location-dot'],
+  ['Wishlist','/admin/wishlist','fa-regular fa-heart'], ['Product Notifications','/admin/product-notification-requests','fa-regular fa-bell'],
+  ['Shipping Countries','/admin/shipping-countries','fa-solid fa-earth-americas'], ['Promo Codes','/admin/promotions','fa-solid fa-tags'],
+  ['Free Deliveries','/admin/free-deliveries','fa-solid fa-truck-fast'], ['Banners','/admin/banners','fa-regular fa-image'],
+  ['Announcement Bars','/admin/announcement-bars','fa-solid fa-bullhorn'], ['Stores','/admin/stores','fa-solid fa-store'],
+  ['Policies','/admin/policies','fa-solid fa-scale-balanced'], ['Payment Methods','/admin/payment-methods','fa-regular fa-credit-card'],
+  ['Available Payments','/admin/available-payment-methods','fa-solid fa-money-check'], ['Contact Messages','/admin/contact','fa-regular fa-envelope'],
+  ['Product Requests','/admin/submit-product-requests','fa-solid fa-clipboard-list'], ['Settings','/admin/settings','fa-solid fa-sliders'],
 ].map(([label,to,icon]) => ({ label,to,icon }));
 const toggleTheme = () => { dark.value = !dark.value; document.documentElement.classList.toggle('dark', dark.value); };
 const goToMatch = () => { const match = navigation.find((item) => item.label.toLowerCase().includes(search.value.trim().toLowerCase())); if (match) router.push(match.to); };

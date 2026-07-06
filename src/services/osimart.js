@@ -1,5 +1,4 @@
 import { apiClient } from '@/services/apiClient';
-import logger from '@/utils/logger';
 import config from '@/config';
 
 const OSIMART_STORE_ID = config.API.STORE_ID;

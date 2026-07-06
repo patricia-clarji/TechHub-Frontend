@@ -19,7 +19,6 @@ export const useProductsStore = defineStore('products', () => {
     const error = ref('');
     const hasFetched = ref(false);
 
-    // Store all categories separately so they don't disappear when filtering
     const allCategories = ref(['All']);
 
     const filters = ref({
@@ -48,7 +47,6 @@ export const useProductsStore = defineStore('products', () => {
 
     const sampleProducts = productsWithAvgRating;
 
-    // Use allCategories instead of computing from products
     const categories = computed(() => {
         return allCategories.value;
     });
@@ -71,12 +69,9 @@ export const useProductsStore = defineStore('products', () => {
             }
         });
 
-        let brandList = [];
-        if (brandsStore.brands.length > 0) {
-            brandList = brandsStore.getActiveBrands().map(b => b.name);
-        } else {
-            brandList = [...new Set(products.value.map((product) => product.brand).filter(Boolean))];
-        }
+        const brandList = brandsStore.brands.length > 0
+            ? brandsStore.getActiveBrands().map(b => b.name)
+            : [...new Set(products.value.map((product) => product.brand).filter(Boolean))];
 
         return brandList
             .sort()

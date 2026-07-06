@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 
-const props = defineProps({
+defineProps({
     product: { type: Object, required: true }
 });
 
@@ -31,7 +31,6 @@ const tabs = [
         <div class="py-10">
             <Transition name="fade" mode="out-in">
                 <div :key="activeTab">
-                    <!-- Specifications Matrix -->
                     <div v-if="activeTab === 'specifications'" class="space-y-4">
                         <div v-for="(val, key) in product.specifications" :key="key" class="flex justify-between py-3 border-b border-[var(--border)]/30">
                             <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{{ key }}</span>
@@ -39,7 +38,6 @@ const tabs = [
                         </div>
                     </div>
                     
-                    <!-- Features List -->
                     <div v-if="activeTab === 'features'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div v-for="feature in product.features" :key="feature" class="flex items-center gap-3 text-xs text-[var(--text-muted)] p-3 bg-[var(--bg-muted)]/30 rounded-xl">
                             <i class="fa-solid fa-circle-check text-[var(--accent)]"></i>
@@ -47,7 +45,6 @@ const tabs = [
                         </div>
                     </div>
                     
-                    <!-- Logistics / Shipping Information -->
                     <div v-if="activeTab === 'shipping'" class="space-y-6">
                         <div class="flex items-start gap-4">
                             <i class="fa-solid fa-truck-fast text-[var(--accent)] mt-1"></i>

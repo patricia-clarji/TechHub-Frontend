@@ -3,8 +3,8 @@ const isDev = import.meta.env.DEV;
 const safePrint = (fn, ...args) => {
   try {
     if (isDev) fn(...args);
-  } catch (e) {
-    // swallow logging errors in production
+  } catch {
+    return undefined;
   }
 };
 

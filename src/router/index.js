@@ -4,6 +4,13 @@ import config from '@/config';
 import { useUserStore } from '@/stores/auth/user';
 import { useUIStore } from '@/stores/ui/ui';
 
+const adminResourceRoutes = [
+    'stores', 'customers', 'customer-addresses', 'categories', 'collections', 'brands', 'variant-types',
+    'products', 'product-variants', 'product-notification-requests', 'wishlist', 'cart', 'payment-methods',
+    'available-payment-methods', 'shipping-countries', 'promotions', 'free-deliveries', 'checkout', 'orders',
+    'contact', 'policies', 'banners', 'announcement-bars', 'submit-product-requests',
+];
+
 const routes = [
     { path: '/', name: 'Home', component: Home, meta: { title: 'Premium Electronics', description: 'Shop premium electronics, computers, gaming gear and smart devices at TechHub.' } },
     { path: '/products', name: 'Products', component: () => import('@/pages/Products/index.vue'), meta: { title: 'Products', description: 'Browse the TechHub electronics catalog by category, brand, price and availability.' } },
@@ -25,15 +32,22 @@ const routes = [
         redirect: '/admin/overview',
         children: [
             { path: 'overview', name: 'AdminOverview', component: () => import('@/admin/pages/AdminOverview.vue'), meta: { admin: true, adminTitle: 'Overview' } },
-            { path: 'products', name: 'AdminProducts', component: () => import('@/admin/pages/AdminResourcePage.vue'), props: { resource: 'products' }, meta: { admin: true, adminTitle: 'Products' } },
+            { path: 'analytics', name: 'AdminAnalytics', component: () => import('@/admin/pages/AdminOverview.vue'), meta: { admin: true, adminTitle: 'Analytics' } },
             { path: 'products/new', name: 'AdminProductNew', component: () => import('@/admin/pages/AdminProductForm.vue'), meta: { admin: true, adminTitle: 'New product' } },
             { path: 'products/:id/edit', name: 'AdminProductEdit', component: () => import('@/admin/pages/AdminProductForm.vue'), meta: { admin: true, adminTitle: 'Edit product' } },
-            ...['categories', 'brands', 'orders', 'customers', 'banners', 'promotions', 'inventory', 'reviews'].map((resource) => ({
+            ...adminResourceRoutes.map((resource) => ({
                 path: resource,
-                name: `Admin${resource[0].toUpperCase()}${resource.slice(1)}`,
+                name: `Admin${resource.split('-').map((part) => part[0].toUpperCase() + part.slice(1)).join('')}`,
                 component: () => import('@/admin/pages/AdminResourcePage.vue'),
                 props: { resource },
                 meta: { admin: true, adminTitle: resource[0].toUpperCase() + resource.slice(1) },
+            })),
+            ...adminResourceRoutes.map((resource) => ({
+                path: `${resource}/:id`,
+                name: `Admin${resource.split('-').map((part) => part[0].toUpperCase() + part.slice(1)).join('')}Detail`,
+                component: () => import('@/admin/pages/AdminResourceDetail.vue'),
+                props: (route) => ({ resource, id: route.params.id }),
+                meta: { admin: true, adminTitle: `${resource[0].toUpperCase() + resource.slice(1)} detail` },
             })),
             { path: 'settings', name: 'AdminSettings', component: () => import('@/admin/pages/AdminSettings.vue'), meta: { admin: true, adminTitle: 'Settings' } },
         ],

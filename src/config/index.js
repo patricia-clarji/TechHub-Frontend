@@ -4,6 +4,7 @@ const IS_DEV = import.meta.env.DEV === true;
 export const API = {
   OSIMART_BASE_URL: import.meta.env.VITE_OSIMART_BASE_URL || 'https://api.osimart.com/store/apis',
   OSIMART_AUTH_URL: import.meta.env.VITE_OSIMART_AUTH_URL || 'https://api.osimart.com/auth',
+  OSIMART_ADMIN_URL: import.meta.env.VITE_OSIMART_ADMIN_URL?.trim().replace(/\/+$/, '') || '',
   STORE_ID: import.meta.env.VITE_OSIMART_STORE_ID?.trim() || '',
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || '',
 };

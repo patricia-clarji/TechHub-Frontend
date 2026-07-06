@@ -3,7 +3,6 @@ import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProductsStore } from '@/stores/shop/products';
 import ProductCard from '../../components/cards/ProductCard.vue';
-import { useCartStore } from '@/stores/shop/cart';
 import { useOsimartCategoriesStore } from '@/stores/catalog/osimartCategories';
 import { useOsimartBannersStore } from '@/stores/catalog/osimartBanners';
 import { useBrandsStore } from '@/stores/catalog/brands';
@@ -12,12 +11,10 @@ import NewsletterSection from '@/components/layout/NewsletterSection.vue';
 
 const router = useRouter();
 const productsStore = useProductsStore();
-const cartStore = useCartStore();
 const categoriesStore = useOsimartCategoriesStore();
 const bannersStore = useOsimartBannersStore();
 const brandsStore = useBrandsStore();
 
-// Computed properties
 const featured = computed(() => {
     const featuredProducts = productsStore.featuredProducts.length
         ? productsStore.featuredProducts
@@ -31,7 +28,6 @@ const activeBanner = computed(() =>
     null
 );
 
-// Trust items
 const trustItems = [
     { icon: 'fa-box', title: 'Live Catalog', desc: 'Products loaded from Osimart' },
     { icon: 'fa-shield-halved', title: 'Safe Ordering', desc: 'No card details collected' },

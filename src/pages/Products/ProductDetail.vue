@@ -3,11 +3,9 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useProductsStore } from '@/stores/shop/products';
 import { useCartStore } from '@/stores/shop/cart';
-import { useWishlistStore } from '@/stores/shop/wishlist';
 import { useRecentlyViewedStore } from '@/stores/shop/recentlyViewed';
 import { useToastStore } from '@/stores/ui/toast';
 
-// Atomic Pro Components
 import ProductGallery from '@/components/products/ProductGallery.vue';
 import ColorSelector from '@/components/products/ColorSelector.vue';
 import VariantSelector from '@/components/products/VariantSelector.vue';
@@ -20,7 +18,6 @@ const router = useRouter();
 const productsStore = useProductsStore();
 const cartStore = useCartStore();
 const toastStore = useToastStore();
-const wishlistStore = useWishlistStore();
 const recentlyViewedStore = useRecentlyViewedStore();
 
 const selectedQuantity = ref(1);
@@ -28,11 +25,9 @@ const activeImgIndex = ref(0);
 const selectedColor = ref(null);
 const selectedVariant = ref(null);
 
-// Product fetched from API
 const product = ref(null);
 const isLoading = ref(false);
 
-// Fetch product from API
 const fetchProductData = async () => {
     const identifier = route.params.identifier;
     if (!identifier) return;
@@ -42,12 +37,10 @@ const fetchProductData = async () => {
         await productsStore.fetchProduct(identifier);
         product.value = productsStore.singleProduct;
 
-        // Set default selections
-        if (product.value) {
+            if (product.value) {
             selectedColor.value = product.value.colors?.[0] || null;
             selectedVariant.value = product.value.variants?.find(v => v.stock > 0) || product.value.variants?.[0] || null;
 
-            // Add to recently viewed
             recentlyViewedStore.addProduct(product.value.id);
             updateSEO(product.value);
         }
@@ -178,7 +171,6 @@ const getHighlightIcon = (text) => {
     return 'fa-microchip';
 };
 
-// Watch Color selection
 watch(selectedColor, (newColor) => {
     if (newColor && typeof newColor.imgIndex === 'number') {
         activeImgIndex.value = newColor.imgIndex;
@@ -230,13 +222,8 @@ const handleBuyNow = () => {
     else toastStore.showToast(result.message, 'fa-triangle-exclamation');
 };
 
-const isWishlisted = computed(() => {
-    return wishlistStore.productIds.includes(product.value?.id);
-});
-
 const goBack = () => router.back();
 
-// Watch route params to fetch new product when navigating
 watch(() => route.params.identifier, () => {
     selectedQuantity.value = 1;
     fetchProductData();
@@ -250,7 +237,6 @@ onUnmounted(() => {
     if (script) script.remove();
 });
 
-// Re-run observer logic when product loads
 watch(product, () => {
     nextTick(() => {
         initObserver();
