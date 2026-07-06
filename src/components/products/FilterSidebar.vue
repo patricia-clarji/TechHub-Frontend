@@ -17,12 +17,13 @@ const isLoadingBrands = computed(() => brandsStore.loading);
 
 <template>
     <aside class="space-y-10 py-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-4 custom-scrollbar">
-        <!-- Search Terminal -->
+        <!-- Search -->
         <div>
-            <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] mb-6">Search Catalog
+            <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] mb-6">Search products
             </h4>
             <div class="relative">
-                <input v-model="productsStore.searchQueries" type="text" placeholder="Keyword lookup..."
+                <label for="catalog-search" class="sr-only">Search products</label>
+                <input id="catalog-search" v-model="productsStore.searchQueries" type="search" placeholder="Search by name, brand, or category"
                     class="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-[var(--accent)]" />
                 <i
                     class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-[10px]"></i>
@@ -46,7 +47,7 @@ const isLoadingBrands = computed(() => brandsStore.loading);
         <!-- Categories -->
         <div>
             <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)] mb-6">Product
-                Classification</h4>
+                categories</h4>
             <div class="space-y-2">
                 <button v-for="cat in productsStore.categories" :key="cat" @click="productsStore.filters.category = cat"
                     :class="productsStore.filters.category === cat ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--bg-muted)] text-[var(--text-muted)]'"
@@ -59,13 +60,13 @@ const isLoadingBrands = computed(() => brandsStore.loading);
         <!-- Price Range -->
         <div>
             <div class="flex justify-between items-center mb-6">
-                <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Price Parameters
+                <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Price range
                 </h4>
                 <span class="text-[10px] font-bold text-[var(--accent)]">${{ productsStore.filters.maxPrice }}</span>
             </div>
             <div class="px-2">
                 <label class="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest block mb-2">Max
-                    Price Threshold</label>
+                    price</label>
                 <input type="range" v-model.number="productsStore.filters.maxPrice" min="50" max="2500" step="50"
                     class="w-full accent-[var(--accent)]" />
                 <div
@@ -79,7 +80,7 @@ const isLoadingBrands = computed(() => brandsStore.loading);
         <!-- Brands -->
         <div>
             <div class="flex justify-between items-center mb-6">
-                <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Brand Nodes</h4>
+                <h4 class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Brands</h4>
                 <span v-if="isLoadingBrands" class="text-[9px] text-[var(--text-muted)]">Loading...</span>
                 <span v-else class="text-[9px] text-[var(--text-muted)]">{{ brandOptions.length }} brands</span>
             </div>
@@ -119,7 +120,7 @@ const isLoadingBrands = computed(() => brandsStore.loading);
         <div class="pt-6 border-t border-[var(--border)]/40">
             <label class="flex items-center justify-between cursor-pointer">
                 <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">Immediate
-                    Availability</span>
+                    In stock only</span>
                 <div class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" v-model="productsStore.filters.onlyInStock" class="sr-only peer">
                     <div
@@ -132,7 +133,7 @@ const isLoadingBrands = computed(() => brandsStore.loading);
         <!-- Reset -->
         <button @click="productsStore.resetFilters"
             class="w-full border border-[var(--border)] hover:bg-[var(--bg-muted)] text-[var(--text-muted)] py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all">
-            Reset All Parameters
+            Clear all filters
         </button>
     </aside>
 </template>

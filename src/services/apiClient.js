@@ -1,6 +1,5 @@
 import axios from 'axios';
 import config from '@/config';
-import AuthService from './authService';
 import {
   createApiError,
   isRetryableApiError,
@@ -33,18 +32,6 @@ const client = axios.create({
 client.interceptors.request.use((request) => {
   request.headers = request.headers || {};
 
-  const requiresAuth = request.requireAuth === true;
-  if (requiresAuth && !AuthService.isAuthenticated()) {
-    const authError = createApiError({ message: 'Authentication required.', status: 401, raw: request });
-    AuthService.logout();
-    return Promise.reject(authError);
-  }
-
-  const token = AuthService.getAccessToken() || config.API.TOKEN;
-  if (token) {
-    request.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-  }
-
   if (config.API.STORE_ID) {
     request.params = {
       store: config.API.STORE_ID,
@@ -63,10 +50,6 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const apiError = createApiError(error);
-    const shouldLogout = [401, 403].includes(apiError.status);
-    if (shouldLogout) {
-      await AuthService.logout();
-    }
     return Promise.reject(apiError);
   }
 );
@@ -150,69 +133,4 @@ export const apiClient = {
   post: async (url, data, options = {}) => sendRequest({ method: 'post', url, data, ...options }),
   put: async (url, data, options = {}) => sendRequest({ method: 'put', url, data, ...options }),
   delete: async (url, options = {}) => sendRequest({ method: 'delete', url, ...options }),
-};
-
-const applyRequestDefaults = (clientInstance) => {
-  clientInstance.interceptors.request.use((request) => {
-    request.headers = request.headers || {};
-    const token = AuthService.getAccessToken();
-    if (token) {
-      request.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-    }
-
-    if (config.API.STORE_ID) {
-      request.params = {
-        store: config.API.STORE_ID,
-        ...(request.params || {}),
-      };
-    }
-
-    request.headers['Accept'] = 'application/json';
-    request.headers['Content-Type'] = request.headers['Content-Type'] || 'application/json';
-    return request;
-  });
-
-  clientInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const apiError = createApiError(error);
-      if (apiError.status === 401) {
-        await AuthService.logout();
-      }
-      return Promise.reject(apiError);
-    }
-  );
-};
-
-export const createApiClient = (baseURL, defaultConfig = {}) => {
-  const instance = axios.create({
-    baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(defaultConfig.headers || {}),
-    },
-    timeout: defaultConfig.timeout || 10000,
-    params: {
-      ...(defaultConfig.params || {}),
-    },
-  });
-
-  applyRequestDefaults(instance);
-
-  const send = async (config) => {
-    const mergedConfig = {
-      ...config,
-      timeout: config.timeout || instance.defaults.timeout || 10000,
-    };
-    return sendRequest(mergedConfig);
-  };
-
-  return {
-    request: send,
-    get: async (url, options = {}) => send({ method: 'get', url, ...options }),
-    post: async (url, data, options = {}) => send({ method: 'post', url, data, ...options }),
-    put: async (url, data, options = {}) => send({ method: 'put', url, data, ...options }),
-    delete: async (url, options = {}) => send({ method: 'delete', url, ...options }),
-  };
 };

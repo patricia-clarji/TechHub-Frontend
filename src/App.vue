@@ -1,20 +1,23 @@
 <template>
   <div class="min-h-screen flex flex-col relative">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <!-- Custom Premium Cursor -->
     <div id="cursor-dot" ref="dot"></div>
     <div id="cursor-ring" ref="ring"></div>
 
     <!-- Global Premium Overlays -->
-    <SearchModal />
-    <AuthModal />
-    <QuickViewModal />
-    <CartDrawer />
-    <ChatWidget />
+    <template v-if="!isAdmin">
+      <SearchModal />
+      <AuthModal />
+      <QuickViewModal />
+      <CartDrawer />
+      <ChatWidget />
+      <CompareModal />
+    </template>
     <ToastNotification />
-    <CompareModal />
 
     <!-- Comparison Overlay (Premium Feature) -->
-    <Transition name="slide-up">
+    <Transition v-if="!isAdmin" name="slide-up">
       <div v-if="productsStore.compareIds.length > 0"
         class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-6">
         <div
@@ -43,9 +46,9 @@
       </div>
     </Transition>
 
-    <Navbar />
+    <Navbar v-if="!isAdmin" />
 
-    <main class="flex-grow">
+    <main id="main-content" class="flex-grow" tabindex="-1">
       <router-view v-slot="{ Component, route }">
         <transition name="page" mode="out-in">
           <component :is="Component" />
@@ -53,10 +56,10 @@
       </router-view>
     </main>
 
-    <Footer />
+    <Footer v-if="!isAdmin" />
 
     <!-- Floating Cart Toggle -->
-    <div v-if="!uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-[100] float-cart-btn">
+    <div v-if="!isAdmin && !uiStore.cartDrawerOpen" class="fixed bottom-6 right-6 z-[100] float-cart-btn">
       <button @click="uiStore.toggleCart()"
         class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-5 py-3.5 rounded-full shadow-2xl shadow-[var(--glow)] flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl premium-btn group">
         <i class="fa-solid fa-cart-shopping text-sm group-hover:scale-110 transition-transform duration-300"></i>
@@ -71,27 +74,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, defineAsyncComponent, watch, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useCartStore } from '@/stores/shop/cart';
 import { useUIStore } from '@/stores/ui/ui';
 import { useProductsStore } from '@/stores/shop/products';
 import Navbar from './components/layout/Navbar.vue';
 import Footer from './components/layout/Footer.vue';
-import SearchModal from './components/modals/SearchModal.vue';
-import AuthModal from './components/modals/AuthModal.vue';
-import QuickViewModal from './components/modals/QuickViewModal.vue';
-import CartDrawer from './components/layout/CartDrawer.vue';
-import ChatWidget from './components/ui/ChatWidget.vue';
 import ToastNotification from './components/layout/ToastNotification.vue';
-import CompareModal from './components/modals/CompareModal.vue';
+const SearchModal = defineAsyncComponent(() => import('./components/modals/SearchModal.vue'));
+const AuthModal = defineAsyncComponent(() => import('./components/modals/AuthModal.vue'));
+const QuickViewModal = defineAsyncComponent(() => import('./components/modals/QuickViewModal.vue'));
+const CartDrawer = defineAsyncComponent(() => import('./components/layout/CartDrawer.vue'));
+const ChatWidget = defineAsyncComponent(() => import('./components/ui/ChatWidget.vue'));
+const CompareModal = defineAsyncComponent(() => import('./components/modals/CompareModal.vue'));
 
 const cartStore = useCartStore();
 const productsStore = useProductsStore();
 const uiStore = useUIStore();
+const route = useRoute();
+const isAdmin = computed(() => route.matched.some((record) => record.meta.admin));
 
 const dot = ref(null);
 const ring = ref(null);
 let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+let animationFrame = 0;
 
 const handleMouseMove = (e) => {
   mouseX = e.clientX;
@@ -110,32 +117,67 @@ const animateRing = () => {
     ring.value.style.left = ringX + 'px';
     ring.value.style.top = ringY + 'px';
   }
-  requestAnimationFrame(animateRing);
+  animationFrame = requestAnimationFrame(animateRing);
 };
 
 const handleInteraction = (isHover) => {
   document.body.classList.toggle('cursor-hover', isHover);
 };
 
+const handleMouseOver = (event) => {
+  if (event.target.closest('a, button, .cat-card, .product-card, .trust-card, .why-card')) handleInteraction(true);
+};
+
+const handleMouseOut = (event) => {
+  if (event.target.closest('a, button, .cat-card, .product-card, .trust-card, .why-card')) handleInteraction(false);
+};
+
+const closeOverlays = () => {
+  uiStore.searchModalOpen = false;
+  uiStore.authModalOpen = false;
+  uiStore.cartDrawerOpen = false;
+  uiStore.chatWindowOpen = false;
+  uiStore.quickViewProductId = null;
+  uiStore.compareModalOpen = false;
+};
+
+const handleKeydown = (event) => {
+  if (event.key === 'Escape') closeOverlays();
+};
+
+watch(
+  () => [
+    uiStore.searchModalOpen,
+    uiStore.authModalOpen,
+    uiStore.cartDrawerOpen,
+    uiStore.chatWindowOpen,
+    Boolean(uiStore.quickViewProductId),
+    uiStore.compareModalOpen,
+  ],
+  (states) => document.body.classList.toggle('overlay-open', states.some(Boolean)),
+  { deep: true }
+);
+
 onMounted(() => {
-  productsStore.fetchProducts();
+  if (!isAdmin.value) productsStore.fetchProducts();
   window.addEventListener('mousemove', handleMouseMove);
 
   // Global event delegation for cursor scaling
-  document.addEventListener('mouseover', (e) => {
-    const target = e.target.closest('a, button, .cat-card, .product-card, .trust-card, .why-card');
-    if (target) handleInteraction(true);
-  });
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target.closest('a, button, .cat-card, .product-card, .trust-card, .why-card');
-    if (target) handleInteraction(false);
-  });
+  document.addEventListener('mouseover', handleMouseOver);
+  document.addEventListener('mouseout', handleMouseOut);
+  document.addEventListener('keydown', handleKeydown);
 
   animateRing();
 });
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove);
+  document.removeEventListener('mouseover', handleMouseOver);
+  document.removeEventListener('mouseout', handleMouseOut);
+  document.removeEventListener('keydown', handleKeydown);
+  cancelAnimationFrame(animationFrame);
+  document.body.classList.remove('cursor-hover');
+  document.body.classList.remove('overlay-open');
 });
 </script>
 
@@ -150,6 +192,38 @@ onUnmounted(() => {
   border-radius: 50%;
   transform: translate3d(-50%, -50%, 0);
   will-change: transform;
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  #cursor-dot,
+  #cursor-ring {
+    display: none;
+  }
+}
+
+.overlay-open {
+  overflow: hidden;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10000;
+  transform: translateY(-150%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 #cursor-dot {

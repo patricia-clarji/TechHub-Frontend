@@ -1,12 +1,8 @@
 node_modules/
-package-lock.json
-package.json
 .vscode/
 .env
 .env.local
 dist/dist/
-node_modules/
-.env
 .env.*
-.env.local
+!.env.example
 dist/

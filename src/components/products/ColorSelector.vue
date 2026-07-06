@@ -11,8 +11,11 @@ defineEmits(['update:modelValue']);
         </div>
         <div class="flex gap-3">
             <button 
+                type="button"
                 v-for="color in colors" 
                 :key="color.name"
+                :aria-label="`Select ${color.name}`"
+                :aria-pressed="modelValue?.name === color.name"
                 @click="$emit('update:modelValue', color)"
                 class="w-10 h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center relative group"
                 :style="{ backgroundColor: color.hex }"

@@ -11,6 +11,7 @@ const normalizeCategory = (raw) => {
 
 const normalizeImages = (raw) => {
   const values = [
+    ...toArray(raw.gallery).map((item) => item?.media || item),
     ...toArray(raw.images),
     raw.main_image,
     raw.image,
@@ -24,13 +25,19 @@ const normalizeImages = (raw) => {
 };
 
 export const normalizeProduct = (raw = {}) => {
-  const category = normalizeCategory(raw.category || raw.category_name || raw.collection || raw.category_data);
-  const categoryId = pick(raw.category_id, raw.category?.id, raw.collection_id, raw.collection?.id, '');
-  const categorySlug = pick(raw.category_slug, raw.category?.slug, raw.collection_slug, raw.collection?.slug, toSlug(category));
+  const categoryRecord = raw.categories?.[0]?.category || raw.category || null;
+  const category = normalizeCategory(categoryRecord || raw.category_name);
+  const categoryId = pick(categoryRecord?.id, raw.category_id, '');
+  const categorySlug = pick(categoryRecord?.slugified_name, categoryRecord?.slug, toSlug(category));
   const images = normalizeImages(raw);
-  const stock = toNumber(raw.stock ?? raw.quantity ?? raw.available_quantity ?? raw.inventory ?? raw.stock_quantity, 0);
-  const isActive = raw.is_active ?? raw.active ?? raw.enabled ?? true;
-  const isInStock = raw.inStock ?? raw.in_stock ?? raw.available ?? stock > 0;
+  const variants = toArray(raw.product_variants || raw.variants);
+  const variantPrices = variants.map((variant) => toNumber(variant.discounted_price_range ?? variant.price, NaN)).filter(Number.isFinite);
+  const variantComparePrices = variants.map((variant) => toNumber(variant.compare_at_price, NaN)).filter(Number.isFinite);
+  const price = toNumber(raw.discounted_price_range ?? raw.price_range ?? raw.price, variantPrices[0] || 0);
+  const comparePrice = toNumber(raw.price_range ?? raw.compare_at_price, variantComparePrices[0] || 0);
+  const stock = toNumber(raw.remaining_stock ?? raw.stock, 0);
+  const isActive = !raw.unlisted_at && !raw.archived_at;
+  const isInStock = raw.status ? raw.status.toLowerCase() === 'in stock' : stock > 0;
 
   const id = pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.product_id);
   const name = pick(raw.name, raw.title, raw.product_name, raw.productName, 'Untitled Product');
@@ -38,9 +45,9 @@ export const normalizeProduct = (raw = {}) => {
   return {
     id,
     name,
-    slug: pick(raw.slug, toSlug(name || id)),
-    price: toNumber(raw.price ?? raw.sale_price ?? raw.current_price ?? raw.unit_price ?? raw.regular_price, 0),
-    oldPrice: toNumber(raw.oldPrice ?? raw.old_price ?? raw.compare_at_price ?? raw.original_price ?? raw.regular_price, 0),
+    slug: pick(raw.slugified_name, raw.slug, toSlug(name || id)),
+    price,
+    oldPrice: comparePrice > price ? comparePrice : 0,
     description: safeString(raw.description ?? raw.full_description ?? raw.desc ?? raw.long_description, ''),
     short_description: safeString(raw.short_description ?? raw.shortDescription ?? raw.summary ?? raw.desc ?? raw.description, ''),
     image: images[0] || '',
@@ -54,12 +61,19 @@ export const normalizeProduct = (raw = {}) => {
     review_count: toNumber(raw.review_count ?? raw.reviews_count ?? raw.rating_count, 0),
     tags: toArray(raw.tags ?? raw.keywords ?? raw.tag_list),
     features: toArray(raw.features ?? raw.highlights ?? raw.specifications_list ?? raw.benefits),
-    variants: toArray(raw.variants).map((variant, index) => ({
-      id: pick(variant.id, variant.pk, variant.sku, `variant-${index}`),
-      name: pick(variant.name, variant.title, variant.sku, `Option ${index + 1}`),
-      stock: toNumber(variant.stock ?? variant.quantity ?? stock, stock),
-      priceMod: toNumber(variant.priceMod ?? variant.price_mod ?? variant.price_delta, 0),
+    variants: variants.map((variant, index) => ({
       ...variant,
+      id: pick(variant.id, variant.pk, variant.sku, `variant-${index}`),
+      name: pick(
+        variant.name,
+        variant.title,
+        toArray(variant.values).map((value) => value?.name || value?.value?.name).filter(Boolean).join(' / '),
+        variant.sku,
+        `Option ${index + 1}`
+      ),
+      stock: toNumber(variant.remaining_stock ?? variant.stock, stock),
+      price: toNumber(variant.discounted_price_range ?? variant.price, price),
+      priceMod: toNumber(variant.discounted_price_range ?? variant.price, price) - price,
     })),
     colors: toArray(raw.colors),
     specifications: raw.specifications || raw.attributes || raw.metadata || raw.specs || {},
@@ -72,8 +86,9 @@ export const normalizeProduct = (raw = {}) => {
     })),
     is_active: Boolean(isActive),
     inStock: Boolean(isInStock),
-    brand: pick(raw.brand, raw.brand_name, raw.manufacturer, raw.vendor, ''),
-    createdAt: pick(raw.createdAt, raw.created_at, raw.created, raw.date_created, ''),
+    brand: pick(raw.brand?.name, raw.brand_name, typeof raw.brand === 'string' ? raw.brand : '', ''),
+    brand_id: pick(raw.brand?.id, raw.brand_id, ''),
+    createdAt: pick(raw.published_at, raw.created_at, ''),
     metadata: raw.metadata || {},
     raw,
     img: images[0] || '',

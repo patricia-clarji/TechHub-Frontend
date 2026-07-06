@@ -1,276 +1,169 @@
 <script setup>
-import { ref, watch } from 'vue';
-import { useUIStore } from '@/stores/ui/ui';
+import { reactive, ref, computed, watch, nextTick } from 'vue';
 import { useUserStore } from '@/stores/auth/user';
+import { useUIStore } from '@/stores/ui/ui';
 import { useToastStore } from '@/stores/ui/toast';
+import config from '@/config';
+import { renderGoogleButton } from '@/services/googleIdentity';
 
-const uiStore = useUIStore();
 const userStore = useUserStore();
+const uiStore = useUIStore();
 const toastStore = useToastStore();
-const isLogin = ref(true);
-
-const email = ref('');
-const password = ref('');
-const name = ref('');
-const confirmPassword = ref('');
-const wasSubmitted = ref(false);
-const isProcessing = ref(false);
-
+const mode = ref('login');
 const showPassword = ref(false);
-const showConfirmPassword = ref(false);
-const isForgotPassword = ref(false);
+const submitted = ref(false);
+const googleButton = ref(null);
+const googleError = ref('');
+const form = reactive({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
 
-const touched = ref({
-    email: false,
-    name: false,
-    password: false,
-    confirmPassword: false
-});
+const errors = computed(() => ({
+  firstName: mode.value === 'register' && form.firstName.trim().length < 2 ? 'Enter your first name.' : '',
+  lastName: mode.value === 'register' && form.lastName.trim().length < 2 ? 'Enter your last name.' : '',
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Enter a valid email.',
+  phone: mode.value === 'register' && !/^\+?[0-9\s()-]{7,20}$/.test(form.phone.trim()) ? 'Enter a valid phone number.' : '',
+  password: mode.value === 'login' && !form.password
+    ? 'Enter your password.'
+    : mode.value === 'register' && form.password.length < 8
+      ? 'Use at least 8 characters.'
+      : '',
+  confirmPassword: mode.value === 'register' && form.confirmPassword !== form.password ? 'Passwords do not match.' : '',
+}));
 
-const errors = ref({
-    email: '',
-    name: '',
-    password: '',
-    confirmPassword: ''
-});
-
-watch(email, (val) => {
-    if (!val) errors.value.email = 'Enter your email or mobile phone number';
-    else if (val.includes('@') && !/^\S+@\S+\.\S+$/.test(val)) errors.value.email = 'Enter a valid email address';
-    else errors.value.email = '';
-});
-
-watch(name, (val) => {
-    if (!isLogin.value && !val) errors.value.name = 'Enter your name';
-    else errors.value.name = '';
-});
-
-watch(password, (val) => {
-    if (val.length < 6) errors.value.password = 'Minimum 6 characters required';
-    else errors.value.password = '';
-
-    if (!isLogin.value && confirmPassword.value && val !== confirmPassword.value) {
-        errors.value.confirmPassword = 'Passwords must match';
-    } else if (!isLogin.value && confirmPassword.value === val) {
-        errors.value.confirmPassword = '';
-    }
-});
-
-watch(confirmPassword, (val) => {
-    if (!isLogin.value && val !== password.value) errors.value.confirmPassword = 'Passwords must match';
-    else errors.value.confirmPassword = '';
-});
-
-const resetForm = () => {
-    email.value = '';
-    password.value = '';
-    name.value = '';
-    confirmPassword.value = '';
-    isForgotPassword.value = false;
-    wasSubmitted.value = false;
-    showPassword.value = false;
-    showConfirmPassword.value = false;
-    touched.value = {
-        email: false,
-        name: false,
-        password: false,
-        confirmPassword: false
-    };
-    Object.keys(errors.value).forEach(k => errors.value[k] = '');
+const reset = () => {
+  submitted.value = false;
+  form.password = '';
+  userStore.error = '';
 };
 
-const handleSubmit = async () => {
-    // Final validation check before submission
-    wasSubmitted.value = true;
-    if (!email.value) errors.value.email = 'Email is required';
-    if (!password.value) errors.value.password = 'Password is required';
-    if (!isLogin.value) {
-        if (!name.value) errors.value.name = 'Name is required';
-        if (password.value !== confirmPassword.value) errors.value.confirmPassword = 'Passwords must match';
-    }
-
-    const hasErrors = Object.values(errors.value).some(err => err !== '');
-    if (hasErrors) {
-        return;
-    }
-    if (isProcessing.value) return; // prevent duplicate submissions
-    isProcessing.value = true;
-    try {
-        let res;
-        if (isLogin.value) {
-            res = await userStore.login(email.value, password.value);
-        } else {
-            res = await userStore.signup(name.value, email.value, password.value);
-        }
-
-        if (res && res.success) {
-            resetForm();
-            uiStore.authModalOpen = false;
-            toastStore.showToast(`System authentication established. Welcome, ${userStore.currentUser?.name || ''}.`, 'fa-user-check');
-        } else {
-            toastStore.showToast(res?.message || 'Authentication failed.', 'fa-triangle-exclamation');
-        }
-    } catch (e) {
-        toastStore.showToast('Authentication error occurred.', 'fa-triangle-exclamation');
-    } finally {
-        isProcessing.value = false;
-    }
-};
-
-const handleForgotPasswordSubmit = () => {
-    if (!email.value || !email.value.includes('@')) {
-        errors.value.email = 'Enter a valid email address';
-        return;
-    }
-    toastStore.showToast('Reset instructions transmitted to ' + email.value, 'fa-paper-plane');
-    resetForm();
+const handleGoogleCredential = async (response) => {
+  googleError.value = '';
+  try {
+    await userStore.loginWithGoogle(response?.credential);
+    toastStore.showToast('Signed in with Google.', 'fa-circle-check');
     uiStore.authModalOpen = false;
+  } catch {
+    googleError.value = userStore.error || 'Google sign-in could not be completed.';
+  }
 };
 
-watch(() => uiStore.authModalOpen, (isOpen) => {
-    if (!isOpen) resetForm();
+const mountGoogleButton = async () => {
+  if (!uiStore.authModalOpen || mode.value === 'forgot' || !config.API.GOOGLE_CLIENT_ID) return;
+  await nextTick();
+  try {
+    await renderGoogleButton({
+      clientId: config.API.GOOGLE_CLIENT_ID,
+      element: googleButton.value,
+      callback: handleGoogleCredential,
+      theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+    });
+  } catch (error) {
+    googleError.value = error.message;
+  }
+};
+
+watch(mode, () => {
+  reset();
+  mountGoogleButton();
 });
+watch(() => uiStore.authModalOpen, (open) => {
+  if (!open) reset();
+  else mountGoogleButton();
+}, { immediate: true });
+
+const submit = async () => {
+  submitted.value = true;
+  if (Object.values(errors.value).some(Boolean)) return;
+  try {
+    if (mode.value === 'login') {
+      await userStore.login(form.email, form.password);
+      toastStore.showToast('Welcome back.', 'fa-circle-check');
+      uiStore.authModalOpen = false;
+    } else if (mode.value === 'register') {
+      const result = await userStore.register(form);
+      toastStore.showToast(result.requiresLogin ? 'Account created. Please sign in.' : 'Account created.', 'fa-circle-check');
+      if (result.requiresLogin) mode.value = 'login';
+      else uiStore.authModalOpen = false;
+    } else {
+      await userStore.forgotPassword(form.email);
+      toastStore.showToast('If that account exists, reset instructions have been sent.', 'fa-envelope');
+      mode.value = 'login';
+    }
+  } catch {
+    // The store exposes a customer-safe message.
+  }
+};
 </script>
 
 <template>
-    <div v-if="uiStore.authModalOpen"
-        class="fixed inset-0 z-[120] flex items-center justify-center p-6 backdrop-blur-xl bg-black/40">
-        <div @click="uiStore.authModalOpen = false" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-lg bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-10 shadow-2xl overflow-hidden transition-all duration-300">
-            <!-- Decorative Header -->
-            <div class="mb-8">
-                <h2 class="font-[Playfair_Display] text-3xl font-bold text-[var(--text)]">
-                    {{ isForgotPassword ? 'Password assistance' : (isLogin ? 'Sign in' : 'Create account') }}
-                </h2>
-                <p v-if="isForgotPassword" class="text-xs text-[var(--text-muted)] mt-2">
-                    Enter the email address associated with your TechHub account.
-                </p>
-            </div>
+  <div v-if="uiStore.authModalOpen" class="fixed inset-0 z-[130] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button class="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-label="Close sign in" @click="uiStore.authModalOpen = false"></button>
+    <section class="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[var(--bg-card)] border border-[var(--border)] rounded-[2rem] p-8 shadow-2xl">
+      <button type="button" aria-label="Close" class="absolute top-5 right-5 w-10 h-10 rounded-full hover:bg-[var(--bg-muted)]" @click="uiStore.authModalOpen = false">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+      <h2 id="auth-title" class="font-[Playfair_Display] text-3xl font-bold">
+        {{ mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Reset Password' }}
+      </h2>
+      <p class="text-sm text-[var(--text-muted)] mt-2 mb-7">Securely connected to your Osimart customer account.</p>
 
-            <!-- Forgot Password Flow -->
-            <div v-if="isForgotPassword" class="space-y-5">
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Email Address</label>
-                    <input v-model="email" type="email"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
-                        :class="errors.email ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'" />
-                    <p v-if="errors.email" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.email }}</p>
-                </div>
-                <button @click="handleForgotPasswordSubmit"
-                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
-                    Transmit Reset Token
-                </button>
-                <div class="text-center mt-4">
-                    <button @click="isForgotPassword = false" class="text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-widest">Return to Sign In</button>
-                </div>
-            </div>
-
-            <div v-else>
-                <!-- Social Login Options -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                <button type="button" class="flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5 group-hover:scale-110 transition-transform">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text)]">Google</span>
-                </button>
-                <button type="button" class="flex items-center justify-center gap-3 py-3 border border-[var(--border)] rounded-2xl hover:bg-[var(--bg-muted)]/50 transition-all group">
-                    <i class="fa-brands fa-apple text-xl group-hover:scale-110 transition-transform text-[var(--text)]"></i>
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text)]">Apple</span>
-                </button>
-            </div>
-
-            <!-- Divider -->
-            <div class="flex items-center gap-4 mb-6">
-                <div class="h-px flex-1 bg-[var(--border)]/60"></div>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">or</span>
-                <div class="h-px flex-1 bg-[var(--border)]/60"></div>
-            </div>
-
-                <form @submit.prevent="handleSubmit" class="space-y-5">
-                <!-- Email / Mobile -->
-                <div class="space-y-1">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Enter mobile number or email</label>
-                    <input v-model="email" type="text"
-                        @blur="touched.email = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
-                        :class="(errors.email && (touched.email || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="" />
-                    <p v-if="errors.email && (touched.email || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.email }}</p>
-                </div>
-
-                <!-- Name (Signup Only) -->
-                <div v-if="!isLogin" class="space-y-1">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Your name</label>
-                    <input v-model="name" type="text"
-                        @blur="touched.name = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all"
-                        :class="(errors.name && (touched.name || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="First and last name" />
-                    <p v-if="errors.name && (touched.name || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.name }}</p>
-                </div>
-
-                <!-- Password -->
-                <div class="space-y-1 relative">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Password</label>
-                    <input v-model="password" :type="showPassword ? 'text' : 'password'"
-                        @blur="touched.password = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
-                        :class="(errors.password && (touched.password || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="At least 6 characters" autocomplete="current-password" />
-                    <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                        <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                    </button>
-                    
-                    <div class="flex justify-between items-start mt-1 px-1">
-                        <div v-if="!(errors.password && (touched.password || wasSubmitted))" class="flex items-center gap-2 text-[var(--text-muted)]">
-                            <i class="fa-solid fa-info text-[10px] w-4 h-4 rounded-full border border-[var(--border)] flex items-center justify-center"></i>
-                            <p class="text-[10px]">Passwords must be at least 6 characters.</p>
-                        </div>
-                        <p v-if="errors.password && (touched.password || wasSubmitted)" class="text-red-500 text-[10px]">{{ errors.password }}</p>
-                        
-                        <button v-if="isLogin" @click="isForgotPassword = true" type="button" class="text-[10px] font-bold text-[var(--accent)] hover:underline uppercase tracking-widest ml-auto">Forgot password?</button>
-                    </div>
-                </div>
-
-                <!-- Re-enter Password (Signup Only) -->
-                <div v-if="!isLogin" class="space-y-1 relative">
-                    <label class="text-xs font-bold text-[var(--text)] ml-1">Re-enter password</label>
-                    <input v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'"
-                        @blur="touched.confirmPassword = true"
-                        class="w-full bg-[var(--bg-muted)]/50 border rounded-2xl px-6 py-4 text-sm focus:outline-none transition-all pr-12"
-                        :class="(errors.confirmPassword && (touched.confirmPassword || wasSubmitted)) ? 'border-red-500' : 'border-[var(--border)] focus:border-[var(--accent)]'"
-                        placeholder="" autocomplete="new-password" />
-                    <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-4 top-[2.6rem] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
-                        <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                    </button>
-                    <p v-if="errors.confirmPassword && (touched.confirmPassword || wasSubmitted)" class="text-red-500 text-[10px] mt-1 ml-1">{{ errors.confirmPassword }}</p>
-                </div>
-
-                <button type="submit" :disabled="isProcessing"
-                    :aria-busy="isProcessing"
-                    class="w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg disabled:opacity-60">
-                    {{ isLogin ? 'Sign in' : 'Verify email' }}
-                </button>
-            </form>
-
-            <!-- Toggle Link -->
-            <div class="mt-8 pt-6 border-t border-[var(--border)]">
-                <p v-if="!isLogin" class="text-sm font-bold text-[var(--text)]">Already a customer?</p>
-                <button @click="isLogin = !isLogin"
-                    class="text-sm font-bold text-[var(--accent)] hover:text-[var(--accent-dk)] hover:underline transition-all mt-1">
-                    {{ isLogin ? "Create your TechHub account" : "Sign in instead" }}
-                </button>
-            </div>
-
-            <!-- Legal Footer -->
-            <div v-if="!isLogin" class="text-center text-[var(--text-muted)] text-[9px] mt-6 leading-relaxed">
-                By creating an account, you agree to TechHub's <br>
-                <a href="#" class="text-[var(--accent)] hover:underline">Conditions of Use</a> and 
-                <a href="#" class="text-[var(--accent)] hover:underline">Privacy Notice</a>.
-            </div>
-            <div v-else class="text-center text-[var(--text-muted)] text-[9px] mt-6 leading-relaxed">
-                By signing in, you agree to TechHub's <a href="#" class="text-[var(--accent)] hover:underline">Conditions of Use</a>.
-            </div>
-            </div>
+      <div v-if="mode !== 'forgot'" class="mb-6">
+        <div v-if="config.API.GOOGLE_CLIENT_ID" ref="googleButton" class="min-h-11 flex justify-center"></div>
+        <p v-else class="text-center text-xs text-[var(--text-muted)] border border-[var(--border)] rounded-xl p-3">
+          Google sign-in becomes available after configuring the public Google Client ID.
+        </p>
+        <p v-if="googleError" role="alert" class="text-red-500 text-xs text-center mt-2">{{ googleError }}</p>
+        <div class="flex items-center gap-3 my-5 text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+          <span class="h-px flex-1 bg-[var(--border)]"></span><span>or continue with email</span><span class="h-px flex-1 bg-[var(--border)]"></span>
         </div>
-    </div>
+      </div>
+
+      <form class="space-y-4" @submit.prevent="submit" novalidate>
+        <div v-if="mode === 'register'" class="grid grid-cols-2 gap-3">
+          <div v-for="field in [{ key: 'firstName', label: 'First name' }, { key: 'lastName', label: 'Last name' }]" :key="field.key">
+            <label :for="field.key" class="block text-xs font-bold mb-2">{{ field.label }}</label>
+            <input :id="field.key" v-model="form[field.key]" autocomplete="name" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+            <p v-if="submitted && errors[field.key]" class="text-red-500 text-xs mt-1">{{ errors[field.key] }}</p>
+          </div>
+        </div>
+        <div>
+          <label for="auth-email" class="block text-xs font-bold mb-2">Email</label>
+          <input id="auth-email" v-model="form.email" type="email" autocomplete="email" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+          <p v-if="submitted && errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</p>
+        </div>
+        <div v-if="mode === 'register'">
+          <label for="auth-phone" class="block text-xs font-bold mb-2">Phone</label>
+          <input id="auth-phone" v-model="form.phone" type="tel" autocomplete="tel" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+          <p v-if="submitted && errors.phone" class="text-red-500 text-xs mt-1">{{ errors.phone }}</p>
+        </div>
+        <div v-if="mode !== 'forgot'">
+          <label for="auth-password" class="block text-xs font-bold mb-2">Password</label>
+          <div class="relative">
+            <input id="auth-password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
+              :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
+              class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3 pr-12" />
+            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2" :aria-label="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword">
+              <i :class="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p v-if="submitted && errors.password" class="text-red-500 text-xs mt-1">{{ errors.password }}</p>
+        </div>
+        <div v-if="mode === 'register'">
+          <label for="auth-confirm-password" class="block text-xs font-bold mb-2">Confirm password</label>
+          <input id="auth-confirm-password" v-model="form.confirmPassword" type="password" autocomplete="new-password"
+            class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+          <p v-if="submitted && errors.confirmPassword" class="text-red-500 text-xs mt-1">{{ errors.confirmPassword }}</p>
+        </div>
+        <p v-if="userStore.error" role="alert" class="text-red-500 text-sm">{{ userStore.error }}</p>
+        <button type="submit" :disabled="userStore.loading" class="w-full bg-[var(--accent)] text-white rounded-full py-4 font-bold disabled:opacity-50">
+          {{ userStore.loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Send Reset Link' }}
+        </button>
+      </form>
+
+      <div class="mt-6 text-center text-sm space-y-3">
+        <button v-if="mode === 'login'" type="button" class="text-[var(--accent)] hover:underline" @click="mode = 'forgot'">Forgot password?</button>
+        <button v-if="mode !== 'register'" type="button" class="block mx-auto hover:underline" @click="mode = 'register'">New customer? Create an account</button>
+        <button v-if="mode !== 'login'" type="button" class="block mx-auto hover:underline" @click="mode = 'login'">Back to sign in</button>
+      </div>
+    </section>
+  </div>
 </template>

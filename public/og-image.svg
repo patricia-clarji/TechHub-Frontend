@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#171512"/>
+  <circle cx="1040" cy="110" r="300" fill="#8b6b47" opacity=".3"/>
+  <circle cx="120" cy="580" r="240" fill="#d8c6ad" opacity=".12"/>
+  <text x="100" y="300" fill="#f5efe6" font-family="Georgia,serif" font-size="112" font-weight="700">TECH<tspan fill="#b8956d">HUB</tspan></text>
+  <text x="105" y="375" fill="#d8c6ad" font-family="Arial,sans-serif" font-size="34" letter-spacing="8">PREMIUM ELECTRONICS</text>
+</svg>

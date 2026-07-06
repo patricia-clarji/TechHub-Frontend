@@ -71,13 +71,15 @@ const buildParams = (params = {}) => ({
 
 const fetchList = async (path, params = {}) => {
   const response = await apiClient.get(path, { params: buildParams(params) });
-  if (!response.success || response.data === null) return [];
+  if (!response.success) throw response.error;
+  if (response.data === null) throw new Error(`Osimart returned no data for ${path}`);
   return extractList(response.data);
 };
 
 const fetchObject = async (path) => {
   const response = await apiClient.get(path);
-  if (!response.success || response.data === null) return null;
+  if (!response.success) throw response.error;
+  if (response.data === null) return null;
   return extractObject(response.data);
 };
 
@@ -94,6 +96,11 @@ export const productAPI = {
   async detail(id) {
     if (!id) return null;
     return fetchObject(`/products/${encodeURIComponent(id)}/`);
+  },
+  async detailBySlug(slug) {
+    if (!slug) return null;
+    const matches = await fetchList('/products/', { search: slug, page_size: 20 });
+    return matches.find((product) => product.slugified_name === slug) || null;
   },
 };
 

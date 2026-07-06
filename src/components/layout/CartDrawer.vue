@@ -2,18 +2,10 @@
 import { computed } from 'vue';
 import { useUIStore } from '@/stores/ui/ui';
 import { useCartStore } from '@/stores/shop/cart';
-import { useProductsStore } from '@/stores/shop/products';
 
 const uiStore = useUIStore();
 const cartStore = useCartStore();
-const productsStore = useProductsStore();
-
-const cartItems = computed(() => {
-    return cartStore.items.map(item => {
-        const product = productsStore.sampleProducts.find(p => p.id === item.id);
-        return { ...product, quantity: item.quantity };
-    }).filter(item => item.id);
-});
+const cartItems = computed(() => cartStore.detailedItems);
 </script>
 
 <template>
@@ -25,7 +17,7 @@ const cartItems = computed(() => {
             <div class="p-8 border-b border-[var(--border)] flex-none flex justify-between items-center bg-[var(--bg)]">
                 <div>
                     <h3 class="font-[Playfair_Display] text-2xl font-bold">Your Basket</h3>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">Resource Allocation</p>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">{{ cartStore.itemCount }} items</p>
                 </div>
                 <button @click="uiStore.cartDrawerOpen = false" class="w-10 h-10 rounded-full hover:bg-[var(--bg-muted)] transition-colors flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
@@ -39,31 +31,33 @@ const cartItems = computed(() => {
                     <p class="text-sm font-bold uppercase tracking-widest">Basket Empty</p>
                 </div>
                 
-                <div v-for="item in cartItems" :key="item.id" class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 py-6 border-b border-[var(--border)]/40 last:border-0">
+                <div v-for="item in cartItems" :key="item.lineKey" class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 py-6 border-b border-[var(--border)]/40 last:border-0">
                     <!-- LEFT: Image -->
                     <div class="w-20 h-20 bg-[var(--bg-muted)] rounded-xl overflow-hidden flex-none">
-                        <img :src="item.img" class="w-full h-full object-cover" />
+                        <img v-if="item.image" :src="item.image" :alt="item.name" class="w-full h-full object-cover" />
                     </div>
                     
                     <!-- CENTER: Info -->
                     <div class="flex-1 min-w-0">
                         <h4 class="font-bold text-sm truncate">{{ item.name }}</h4>
                         <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1">{{ item.category }}</p>
+                        <p v-if="item.variantName || item.color" class="text-[10px] text-[var(--text-muted)] mt-1">{{ [item.variantName, item.color].filter(Boolean).join(' · ') }}</p>
+                        <p v-if="item.unavailable" class="text-xs text-red-500 mt-1">No longer available</p>
                     </div>
 
                     <!-- RIGHT: Actions -->
                     <div class="flex items-center gap-4 flex-none">
                         <div class="flex items-center bg-[var(--bg-muted)] rounded-lg p-1 border border-[var(--border)]">
-                            <button @click="cartStore.addToCart(item.id, -1)" :disabled="item.quantity <= 1" class="w-6 h-6 flex items-center justify-center hover:text-[var(--accent)] transition-colors disabled:opacity-30">
+                            <button @click="cartStore.increment(item.lineKey, -1)" :disabled="item.quantity <= 1 || item.unavailable" class="w-6 h-6 flex items-center justify-center hover:text-[var(--accent)] transition-colors disabled:opacity-30">
                                 <i class="fa-solid fa-minus text-[8px]"></i>
                             </button>
                             <span class="w-6 text-center text-xs font-bold">{{ item.quantity }}</span>
-                            <button @click="cartStore.addToCart(item.id, 1)" class="w-6 h-6 flex items-center justify-center hover:text-[var(--accent)] transition-colors">
+                            <button @click="cartStore.increment(item.lineKey, 1)" :disabled="item.quantity >= item.stock || item.unavailable" class="w-6 h-6 flex items-center justify-center hover:text-[var(--accent)] transition-colors disabled:opacity-30">
                                 <i class="fa-solid fa-plus text-[8px]"></i>
                             </button>
                         </div>
-                        <p class="text-sm font-black text-[var(--accent)] w-16 text-right">$ {{ item.price * item.quantity }}</p>
-                        <button @click="cartStore.removeFromCart(item.id)" class="text-[var(--text-muted)] hover:text-red-500 transition-colors ml-2">
+                        <p class="text-sm font-black text-[var(--accent)] w-16 text-right">$ {{ (item.price * item.quantity).toFixed(2) }}</p>
+                        <button @click="cartStore.removeFromCart(item.lineKey)" :aria-label="`Remove ${item.name} from cart`" class="text-[var(--text-muted)] hover:text-red-500 transition-colors ml-2">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>
@@ -84,7 +78,7 @@ const cartItems = computed(() => {
                 </div>
                 <router-link to="/cart" @click="uiStore.cartDrawerOpen = false" 
                     class="block w-full bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white text-center py-5 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all premium-btn">
-                    Authorize Checkout
+                    View Cart
                 </router-link>
             </div>
         </div>

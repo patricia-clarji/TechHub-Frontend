@@ -7,6 +7,7 @@ export const useUIStore = defineStore('ui', () => {
     const cartDrawerOpen = ref(false);
     const chatWindowOpen = ref(false);
     const quickViewProductId = ref(null);
+    const compareModalOpen = ref(false);
 
     const toggleSearch = () => searchModalOpen.value = !searchModalOpen.value;
     const toggleAuth = () => authModalOpen.value = !authModalOpen.value;
@@ -17,7 +18,7 @@ export const useUIStore = defineStore('ui', () => {
     const closeQuickView = () => quickViewProductId.value = null;
 
     return {
-        searchModalOpen, authModalOpen, cartDrawerOpen, chatWindowOpen, quickViewProductId,
+        searchModalOpen, authModalOpen, cartDrawerOpen, chatWindowOpen, quickViewProductId, compareModalOpen,
         toggleSearch, toggleAuth, toggleCart, toggleChat, openQuickView, closeQuickView
     };
 });

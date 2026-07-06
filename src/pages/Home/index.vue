@@ -31,16 +31,12 @@ const activeBanner = computed(() =>
     null
 );
 
-// Timer for flash sale
-const timeLeft = ref({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-const saleEnd = new Date(Date.now() + (3 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000));
-
 // Trust items
 const trustItems = [
-    { icon: 'fa-truck-fast', title: 'Free Delivery', desc: 'Fast shipping nationwide' },
-    { icon: 'fa-shield-halved', title: 'Secure Checkout', desc: 'Protected transactions' },
-    { icon: 'fa-award', title: 'Genuine Products', desc: 'Authorized brand partners' },
-    { icon: 'fa-headset', title: 'Premium Support', desc: 'Assistance whenever needed' }
+    { icon: 'fa-box', title: 'Live Catalog', desc: 'Products loaded from Osimart' },
+    { icon: 'fa-shield-halved', title: 'Safe Ordering', desc: 'No card details collected' },
+    { icon: 'fa-layer-group', title: 'Product Options', desc: 'Variant and stock visibility' },
+    { icon: 'fa-headset', title: 'Order Support', desc: 'Contact our team for assistance' }
 ];
 
 // Categories from API only - no fallback
@@ -76,21 +72,6 @@ const brandNames = computed(() => {
     return [];
 });
 
-// Testimonials
-const testimonials = [
-    { name: 'Sarah Johnson', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/women/44.jpg', text: "Fast shipping and excellent quality. My order arrived two days early and the packaging was perfect." },
-    { name: 'Michael Carter', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/men/32.jpg', text: "The best electronics store I've ever used. Genuine products, real prices, and outstanding customer care." },
-    { name: 'Emma Rodriguez', role: 'Verified Buyer', img: 'https://randomuser.me/api/portraits/women/68.jpg', text: "Amazing customer service and delivery. Needed help choosing a laptop and got expert advice instantly." }
-];
-
-// Stats
-const stats = [
-    { display: '10', target: 10, label: 'Products', suffix: 'K+' },
-    { display: '50', target: 50, label: 'Customers', suffix: 'K+' },
-    { display: '500', target: 500, label: 'Brands', suffix: '+' },
-    { display: '99', target: 99, label: 'Satisfaction', suffix: '%' }
-];
-
 // Finder options
 const finderOptions = [
     { label: 'Work', emoji: '💼' },
@@ -102,10 +83,7 @@ const finderOptions = [
 // State
 const activeFinder = ref(null);
 const scrollY = ref(0);
-const animatedStats = ref(stats.map(s => ({ ...s, current: 0 })));
-const statsAnimated = ref(false);
 let observer = null;
-let timerInterval = null;
 
 // Methods
 const selectFinder = (label) => activeFinder.value = label;
@@ -129,42 +107,6 @@ const filterByBrand = (brandName) => {
     router.push({ name: 'Products', query: { brand: brandName } });
 };
 
-const animateStats = () => {
-    if (statsAnimated.value) return;
-    statsAnimated.value = true;
-
-    animatedStats.value.forEach((s, index) => {
-        let start = 0;
-        const end = s.target;
-        const duration = 2000;
-        const increment = end / (duration / 16);
-
-        const timer = setInterval(() => {
-            start += increment;
-            if (start >= end) {
-                s.current = end;
-                clearInterval(timer);
-            } else {
-                s.current = Math.floor(start);
-            }
-        }, 16);
-    });
-};
-
-const updateTimer = () => {
-    const now = new Date();
-    const diff = saleEnd - now;
-
-    if (diff > 0) {
-        timeLeft.value = {
-            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-            minutes: Math.floor((diff / 1000 / 60) % 60),
-            seconds: Math.floor((diff / 1000) % 60)
-        };
-    }
-};
-
 const handleScroll = () => {
     scrollY.value = window.scrollY;
 };
@@ -183,19 +125,13 @@ onMounted(async () => {
         import('@/utils/logger').then(({ default: logger }) => logger.error('Error loading home page data:', error));
     }
 
-    // Start timer
-    timerInterval = setInterval(updateTimer, 1000);
     window.addEventListener('scroll', handleScroll);
-    updateTimer();
 
     // Initialize scroll reveal
     observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
-                if (entry.target.classList.contains('stats-grid')) {
-                    animateStats();
-                }
             }
         });
     }, { threshold: 0.1 });
@@ -205,7 +141,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
     if (observer) observer.disconnect();
-    if (timerInterval) clearInterval(timerInterval);
     window.removeEventListener('scroll', handleScroll);
 });
 </script>
@@ -255,7 +190,7 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="hidden lg:block relative hero-img-wrap">
-                    <img :src="activeBanner?.image || 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1400'"
+                    <img :src="activeBanner?.image || '/og-image.svg'"
                         class="h-[580px] w-full object-cover rounded-[2.5rem] shadow-2xl relative z-10 hero-parallax"
                         :style="{ transform: `translateY(${scrollY * 0.08}px)` }" alt="Tech Hub">
                 </div>
@@ -368,28 +303,18 @@ onUnmounted(() => {
             </div>
         </section>
 
-        <!-- Flash Sale Section -->
+        <!-- Offers Section -->
         <section class="max-w-7xl mx-auto px-6 lg:px-10 py-20">
             <div class="newsletter-section reveal text-center relative z-10">
                 <div class="relative z-10">
-                    <span class="section-badge">Limited Time Offer</span>
-                    <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Flash Sale Event</h2>
-                    <p class="mt-4 text-[var(--text-muted)] max-w-md mx-auto">Exclusive discounts on selected premium
-                        devices. Don't miss out.</p>
-
-                    <div class="flex justify-center gap-4 sm:gap-6 mt-12">
-                        <div v-for="(val, unit) in timeLeft" :key="unit"
-                            class="timer-block w-24 sm:w-28 p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-xl">
-                            <h3 class="text-4xl sm:text-5xl font-[Playfair_Display] font-bold text-[var(--accent)]">{{
-                                String(val).padStart(2, '0') }}</h3>
-                            <p class="mt-2 text-[10px] uppercase tracking-widest font-bold opacity-60">{{ unit }}</p>
-                        </div>
-                    </div>
+                    <span class="section-badge">Current Offers</span>
+                    <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">Explore Current Deals</h2>
+                    <p class="mt-4 text-[var(--text-muted)] max-w-md mx-auto">View discounts supplied by current Osimart pricing—without fabricated countdowns.</p>
 
                     <div class="mt-12">
                         <router-link to="/deals"
                             class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-10 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-xl">
-                            Shop the Sale
+                            View Deals
                         </router-link>
                     </div>
                 </div>
@@ -422,46 +347,6 @@ onUnmounted(() => {
                         class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-12 py-5 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-2xl">
                         Generate Recommendations
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Testimonials -->
-        <section id="testimonials" class="max-w-7xl mx-auto px-6 lg:px-10 py-24">
-            <div class="reveal mb-16">
-                <span class="section-badge">Happy Customers</span>
-                <h2 class="font-[Playfair_Display] text-4xl lg:text-5xl font-bold mt-6">What Our Customers Say</h2>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                <div v-for="(t, i) in testimonials" :key="i"
-                    class="reveal p-10 bg-[var(--bg-card)] border border-[var(--border)] rounded-[2.5rem] relative group hover:shadow-2xl transition-all duration-500"
-                    :class="`reveal-delay-${i + 1}`">
-                    <div class="flex items-center gap-4 mb-8">
-                        <img :src="t.img"
-                            class="w-14 h-14 rounded-full object-cover ring-2 ring-[var(--accent)] ring-offset-4 ring-offset-[var(--bg-card)]"
-                            alt="Avatar">
-                        <div>
-                            <h4 class="font-bold text-sm">{{ t.name }}</h4>
-                            <p class="text-[var(--text-muted)] text-[10px] uppercase tracking-widest">{{ t.role }}</p>
-                        </div>
-                    </div>
-                    <p class="text-[var(--accent)] mb-4 text-xs">★★★★★</p>
-                    <p class="text-[var(--text-muted)] text-sm leading-relaxed italic">"{{ t.text }}"</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stats Bar -->
-        <section class="max-w-7xl mx-auto px-6 lg:px-10 py-20 border-t border-[var(--border)]">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12 stats-grid reveal">
-                <div v-for="(s, i) in animatedStats" :key="i" class="text-center group reveal"
-                    :class="`reveal-delay-${i + 1}`">
-                    <h2
-                        class="font-[Playfair_Display] text-5xl lg:text-6xl text-[var(--accent)] font-bold mb-2 transition-transform group-hover:scale-110">
-                        {{ s.current }}{{ s.suffix }}
-                    </h2>
-                    <p class="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-[0.3em]">{{ s.label }}
-                    </p>
                 </div>
             </div>
         </section>

@@ -8,8 +8,11 @@ defineEmits(['update:modelValue']);
         <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Configuration</h4>
         <div class="flex flex-wrap gap-2">
             <button 
+                type="button"
                 v-for="v in variants" 
                 :key="v.id"
+                :disabled="v.stock === 0"
+                :aria-pressed="modelValue?.id === v.id"
                 @click="v.stock > 0 && $emit('update:modelValue', v)"
                 class="px-5 py-3 rounded-xl border-2 font-bold text-xs transition-all relative overflow-hidden"
                 :class="[

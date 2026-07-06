@@ -23,7 +23,7 @@ const wishlistedProducts = computed(() => {
       <ProductCard v-for="product in wishlistedProducts" :key="product.id" :product="product" />
     </div>
     <div v-else class="text-center py-32 bg-[var(--bg-card)] rounded-[3rem] border border-[var(--border)]">
-      <p class="text-[var(--text-muted)]">No premium provisions identified in your wishlist yet.</p>
+      <p class="text-[var(--text-muted)]">Your wishlist is empty.</p>
     </div>
   </main>
 </template>

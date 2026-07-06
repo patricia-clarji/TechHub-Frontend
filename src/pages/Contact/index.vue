@@ -1,7 +1,8 @@
 <script setup>
-import emailjs from '@emailjs/browser'
 import { ref } from 'vue';
 import { useToastStore } from '@/stores/ui/toast';
+import { apiClient } from '@/services/apiClient';
+import config from '@/config';
 
 const toastStore = useToastStore();
 const senderName = ref('');
@@ -11,12 +12,12 @@ const inquiry = ref('');
 const isLoading = ref(false);
 const formErrors = ref({});
 
-const transmit = () => {
+const transmit = async () => {
     formErrors.value = {};
-    if (!senderName.value) formErrors.value.senderName = 'Corporate Alias is required.';
-    if (!senderEmail.value) formErrors.value.senderEmail = 'Email Channel is required.';
-    if (!inquirySubject.value) formErrors.value.inquirySubject = 'Inquiry Subject is required.';
-    if (!inquiry.value) formErrors.value.inquiry = 'Inquiry Description is required.';
+    if (senderName.value.trim().length < 2) formErrors.value.senderName = 'Enter your name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail.value.trim())) formErrors.value.senderEmail = 'Enter a valid email address.';
+    if (inquirySubject.value.trim().length < 3) formErrors.value.inquirySubject = 'Enter a subject.';
+    if (inquiry.value.trim().length < 10) formErrors.value.inquiry = 'Tell us how we can help.';
 
     if (Object.keys(formErrors.value).length > 0) {
         toastStore.showToast('Please complete all required fields.', 'fa-triangle-exclamation');
@@ -24,48 +25,27 @@ const transmit = () => {
     }
 
     isLoading.value = true;
-    // Simulate API call
-    emailjs.send(
-
-        'service_8444g4j',
-        'template_p8m6bbc',
-
-        {
-            sender_name: senderName.value,
-            sender_email: senderEmail.value,
-            subject: inquirySubject.value,
-            message: inquiry.value
-        },
-
-        '3tX8kiypKhU3hmZBY'
-
-    )
-        .then(() => {
-
-            toastStore.showToast(
-                'Message sent successfully.',
-                'fa-paper-plane'
-            )
-
-            senderName.value = ''
-            senderEmail.value = ''
-            inquirySubject.value = ''
-            inquiry.value = ''
-
-        })
-        .catch(() => {
-
-            toastStore.showToast(
-                'Failed to send message.',
-                'fa-triangle-exclamation'
-            )
-
-        })
-        .finally(() => {
-
-            isLoading.value = false;
-
-        })
+    const [firstName, ...lastName] = senderName.value.trim().split(/\s+/);
+    try {
+        const response = await apiClient.post('/contactmessage/', {
+            first_name: firstName,
+            last_name: lastName.join(' ') || '-',
+            email: senderEmail.value.trim(),
+            subject: inquirySubject.value.trim(),
+            message: inquiry.value.trim(),
+            store_id: config.API.STORE_ID,
+        }, { retries: 0, dedupe: false });
+        if (!response.success) throw response.error;
+        toastStore.showToast('Message sent successfully.', 'fa-paper-plane');
+        senderName.value = '';
+        senderEmail.value = '';
+        inquirySubject.value = '';
+        inquiry.value = '';
+    } catch {
+        toastStore.showToast('We could not send your message. Please try again.', 'fa-triangle-exclamation');
+    } finally {
+        isLoading.value = false;
+    }
 };
 </script>
 
@@ -288,7 +268,7 @@ const transmit = () => {
                     </h3>
 
                     <p class="text-[var(--text-muted)] mt-2">
-                        support@techhub.com
+                        Use the secure contact form
                     </p>
 
                 </div>
@@ -307,7 +287,7 @@ const transmit = () => {
                     </h3>
 
                     <p class="text-[var(--text-muted)] mt-2">
-                        +1 (800) 555-TECH
+                        Shared during order confirmation
                     </p>
 
                 </div>
@@ -326,7 +306,7 @@ const transmit = () => {
                     </h3>
 
                     <p class="text-[var(--text-muted)] mt-2">
-                        Monday - Sunday · 24/7
+                        Response times vary by business day
                     </p>
 
                 </div>

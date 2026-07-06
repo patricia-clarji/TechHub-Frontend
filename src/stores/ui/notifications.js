@@ -1,13 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
+import { readJson, writeJson } from '@/utils/storage';
 
 export const useNotificationStore = defineStore('notifications', () => {
-    const notifications = ref(JSON.parse(localStorage.getItem('techhub_notifications')) || [
-        { id: 'notif1', message: 'System Update: New firmware available for Nova X 5G. Optimize now!', type: 'system', date: '2024-06-15', read: false },
-        { id: 'notif2', message: 'Special Offer: 20% off all Audio modules this week. Limited time!', type: 'promo', date: '2024-06-14', read: false },
-        { id: 'notif3', message: 'Order #TH7890: Your AeroBlade 14 has been dispatched. Tracking ID: AB12345.', type: 'order', date: '2024-06-13', read: true },
-        { id: 'notif4', message: 'Wishlist Alert: Pixel Lite is now back in stock!', type: 'wishlist', date: '2024-06-12', read: false },
-    ]);
+    const saved = readJson(localStorage, 'techhub_notifications_v2', []);
+    const notifications = ref(Array.isArray(saved) ? saved : []);
 
     const addNotification = (message, type = 'system') => {
         const newNotification = {
@@ -41,7 +38,7 @@ export const useNotificationStore = defineStore('notifications', () => {
 
     // Persist notifications to localStorage
     watch(notifications, (newVal) => {
-        localStorage.setItem('techhub_notifications', JSON.stringify(newVal));
+        writeJson(localStorage, 'techhub_notifications_v2', newVal);
     }, { deep: true });
 
     return {

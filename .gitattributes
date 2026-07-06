@@ -1,0 +1,4 @@
+.git export-ignore
+.env export-ignore
+.vscode export-ignore
+dist export-ignore

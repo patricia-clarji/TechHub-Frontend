@@ -33,8 +33,8 @@ const closeModal = () => {
                 <!-- Header -->
                 <div class="p-8 border-b border-[var(--border)] flex justify-between items-center bg-[var(--bg)] flex-none">
                     <div>
-                        <span class="section-badge mb-2">Technical Analysis</span>
-                        <h2 class="font-[Playfair_Display] text-3xl font-bold">Hardware Matrix Comparison</h2>
+                        <span class="section-badge mb-2">Product Comparison</span>
+                        <h2 class="font-[Playfair_Display] text-3xl font-bold">Compare Products</h2>
                     </div>
                     <button @click="closeModal" class="w-12 h-12 rounded-full hover:bg-[var(--bg-muted)] transition-colors flex items-center justify-center border border-[var(--border)]">
                         <i class="fa-solid fa-xmark"></i>
@@ -49,7 +49,7 @@ const closeModal = () => {
                                 <th class="w-1/4 pb-8"></th>
                                 <th v-for="p in products" :key="p.id" class="w-1/4 pb-8 px-4">
                                     <div class="space-y-4">
-                                        <img :src="p.img" class="w-full aspect-square object-cover rounded-2xl border border-[var(--border)] shadow-sm" />
+                                        <img :src="p.img" :alt="p.name" class="w-full aspect-square object-cover rounded-2xl border border-[var(--border)] shadow-sm" />
                                         <h3 class="font-bold text-sm leading-tight">{{ p.name }}</h3>
                                         <p class="text-[var(--accent)] font-black text-lg">$ {{ p.price }}</p>
                                     </div>
@@ -83,7 +83,7 @@ const closeModal = () => {
                                 <td class="py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Stock Status</td>
                                 <td v-for="p in products" :key="p.id" class="py-4 px-4">
                                     <span :class="p.inStock ? 'text-green-600' : 'text-red-500'" class="text-[10px] font-black uppercase tracking-widest">
-                                        {{ p.inStock ? 'Available' : 'Depleted' }}
+                                        {{ p.inStock ? 'In Stock' : 'Out of Stock' }}
                                     </span>
                                 </td>
                             </tr>
@@ -97,7 +97,7 @@ const closeModal = () => {
                         Clear Comparison
                     </button>
                     <button @click="closeModal" class="bg-[var(--accent)] text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest premium-btn">
-                        Dismiss Analysis
+                        Close
                     </button>
                 </div>
             </div>

@@ -1,125 +1,19 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { mediaAPI, productAPI } from '@/services/osimart';
+import { productAPI } from '@/services/osimart';
 import logger from '@/utils/logger';
-import { fallbackProducts } from './fallbackProducts';
+import { normalizeProduct } from '@/services/normalizers';
 import { useBrandsStore } from '@/stores/catalog/brands';
 import { useOsimartCategoriesStore } from '@/stores/catalog/osimartCategories';
-
-const toArray = (value) => {
-    if (Array.isArray(value)) return value;
-    if (value === undefined || value === null || value === '') return [];
-    return [value];
-};
-
-const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 
 const toNumber = (value, fallback = 0) => {
     const number = Number(value);
     return Number.isFinite(number) ? number : fallback;
 };
 
-const toSlug = (value) => String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const normalizeCategory = (raw) => {
-    if (!raw) return '';
-    if (typeof raw === 'string') return raw;
-    return pick(
-        raw.name,
-        raw.title,
-        raw.slug,
-        raw.category_name,
-        raw.category?.name,
-        raw.id,
-        ''
-    );
-};
-
-const normalizeReviews = (raw) => toArray(pick(raw.reviews, raw.ratings, raw.feedback)).map((review, index) => ({
-    userId: pick(review.userId, review.user_id, review.user, `review-${index}`),
-    userName: pick(review.userName, review.user_name, review.name, 'Customer'),
-    rating: toNumber(pick(review.rating, review.stars, review.score), 0),
-    comment: pick(review.comment, review.review, review.text, ''),
-    date: pick(review.date, review.created_at, review.updated_at, ''),
-}));
-
-const normalizeImages = (raw) => {
-    const values = [
-        ...toArray(raw.images),
-        raw.main_image,
-        raw.image,
-        raw.image_url,
-        raw.thumbnail,
-        raw.mainImage,
-        raw.featured_image,
-    ];
-
-    return [...new Set(values.map((image) => mediaAPI.getImageUrl(image)).filter(Boolean))];
-};
-
-const normalizeProduct = (raw = {}) => {
-    logger.debug('Normalizing product:', raw);
-
-    const category = normalizeCategory(pick(raw.category, raw.category_name, raw.collection, raw.category_data));
-    const categoryId = pick(raw.category_id, raw.category?.id, raw.collection_id, raw.collection?.id, '');
-    const categorySlug = pick(raw.category_slug, raw.category?.slug, raw.collection_slug, raw.collection?.slug, toSlug(category));
-    const images = normalizeImages(raw);
-    const reviews = normalizeReviews(raw);
-    const stock = toNumber(pick(raw.stock, raw.quantity, raw.available_quantity, raw.inventory, raw.stock_quantity), 0);
-    const isActive = pick(raw.is_active, raw.active, raw.enabled, true);
-    const isInStock = pick(raw.inStock, raw.in_stock, raw.available, stock > 0);
-
-    const normalized = {
-        id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.product_id),
-        name: pick(raw.name, raw.title, raw.product_name, raw.productName, 'Untitled Product'),
-        slug: pick(raw.slug, toSlug(pick(raw.name, raw.title, raw.product_name, raw.id))),
-        price: toNumber(pick(raw.price, raw.sale_price, raw.current_price, raw.unit_price, raw.regular_price), 0),
-        oldPrice: toNumber(pick(raw.oldPrice, raw.old_price, raw.compare_at_price, raw.original_price, raw.regular_price), 0),
-        description: pick(raw.description, raw.full_description, raw.desc, raw.long_description, ''),
-        short_description: pick(raw.short_description, raw.shortDescription, raw.summary, raw.desc, raw.description, ''),
-        image: images[0] || '',
-        images,
-        category,
-        category_id: categoryId,
-        category_slug: categorySlug,
-        badge: pick(raw.badge, raw.label, raw.tagline, raw.badge_text, ''),
-        stock,
-        rating: toNumber(pick(raw.rating, raw.average_rating, raw.avg_rating, raw.avg_rating), 0),
-        review_count: toNumber(pick(raw.review_count, raw.reviews_count, raw.rating_count, reviews.length), reviews.length),
-        tags: toArray(pick(raw.tags, raw.keywords, raw.tag_list)),
-        features: toArray(pick(raw.features, raw.highlights, raw.specifications_list, raw.benefits)),
-        variants: toArray(raw.variants).map((variant, index) => ({
-            id: pick(variant.id, variant.pk, variant.sku, `variant-${index}`),
-            name: pick(variant.name, variant.title, variant.sku, `Option ${index + 1}`),
-            stock: toNumber(pick(variant.stock, variant.quantity, stock), stock),
-            priceMod: toNumber(pick(variant.priceMod, variant.price_mod, variant.price_delta), 0),
-            ...variant,
-        })),
-        colors: toArray(raw.colors),
-        specifications: raw.specifications || raw.attributes || raw.metadata || raw.specs || {},
-        reviews,
-        is_active: Boolean(isActive),
-        inStock: Boolean(isInStock),
-        brand: pick(raw.brand, raw.brand_name, raw.manufacturer, raw.vendor, ''),
-        createdAt: pick(raw.createdAt, raw.created_at, raw.created, raw.date_created, ''),
-        metadata: raw.metadata || {},
-        raw,
-    };
-
-    return {
-        ...normalized,
-        img: normalized.image,
-        desc: normalized.short_description || normalized.description,
-    };
-};
-
 export const useProductsStore = defineStore('products', () => {
-    const products = ref([...fallbackProducts]);
-    const featuredProducts = ref(fallbackProducts.slice(0, 8));
+    const products = ref([]);
+    const featuredProducts = ref([]);
     const singleProduct = ref(null);
     const loading = ref(false);
     const error = ref('');
@@ -167,19 +61,16 @@ export const useProductsStore = defineStore('products', () => {
         return [...new Set(products.value.map((product) => product.brand).filter(Boolean))].sort();
     });
 
-    // Brand filter options with counts for the sidebar
     const brandFilterOptions = computed(() => {
         const brandsStore = useBrandsStore();
         const brandCounts = {};
 
-        // Count products per brand
         products.value.forEach(product => {
             if (product.brand) {
                 brandCounts[product.brand] = (brandCounts[product.brand] || 0) + 1;
             }
         });
 
-        // Get brands from API or fallback
         let brandList = [];
         if (brandsStore.brands.length > 0) {
             brandList = brandsStore.getActiveBrands().map(b => b.name);
@@ -187,7 +78,6 @@ export const useProductsStore = defineStore('products', () => {
             brandList = [...new Set(products.value.map((product) => product.brand).filter(Boolean))];
         }
 
-        // Return brands with counts, sorted alphabetically
         return brandList
             .sort()
             .map(name => ({
@@ -199,24 +89,36 @@ export const useProductsStore = defineStore('products', () => {
 
     const filteredProducts = computed(() => {
         let result = [...productsWithAvgRating.value];
+        const matchesReference = (value, candidates) => {
+            const normalized = String(value || '').trim().toLowerCase();
+            return candidates.some((candidate) => String(candidate || '').trim().toLowerCase() === normalized);
+        };
 
         if (filters.value.category !== 'All') {
-            result = result.filter((product) => product.category === filters.value.category);
+            result = result.filter((product) => matchesReference(filters.value.category, [
+                product.category,
+                product.category_id,
+                product.category_slug,
+            ]));
         }
 
         if (searchQueries.value) {
             const query = searchQueries.value.toLowerCase();
             result = result.filter((product) =>
-                product.name.toLowerCase().includes(query) ||
-                product.category.toLowerCase().includes(query) ||
-                product.brand.toLowerCase().includes(query)
+                String(product.name).toLowerCase().includes(query) ||
+                String(product.category).toLowerCase().includes(query) ||
+                String(product.brand).toLowerCase().includes(query)
             );
         }
 
         result = result.filter((product) => product.price >= filters.value.minPrice && product.price <= filters.value.maxPrice);
 
         if (filters.value.brands.length > 0) {
-            result = result.filter((product) => filters.value.brands.includes(product.brand));
+            result = result.filter((product) => filters.value.brands.some((brand) => matchesReference(brand, [
+                product.brand,
+                product.brand_id,
+                product.raw?.brand?.slugified_name,
+            ])));
         }
 
         if (filters.value.onlyInStock) {
@@ -271,19 +173,7 @@ export const useProductsStore = defineStore('products', () => {
             const response = await productAPI.list(apiParams);
             logger.debug('Products response:', response);
 
-            let productData = response;
-            if (!Array.isArray(response)) {
-                productData = response.results || response.data || response.items || [];
-                logger.debug('Extracted products from response:', productData);
-            }
-
-            if (!Array.isArray(productData)) {
-                logger.error('Product data is not an array:', productData);
-                // Keep existing products (could be fallback or previously loaded)
-                return products.value;
-            }
-            logger.debug('Normalizing products...');
-            const normalizedProducts = productData
+            const normalizedProducts = response
                 .filter(item => item && typeof item === 'object')
                 .map(normalizeProduct)
                 .filter((product) => product.id && product.id !== '');
@@ -291,23 +181,19 @@ export const useProductsStore = defineStore('products', () => {
             logger.debug(`Normalized ${normalizedProducts.length} products`);
 
             if (normalizedProducts.length > 0) {
-                // Success - use API data
                 products.value = normalizedProducts;
                 featuredProducts.value = products.value
                     .filter((product) => product.is_active)
                     .slice(0, 8);
 
-                // Update categories from products
                 updateCategoriesFromProducts();
                 logger.debug('Products store updated successfully with API data');
             } else {
-                // API returned empty array - keep existing products (fallback or previous data)
-                logger.warn('No products returned from API, keeping existing products');
-                // Only update categories from existing products
+                products.value = [];
+                featuredProducts.value = [];
                 updateCategoriesFromProducts();
             }
 
-            // Try to get categories from the categories store as well
             const categoriesStore = useOsimartCategoriesStore();
             if (categoriesStore.categories.length > 0) {
                 const categoryNames = categoriesStore.categories
@@ -322,12 +208,12 @@ export const useProductsStore = defineStore('products', () => {
             hasFetched.value = true;
             return products.value;
         } catch (err) {
-            // API call failed - keep existing products (fallback or previously loaded)
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart products.';
             error.value = errorMsg;
             logger.error('Error fetching products:', errorMsg);
             logger.error('Full error:', err);
-            // Don't replace products with fallback - keep what we have
+            products.value = [];
+            featuredProducts.value = [];
             return products.value;
         } finally {
             loading.value = false;
@@ -340,7 +226,13 @@ export const useProductsStore = defineStore('products', () => {
 
         try {
             logger.debug('Fetching product detail for ID:', id);
-            const response = await productAPI.detail(id);
+            const cached = products.value.find((product) =>
+                [product.id, product.slug].some((value) => String(value) === String(id))
+            );
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id));
+            const response = isUuid
+                ? await productAPI.detail(id)
+                : await productAPI.detailBySlug(id);
             logger.debug('Product detail response:', response);
 
             if (response) {
@@ -351,14 +243,16 @@ export const useProductsStore = defineStore('products', () => {
                     products.value = [singleProduct.value, ...products.value];
                 }
             } else {
-                singleProduct.value = null;
+                singleProduct.value = cached || null;
             }
 
             return singleProduct.value;
         } catch (err) {
             error.value = err?.response?.data?.detail || err?.message || 'Unable to load Osimart product.';
             logger.error('Error fetching product detail:', err);
-            singleProduct.value = products.value.find((product) => String(product.id) === String(id)) || null;
+            singleProduct.value = products.value.find((product) =>
+                [product.id, product.slug].some((value) => String(value) === String(id))
+            ) || null;
             return singleProduct.value;
         } finally {
             loading.value = false;
@@ -374,19 +268,6 @@ export const useProductsStore = defineStore('products', () => {
     const resetFilters = () => {
         filters.value = { category: 'All', minPrice: 0, maxPrice: 2500, brands: [], onlyInStock: false };
         sortBy.value = 'featured';
-    };
-
-    const submitReview = (productId, userId, userName, rating, comment) => {
-        const product = products.value.find((item) => String(item.id) === String(productId));
-        if (product) {
-            product.reviews.push({
-                userId,
-                userName,
-                rating,
-                comment,
-                date: new Date().toISOString().slice(0, 10)
-            });
-        }
     };
 
     const toggleCompare = (productId) => {
@@ -408,6 +289,7 @@ export const useProductsStore = defineStore('products', () => {
         singleProduct,
         loading,
         error,
+        hasFetched,
         sampleProducts,
         categories,
         allCategories,
@@ -418,7 +300,6 @@ export const useProductsStore = defineStore('products', () => {
         searchQueries,
         filteredProducts,
         resetFilters,
-        submitReview,
         compareIds,
         toggleCompare,
         compareProducts,

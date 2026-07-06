@@ -9,7 +9,7 @@
 
         <div
             class="rounded-[2.5rem] overflow-hidden aspect-video border border-[var(--border)] shadow-xl bg-[var(--bg-muted)]">
-            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80"
+            <img src="/og-image.svg"
                 class="w-full h-full object-cover" />
         </div>
 

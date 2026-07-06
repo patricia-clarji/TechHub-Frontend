@@ -1,173 +1,116 @@
-import { useUserStore } from '@/stores/auth/user';
-import { useUIStore } from '@/stores/ui/ui';
-import { error as logError, debug as logDebug } from '@/utils/logger';
+import axios from 'axios';
+import config from '@/config';
+import { authSession } from './authSession';
 
-const ACCESS_KEY = 'osimart_access';
-const REFRESH_KEY = 'osimart_refresh';
-const AUTH_EVENT_KEY = 'techhub_auth_event';
-const CACHE_PREFIXES = ['api_', 'cache', 'osimart'];
+const client = axios.create({
+  baseURL: config.API.OSIMART_AUTH_URL,
+  timeout: 12000,
+  headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+});
 
-let piniaInstance = null;
-let idleTimer = null;
-let idleTimeoutMs = 15 * 60 * 1000; // 15 minutes default
-let warningTimeoutMs = 60 * 1000; // 1 minute warning
-
-export const AuthService = {
-  init(pinia, options = {}) {
-    piniaInstance = pinia;
-    if (options.idleTimeoutMs) idleTimeoutMs = options.idleTimeoutMs;
-    if (options.warningTimeoutMs) warningTimeoutMs = options.warningTimeoutMs;
-    this._initStorageSync();
-    this._initIdleHandlers();
-  },
-
-  _getUserStore() {
-    try {
-      return useUserStore();
-    } catch (e) {
-      logError('Unable to access user store:', e);
-      return null;
-    }
-  },
-
-  getAccessToken() {
-    return sessionStorage.getItem(ACCESS_KEY) || localStorage.getItem(ACCESS_KEY) || '';
-  },
-
-  setAccessToken(token, remember = false) {
-    if (remember) localStorage.setItem(ACCESS_KEY, token);
-    else sessionStorage.setItem(ACCESS_KEY, token);
-    this._emitAuthEvent('login');
-  },
-
-  clearTokens() {
-    try {
-      sessionStorage.removeItem(ACCESS_KEY);
-      sessionStorage.removeItem(REFRESH_KEY);
-      localStorage.removeItem(ACCESS_KEY);
-      localStorage.removeItem(REFRESH_KEY);
-    } catch (e) {
-      logError('Error clearing tokens:', e);
-    }
-  },
-
-  _clearCachedApiData() {
-    try {
-      ['localStorage', 'sessionStorage'].forEach((storageName) => {
-        const storage = window[storageName];
-        if (!storage || typeof storage !== 'object') return;
-        Object.keys(storage).forEach((key) => {
-          if (CACHE_PREFIXES.some((prefix) => key.toLowerCase().startsWith(prefix))) {
-            storage.removeItem(key);
-          }
-        });
-      });
-    } catch (e) {
-      logError('Error clearing cached API data:', e);
-    }
-  },
-
-  isAuthenticated() {
-    const token = this.getAccessToken();
-    const userStore = this._getUserStore();
-    return Boolean(token && userStore?.currentUser);
-  },
-
-  async logout() {
-    const userStore = this._getUserStore();
-    if (userStore && typeof userStore.logout === 'function') {
-      try {
-        userStore.logout();
-      } catch (e) {
-        logError('Error during store logout:', e);
-      }
-    }
-    this.clearTokens();
-    this._clearCachedApiData();
-    this._emitAuthEvent('logout');
-    try {
-      const ui = useUIStore();
-      if (ui) ui.navigateToLogin?.();
-    } catch (_) {}
-  },
-
-  async refreshToken() {
-    const refresh = sessionStorage.getItem(REFRESH_KEY) || localStorage.getItem(REFRESH_KEY);
-    if (!refresh) return false;
-    try {
-      const base = import.meta.env.VITE_OSIMART_BASE_URL || '';
-      const url = base ? `${base.replace(/\/$/, '')}/auth/refresh/` : '/auth/refresh/';
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh }),
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      if (data?.access) this.setAccessToken(data.access, false);
-      if (data?.refresh) {
-        sessionStorage.setItem(REFRESH_KEY, data.refresh);
-      }
-      return true;
-    } catch (e) {
-      logError('Refresh token call failed');
-      return false;
-    }
-  },
-
-  _emitAuthEvent(event) {
-    try {
-      localStorage.setItem(AUTH_EVENT_KEY, JSON.stringify({ event, ts: Date.now() }));
-    } catch (e) {
-      // ignore
-    }
-  },
-
-  _initStorageSync() {
-    window.addEventListener('storage', (ev) => {
-      if (ev.key !== AUTH_EVENT_KEY) return;
-      try {
-        const payload = JSON.parse(ev.newValue || '{}');
-        if (payload.event === 'logout') {
-          const userStore = this._getUserStore();
-          userStore && userStore.currentUser && userStore.logout?.();
-        }
-        if (payload.event === 'login') {
-          // noop: stores will pick up persisted values via their own watches
-        }
-      } catch (e) {
-        // ignore
-      }
-    });
-  },
-
-  _initIdleHandlers() {
-    const resetTimer = () => {
-      if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(async () => {
-        // warn the user
-        try {
-          const shouldStay = window.confirm('Your session will expire in 1 minute due to inactivity. Stay signed in?');
-          if (shouldStay) {
-            // reset timer
-            resetTimer();
-          } else {
-            await this.logout();
-            window.location.reload();
-          }
-        } catch (e) {
-          await this.logout();
-          window.location.reload();
-        }
-      }, idleTimeoutMs - warningTimeoutMs);
-    };
-
-    ['click', 'keydown', 'mousemove', 'touchstart'].forEach((ev) =>
-      window.addEventListener(ev, resetTimer)
-    );
-
-    resetTimer();
-  },
+const messageFrom = (error, fallback) => {
+  const data = error?.response?.data;
+  if (typeof data?.detail === 'string') return data.detail;
+  if (Array.isArray(data?.non_field_errors)) return data.non_field_errors[0];
+  const first = data && Object.values(data).flat().find((value) => typeof value === 'string');
+  return first || fallback;
 };
 
-export default AuthService;
+const extractToken = (data) => data?.access || data?.access_token || data?.token || data?.key || data?.tokens?.access || data?.data?.access || data?.data?.token || '';
+const extractUser = (data, email = '') => {
+  const source = data?.user || data?.customer || data?.data?.user || data?.data || data || {};
+  return {
+    id: source.id || source.pk || '',
+    email: source.email || email,
+    firstName: source.first_name || '',
+    lastName: source.last_name || '',
+    name: [source.first_name, source.last_name].filter(Boolean).join(' ') || source.name || email.split('@')[0],
+    phone: source.mobile_number || '',
+    avatar: source.profile_pic_path || '',
+  };
+};
+
+export const authService = {
+  async login(email, password) {
+    try {
+      const { data } = await client.post('/login/', {
+        email: email.trim().toLowerCase(),
+        password,
+        login_as: 'customer',
+        store_id: config.API.STORE_ID,
+      });
+      const token = extractToken(data);
+      if (!token) throw new Error('Osimart did not return a session token.');
+      const user = extractUser(data, email);
+      authSession.set(token, user);
+      return user;
+    } catch (error) {
+      throw new Error(messageFrom(error, error.message || 'Unable to sign in.'));
+    }
+  },
+
+  async register({ firstName, lastName, email, password, phone }) {
+    try {
+      const { data } = await client.post('/register/', {
+        register_as: 'customer',
+        store_id: config.API.STORE_ID,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        mobile_number: phone.trim(),
+      });
+      const token = extractToken(data);
+      if (!token) return { user: null, requiresLogin: true };
+      const user = extractUser(data, email);
+      authSession.set(token, user);
+      return { user, requiresLogin: false };
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 400 || status === 409) {
+        throw new Error('Unable to create an account with those details. Check the form or use password recovery.');
+      }
+      throw new Error('Unable to create your account right now. Please try again later.');
+    }
+  },
+
+  async loginWithGoogle(credential) {
+    if (!credential) throw new Error('Google did not return a valid credential.');
+    try {
+      const { data } = await client.post('/login/google/', {
+        login_as: 'customer',
+        store_id: config.API.STORE_ID,
+        credential,
+        id_token: credential,
+      }, {
+        headers: { Authorization: `Bearer ${credential}` },
+      });
+      const token = extractToken(data);
+      if (!token) throw new Error('Osimart did not return a customer session.');
+      const user = extractUser(data);
+      authSession.set(token, user);
+      return user;
+    } catch (error) {
+      throw new Error(messageFrom(error, error.message || 'Google sign-in could not be completed.'));
+    }
+  },
+
+  async forgotPassword(email) {
+    try {
+      await client.post('/forgot-password/', {
+        email: email.trim().toLowerCase(),
+        reset_as: 'customer',
+        store_id: config.API.STORE_ID,
+      });
+    } catch (error) {
+      // Do not expose whether an email is registered. Treat validation responses
+      // as accepted and always show the same message to prevent enumeration.
+      if ([400, 404].includes(error?.response?.status)) return;
+      throw new Error('Unable to request a password reset right now. Please try again later.');
+    }
+  },
+
+  logout() {
+    authSession.clear();
+  },
+};

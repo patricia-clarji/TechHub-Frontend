@@ -19,10 +19,10 @@ const normalizeCategory = (raw = {}) => {
     return {
         id: pick(raw.id, raw.pk, raw.uuid, raw.slug, raw.category_id),
         name,
-        slug: pick(raw.slug, toSlug(name)),
+        slug: pick(raw.slugified_name, raw.slug, toSlug(name)),
         description: pick(raw.description, raw.desc, raw.summary, raw.about, ''),
         image: mediaAPI.getImageUrl(pick(raw.image, raw.image_url, raw.thumbnail, raw.icon, raw.background, raw.banner_image)),
-        is_active: Boolean(pick(raw.is_active, raw.active, raw.enabled, true)),
+        is_active: !raw.unlisted_at && !raw.archived_at,
         product_count: pick(raw.product_count, raw.products_count, raw.count, 0),
         parent_id: pick(raw.parent_id, raw.parent, raw.parent_category, null),
         raw,

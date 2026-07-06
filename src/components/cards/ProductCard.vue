@@ -29,20 +29,22 @@ const isLowStock = computed(() => props.product.stock > 0 && props.product.stock
         </div>
 
         <!-- Wishlist Toggle -->
-        <button @click.stop="wishlistStore.toggleWishlist(product.id)" 
+        <button @click.stop="wishlistStore.toggleWishlist(product.id)" type="button"
+            :aria-label="isInWishlist ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`"
             class="absolute top-4 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110">
             <i :class="isInWishlist ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart'"></i>
         </button>
 
         <!-- Comparison Toggle -->
-        <button @click.stop="productsStore.toggleCompare(product.id)" 
+        <button @click.stop="productsStore.toggleCompare(product.id)" type="button"
+            :aria-label="isComparing ? `Remove ${product.name} from comparison` : `Compare ${product.name}`"
             class="absolute top-16 right-4 z-10 w-10 h-10 glass-panel-wishlist text-[var(--text)] rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110"
             :class="{'bg-[var(--accent)]! text-white!': isComparing}">
             <i class="fa-solid fa-layer-group text-xs"></i>
         </button>
 
         <figure class="relative overflow-hidden aspect-square bg-[var(--bg-muted)]">
-            <img :src="product.img"
+            <img :src="product.img" :alt="product.name" loading="lazy" decoding="async"
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
             
             <!-- Quick View Overlay -->
@@ -56,14 +58,14 @@ const isLowStock = computed(() => props.product.stock > 0 && props.product.stock
 
         <div class="p-6 flex flex-col flex-grow">
             <div class="flex items-center mb-2">
-                <span class="text-[9px] text-[var(--accent)] font-bold uppercase tracking-[0.2em]">✦ Provisioned Elite</span>
+                <span class="text-[9px] text-[var(--accent)] font-bold uppercase tracking-[0.2em]">{{ product.brand || 'Featured product' }}</span>
                 <!-- Low Stock Pulse -->
                 <span v-if="isLowStock" class="ml-auto flex items-center gap-1.5 text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">
                     <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
                     Only {{ product.stock }} left
                 </span>
             </div>
-            <router-link :to="`/products/${product.id}`"
+            <router-link :to="{ name: 'ProductDetail', params: { identifier: product.slug || product.id } }"
                 class="font-[Playfair_Display] text-xl font-bold leading-tight text-[var(--text)] hover:text-[var(--accent)] mb-3 line-clamp-1 transition-colors">
                 {{ product.name }}
             </router-link>
@@ -80,11 +82,13 @@ const isLowStock = computed(() => props.product.stock > 0 && props.product.stock
 
             <div class="pt-4 border-t border-[var(--border)]/60 flex items-center justify-between">
                 <div class="flex flex-col">
-                    <span class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">MSRP Deployment</span>
-                    <span class="text-lg font-black text-[var(--accent)]">$ {{ product.price }}</span>
+                    <span class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">Price</span>
+                    <span class="text-lg font-black text-[var(--accent)]">$ {{ Number(product.price).toFixed(2) }}</span>
                 </div>
-                <button @click="cartStore.addToCart(product.id)"
-                    class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-3.5 rounded-2xl transition-all premium-btn shadow-lg">
+                <button @click="cartStore.addToCart(product)" type="button"
+                    :disabled="!product.inStock"
+                    :aria-label="product.inStock ? `Add ${product.name} to cart` : `${product.name} is out of stock`"
+                    class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-3.5 rounded-2xl transition-all premium-btn shadow-lg disabled:opacity-40 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-cart-plus"></i>
                 </button>
             </div>

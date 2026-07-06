@@ -30,7 +30,7 @@ const hasBeenVisible = ref(false);
 let observer = null;
 
 const handleAddToCart = () => {
-    cartStore.addToCart(props.product.id);
+    cartStore.addToCart(props.product);
     emit('add-to-cart', props.product);
 };
 
@@ -93,7 +93,7 @@ const getAnimationClass = (baseClass) => {
                     <!-- Glassmorphism Overlay for Price -->
                     <div
                         class="absolute bottom-6 right-6 backdrop-blur-md bg-white/10 border border-white/20 px-6 py-3 rounded-2xl shadow-xl">
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">MSRP Deployment</p>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Price</p>
                         <p class="text-2xl font-black text-white">$ {{ product.price }}</p>
                     </div>
                 </div>
@@ -109,7 +109,7 @@ const getAnimationClass = (baseClass) => {
                     <span class="section-badge inline-flex">
                         <span
                             class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] inline-block animate-pulse mr-3"></span>
-                        Architectural Feature
+                        Product Highlight
                     </span>
                     <h2 class="font-[Playfair_Display] text-4xl lg:text-6xl font-bold leading-tight">
                         {{ product.name }}
@@ -145,7 +145,7 @@ const getAnimationClass = (baseClass) => {
                 <div :class="getAnimationClass('flex flex-wrap gap-4 pt-6 delay-700')">
                     <button @click="handleAddToCart"
                         class="group inline-flex items-center gap-3 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
-                        <span>Integrate System</span>
+                        <span>Add to Cart</span>
                         <i class="fa-solid fa-cart-plus transition-transform group-hover:translate-x-1"></i>
                     </button>
 
