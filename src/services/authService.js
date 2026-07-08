@@ -1,6 +1,7 @@
 import axios from 'axios';
 import config from '@/config';
 import { authSession } from './authSession';
+import { readJson, writeJson } from '@/utils/storage';
 
 const client = axios.create({
   baseURL: config.API.OSIMART_AUTH_URL,
@@ -11,7 +12,9 @@ const client = axios.create({
 const messageFrom = (error, fallback) => {
   const data = error?.response?.data;
   if (typeof data?.detail === 'string') return data.detail;
+  if (typeof data?.message === 'string') return data.message;
   if (Array.isArray(data?.non_field_errors)) return data.non_field_errors[0];
+  if (Array.isArray(data?.errors)) return data.errors[0];
   const first = data && Object.values(data).flat().find((value) => typeof value === 'string');
   return first || fallback;
 };
@@ -30,22 +33,115 @@ const extractUser = (data, email = '') => {
   };
 };
 
+const deviceStorageKey = 'techhub_auth_device_id';
+
+const createDeviceId = () => {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (cryptoApi?.getRandomValues) {
+    cryptoApi.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+  return `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
+const getDeviceId = () => {
+  if (typeof localStorage === 'undefined') return createDeviceId();
+  const stored = readJson(localStorage, deviceStorageKey, '');
+  if (stored) return stored;
+  const deviceId = createDeviceId();
+  writeJson(localStorage, deviceStorageKey, deviceId);
+  return deviceId;
+};
+
+const getDeviceName = () => {
+  if (typeof navigator === 'undefined') return 'TechHub web';
+  const ua = navigator.userAgent || '';
+  const browser =
+    ua.includes('Edg/') ? 'Edge' :
+      ua.includes('Chrome/') ? 'Chrome' :
+        ua.includes('Firefox/') ? 'Firefox' :
+          ua.includes('Safari/') ? 'Safari' :
+            'Browser';
+  const os =
+    navigator.userAgentData?.platform ||
+    (ua.includes('Windows') ? 'Windows' :
+      ua.includes('Mac OS') ? 'macOS' :
+        ua.includes('Android') ? 'Android' :
+          /iPhone|iPad|iPod/.test(ua) ? 'iOS' :
+            navigator.platform || 'unknown OS');
+  return `TechHub web (${browser} on ${os})`;
+};
+
+const shouldRetryWithCustmer = (error) => {
+  const status = error?.response?.status;
+  return [400, 401, 403].includes(status);
+};
+
+const loginErrorMessage = (error) => {
+  const status = error?.response?.status;
+  const fallback = status === 400 || status === 401
+    ? 'Invalid email or password.'
+    : status === 403
+      ? 'This account is not allowed to sign in.'
+      : status >= 500
+        ? 'The Osimart server could not complete sign in right now.'
+        : error?.code === 'ERR_NETWORK' || !error?.response
+          ? 'Network error. Check your connection and try again.'
+          : error.message || 'Unable to sign in.';
+  return messageFrom(error, fallback);
+};
+
 export const authService = {
   async login(email, password) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      throw new Error('Email and password are required.');
+    }
+
+    const payload = {
+      email: normalizedEmail,
+      password,
+      device_name: getDeviceName(),
+      device_id: getDeviceId(),
+      store_id: config.API.STORE_ID,
+    };
+
+    let response;
+    let customerError;
     try {
-      const { data } = await client.post('/login/', {
-        email: email.trim().toLowerCase(),
-        password,
+      response = await client.post('/login/', {
         login_as: 'customer',
-        store_id: config.API.STORE_ID,
+        ...payload,
       });
+    } catch (error) {
+      customerError = error;
+      if (!shouldRetryWithCustmer(error)) {
+        throw new Error(loginErrorMessage(error));
+      }
+    }
+
+    if (!response && customerError) {
+      try {
+        response = await client.post('/login/', {
+          login_as: 'custmer',
+          ...payload,
+        });
+      } catch (error) {
+        throw new Error(loginErrorMessage(error));
+      }
+    }
+
+    try {
+      const { data } = response;
       const token = extractToken(data);
       if (!token) throw new Error('Osimart did not return a session token.');
-      const user = extractUser(data, email);
+      const user = extractUser(data, normalizedEmail);
       authSession.set(token, user);
       return user;
     } catch (error) {
-      throw new Error(messageFrom(error, error.message || 'Unable to sign in.'));
+      throw new Error(error.message || 'Unable to sign in.');
     }
   },
 

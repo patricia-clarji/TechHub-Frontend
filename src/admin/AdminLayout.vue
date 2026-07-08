@@ -22,7 +22,8 @@
         <div class="topbar-actions">
           <button class="admin-icon" :aria-label="dark ? 'Use light theme' : 'Use dark theme'" @click="toggleTheme"><i :class="dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i></button>
           <button class="admin-icon" aria-label="Notifications"><i class="fa-regular fa-bell"></i><span class="notification-dot"></span></button>
-          <div class="admin-profile"><span>TH</span><div><strong>Demo operator</strong><small>No write access</small></div></div>
+          <div class="admin-profile"><span>{{ initials }}</span><div><strong>{{ displayName }}</strong><small>No write access</small></div></div>
+          <button class="admin-icon" aria-label="Log out" @click="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
         </div>
       </header>
       <main class="admin-main">
@@ -34,10 +35,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/auth/user';
 const route = useRoute(); const router = useRouter(); const drawerOpen = ref(false); const search = ref('');
+const userStore = useUserStore();
 const dark = ref(document.documentElement.classList.contains('dark'));
+const displayName = computed(() => userStore.currentUser?.name || userStore.currentUser?.email || 'Admin user');
+const initials = computed(() => displayName.value.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'TH');
 const navigation = [
   ['Home','/admin/overview','fa-solid fa-house'], ['Analytics','/admin/analytics','fa-solid fa-chart-pie'], ['Products','/admin/products','fa-solid fa-box'],
   ['Product Variants','/admin/product-variants','fa-solid fa-boxes-stacked'], ['Categories','/admin/categories','fa-solid fa-grid-2'],
@@ -55,4 +60,5 @@ const navigation = [
 ].map(([label,to,icon]) => ({ label,to,icon }));
 const toggleTheme = () => { dark.value = !dark.value; document.documentElement.classList.toggle('dark', dark.value); };
 const goToMatch = () => { const match = navigation.find((item) => item.label.toLowerCase().includes(search.value.trim().toLowerCase())); if (match) router.push(match.to); };
+const logout = () => { userStore.logout(); router.push({ name: 'AdminLogin' }); };
 </script>

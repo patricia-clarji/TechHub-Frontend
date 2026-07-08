@@ -5,6 +5,7 @@ import {
   isRetryableApiError,
   delay,
 } from './errorHandler';
+import { authSession } from './authSession';
 
 const pendingRequests = new Map();
 
@@ -40,6 +41,12 @@ client.interceptors.request.use((request) => {
   }
 
   delete request.requireAuth;
+  const token = authSession.getToken();
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete request.headers.Authorization;
+  }
   request.headers['Accept'] = 'application/json';
   request.headers['Content-Type'] = request.headers['Content-Type'] || 'application/json';
 

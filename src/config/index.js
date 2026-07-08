@@ -1,10 +1,16 @@
 const ENV = import.meta.env.MODE || 'development';
 const IS_DEV = import.meta.env.DEV === true;
 
+const cleanEnvUrl = (value, fallback = '') => {
+  const raw = String(value || '').trim();
+  const duplicatedAssignment = raw.match(/^[A-Z0-9_]+=(https?:\/\/.+)$/i);
+  return (duplicatedAssignment ? duplicatedAssignment[1] : raw || fallback).replace(/\/+$/, '');
+};
+
 export const API = {
-  OSIMART_BASE_URL: import.meta.env.VITE_OSIMART_BASE_URL || 'https://api.osimart.com/store/apis',
-  OSIMART_AUTH_URL: import.meta.env.VITE_OSIMART_AUTH_URL || 'https://api.osimart.com/auth',
-  OSIMART_ADMIN_URL: import.meta.env.VITE_OSIMART_ADMIN_URL?.trim().replace(/\/+$/, '') || '',
+  OSIMART_BASE_URL: cleanEnvUrl(import.meta.env.VITE_OSIMART_BASE_URL, 'https://api.osimart.com/store/apis'),
+  OSIMART_AUTH_URL: cleanEnvUrl(import.meta.env.VITE_OSIMART_AUTH_URL, 'https://api.osimart.com/auth'),
+  OSIMART_ADMIN_URL: cleanEnvUrl(import.meta.env.VITE_OSIMART_ADMIN_URL),
   STORE_ID: import.meta.env.VITE_OSIMART_STORE_ID?.trim() || '',
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || '',
 };

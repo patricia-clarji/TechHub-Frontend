@@ -25,6 +25,7 @@ const routes = [
     { path: '/contact', name: 'Contact', component: () => import('@/pages/Contact/index.vue'), meta: { title: 'Contact', description: 'Contact TechHub about products, order requests, warranty, or support.' } },
     { path: '/order-confirmation', name: 'OrderConfirmation', component: () => import('@/pages/OrderConfirmation/index.vue'), meta: { title: 'Request Received', description: 'Your TechHub order request was received.' } },
     { path: '/deals', name: 'Deals', component: () => import('@/pages/Deals/index.vue'), meta: { title: 'Deals', description: 'Browse current TechHub offers provided by live Osimart pricing.' } },
+    { path: '/admin/login', name: 'AdminLogin', component: () => import('@/admin/pages/AdminLogin.vue'), meta: { title: 'Admin Login', description: 'Sign in to the TechHub admin workspace.' } },
     {
         path: '/admin',
         component: () => import('@/admin/AdminLayout.vue'),
@@ -64,8 +65,14 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
-    if (!to.meta.requiresAuth) return true;
     const userStore = useUserStore();
+    if (to.name === 'AdminLogin' && userStore.isAuthenticated) {
+        return { path: typeof to.query.redirect === 'string' ? to.query.redirect : '/admin/overview' };
+    }
+    if (to.meta.admin && !userStore.isAuthenticated) {
+        return { name: 'AdminLogin', query: { redirect: to.fullPath } };
+    }
+    if (!to.meta.requiresAuth) return true;
     if (userStore.isAuthenticated) return true;
     useUIStore().authModalOpen = true;
     return { name: 'Home', query: { signIn: 'required' } };

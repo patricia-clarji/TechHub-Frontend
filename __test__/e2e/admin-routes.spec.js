@@ -30,8 +30,31 @@ const routes = [
   ['/admin/settings', 'Store settings'],
 ];
 
+const mockLogin = async (page) => {
+  await page.route('**/auth/login/', async (route) => {
+    const body = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access: 'header.payload.signature',
+        user: { id: 'customer-1', email: body.email, first_name: 'Demo', last_name: 'Operator' },
+      }),
+    });
+  });
+};
+
+const signIn = async (page, redirect = '/admin/overview') => {
+  await page.goto(`/admin/login?redirect=${encodeURIComponent(redirect)}`, { waitUntil: 'domcontentloaded' });
+  await page.getByLabel('Email').fill('demo@example.com');
+  await page.getByLabel('Password').fill('secret-password');
+  await page.locator('.admin-login-form').getByRole('button', { name: /sign in/i }).click();
+  await expect(page).toHaveURL(new RegExp(redirect.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+};
+
 test.describe('admin workspace routes', () => {
   test.beforeEach(async ({ page }) => {
+    await mockLogin(page);
     await page.route('**/store/apis/**', async (route) => {
       const path = new URL(route.request().url()).pathname;
       const label = path.split('/').filter(Boolean).at(-1) || 'record';
@@ -45,22 +68,27 @@ test.describe('admin workspace routes', () => {
     });
   });
 
+  test('redirects protected admin routes to login when unauthenticated', async ({ page }) => {
+    await page.goto('/admin/products', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/\/admin\/login\?redirect=\/admin\/products/);
+  });
+
   for (const [path, heading] of routes) {
     test(`${path} renders without a broken route`, async ({ page }) => {
-      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await signIn(page, path);
       await expect(page.locator('body')).toContainText(heading);
       await expect(page.locator('body')).not.toContainText('404');
     });
   }
 
   test('opens a DRF detail route where supported', async ({ page }) => {
-    await page.goto('/admin/products', { waitUntil: 'domcontentloaded' });
+    await signIn(page, '/admin/products');
     await page.getByLabel('View details').first().click();
     await expect(page.locator('body')).toContainText('Record details');
   });
 
   test('write controls remain disabled in read-only DRF mode', async ({ page }) => {
-    await page.goto('/admin/promotions', { waitUntil: 'domcontentloaded' });
+    await signIn(page, '/admin/promotions');
     await expect(page.getByRole('button', { name: /add promo code/i })).toBeDisabled();
   });
 });

@@ -3,6 +3,7 @@ import config from '@/config';
 import { apiClient } from '@/services/apiClient';
 import { adminResources, getAdminResource } from '@/services/adminResources';
 import { normalizeDrfObject, normalizeDrfResponse } from '@/services/drf';
+import { authSession } from '@/services/authSession';
 
 export class UnsupportedAdminOperationError extends Error {
   constructor(operation) {
@@ -36,11 +37,13 @@ const ensureStaffWriteApi = (operation) => {
 const staffWriteRequest = async (operation, axiosConfig) => {
   ensureStaffWriteApi(operation);
   const csrfToken = getCookie('csrftoken');
+  const token = authSession.getToken();
   const response = await createAdminClient().request({
     ...axiosConfig,
     headers: {
       ...(axiosConfig.headers || {}),
       ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
   return response.data;
