@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const loadAuthService = async (post = vi.fn()) => {
+const loadAuthService = async (post = vi.fn(), options = {}) => {
   vi.resetModules();
   vi.unstubAllEnvs();
   vi.stubEnv('VITE_OSIMART_AUTH_URL', 'https://api.example.test/auth');
-  vi.stubEnv('VITE_OSIMART_STORE_ID', 'store-1');
+  vi.stubEnv('VITE_OSIMART_STORE_ID', options.storeId ?? 'store-1');
   localStorage.clear();
 
   vi.doMock('axios', () => ({
@@ -33,12 +33,12 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    const user = await authService.login(' Admin@Example.com ', 'secret');
+    const user = await authService.login(' Admin@Example.com ', ' secret ');
 
     expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({
       login_as: 'customer',
       email: 'admin@example.com',
-      password: 'secret',
+      password: ' secret ',
       device_name: expect.stringContaining('TechHub web'),
       device_id: expect.any(String),
       store_id: 'store-1',
@@ -47,35 +47,56 @@ describe('authService login', () => {
     expect(authSession.getToken()).toBe('header.payload.signature');
   });
 
-  it('retries once with custmer when customer login is rejected by the backend', async () => {
-    const post = vi.fn()
-      .mockRejectedValueOnce({ response: { status: 400, data: { non_field_errors: ['Invalid user.'] } } })
-      .mockResolvedValueOnce({
-        data: {
-          token: 'fallback-token',
-          customer: { id: 'customer-2', email: 'admin@example.com', first_name: 'Fallback' },
-        },
-      });
+  it('generates a stable device_id when none exists before login', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        access: 'header.payload.signature',
+        user: { id: 'customer-1', email: 'admin@example.com' },
+      },
+    });
     const { authService } = await loadAuthService(post);
+    localStorage.setItem('techhub_auth_device_id', JSON.stringify(''));
 
-    const user = await authService.login('admin@example.com', 'secret');
+    await authService.login('admin@example.com', 'secret');
 
-    expect(post).toHaveBeenNthCalledWith(1, '/login/', expect.objectContaining({ login_as: 'customer' }));
-    expect(post).toHaveBeenNthCalledWith(2, '/login/', expect.objectContaining({ login_as: 'custmer' }));
-    expect(user).toMatchObject({ id: 'customer-2', email: 'admin@example.com', name: 'Fallback' });
+    expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({
+      device_id: expect.stringMatching(/\S/),
+      device_name: expect.stringMatching(/TechHub web/),
+    }));
+  });
+
+  it('does not retry with another login_as when the backend returns invalid credentials', async () => {
+    const post = vi.fn()
+      .mockRejectedValueOnce({ response: { status: 400, data: { non_field_errors: ['Invalid user.'] } } });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    await expect(authService.login('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({ login_as: 'customer' }));
+    expect(authSession.getToken()).toBe('');
   });
 
   it('surfaces failed login responses without faking success', async () => {
     const post = vi.fn()
-      .mockRejectedValueOnce({ response: { status: 401, data: { detail: 'No active account found.' } } })
-      .mockRejectedValueOnce({ response: { status: 401, data: { detail: 'No active account found.' } } });
+      .mockRejectedValueOnce({ response: { status: 400, data: { non_field_errors: ['Invalid user.'] } } });
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    await expect(authService.login('admin@example.com', 'wrong-password')).rejects.toThrow('No active account found.');
+    await expect(authService.login('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
 
-    expect(post).toHaveBeenCalledTimes(2);
+    expect(post).toHaveBeenCalledTimes(1);
     expect(authSession.getToken()).toBe('');
+  });
+
+  it('shows the backend unverified-account message cleanly', async () => {
+    const post = vi.fn()
+      .mockRejectedValueOnce({ response: { status: 400, data: { non_field_errors: ['User account is not verified.'] } } });
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.login('new@example.com', 'StrongPassw0rd!')).rejects.toThrow('User account is not verified.');
+    expect(post).toHaveBeenCalledTimes(1);
   });
 
   it('validates missing login fields before calling the backend', async () => {
@@ -83,6 +104,14 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
 
     await expect(authService.login('', '')).rejects.toThrow('Email and password are required.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('shows a clear login error when the store id is missing', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post, { storeId: '' });
+
+    await expect(authService.login('admin@example.com', 'secret')).rejects.toThrow('Store configuration is missing. Set VITE_OSIMART_STORE_ID before using authentication.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -101,5 +130,148 @@ describe('authService login', () => {
 
     expect(authSession.getToken()).toBe('');
     expect(authSession.getUser()).toBeNull();
+  });
+});
+
+describe('authService register', () => {
+  const registerDetails = {
+    firstName: 'Ada',
+    lastName: 'Customer',
+    email: ' Ada.Customer@Example.com ',
+    phone: '70 123 456',
+    password: 'StrongPassw0rd!',
+  };
+
+  it('posts the confirmed Osimart customer register payload and signs in when a token is returned', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        access: 'register-token',
+        user: { id: 'customer-3', email: 'ada.customer@example.com', first_name: 'Ada', last_name: 'Customer' },
+      },
+    });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    const result = await authService.register(registerDetails);
+
+    expect(post).toHaveBeenCalledWith('/register/', {
+      register_as: 'customer',
+      store_id: 'store-1',
+      first_name: 'Ada',
+      last_name: 'Customer',
+      email: 'ada.customer@example.com',
+      password: 'StrongPassw0rd!',
+      mobile_number: '+96170123456',
+    });
+    expect(result.requiresLogin).toBe(false);
+    expect(result.user).toMatchObject({ id: 'customer-3', email: 'ada.customer@example.com', name: 'Ada Customer' });
+    expect(authSession.getToken()).toBe('register-token');
+  });
+
+  it('returns verification-required state after a successful register response without a token', async () => {
+    const post = vi.fn()
+      .mockResolvedValueOnce({
+        data: { id: 'customer-4', email: 'ada.customer@example.com', first_name: 'Ada', last_name: 'Customer' },
+      });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    const result = await authService.register(registerDetails);
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      requiresLogin: true,
+      verificationRequired: true,
+      message: 'Account created. Please verify your account before signing in.',
+      email: 'ada.customer@example.com',
+    });
+    expect(result.user).toMatchObject({ id: 'customer-4', email: 'ada.customer@example.com' });
+    expect(authSession.getToken()).toBe('');
+  });
+
+  it('skips auto-login when verification is required after register', async () => {
+    const post = vi.fn()
+      .mockResolvedValueOnce({
+        data: { id: 'customer-5', email: 'ada.customer@example.com' },
+      });
+    const { authService } = await loadAuthService(post);
+
+    const result = await authService.register(registerDetails);
+
+    expect(result.verificationRequired).toBe(true);
+    expect(post).not.toHaveBeenCalledWith('/login/', expect.anything());
+  });
+
+  it('surfaces register field errors from the backend without faking success', async () => {
+    const post = vi.fn().mockRejectedValue({
+      response: {
+        status: 400,
+        data: { email: ['Store is required.'], password: ['This password is too short.'] },
+      },
+    });
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register(registerDetails)).rejects.toThrow('email: Store is required.');
+  });
+
+  it('validates missing register fields before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register({ ...registerDetails, phone: '' })).rejects.toThrow('First name, last name, email, phone, and password are required.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('blocks invalid phone values before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register({ ...registerDetails, phone: '12 34' })).rejects.toThrow('Enter a valid Lebanon mobile number.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('blocks placeholder phone values before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register({ ...registerDetails, phone: 'XX XXX XXX' })).rejects.toThrow('Enter digits only for your mobile number.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('blocks common passwords before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register({ ...registerDetails, password: 'password123' })).rejects.toThrow('Choose a stronger password that is not commonly used.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('blocks passwords that are 8 characters or shorter before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.register({ ...registerDetails, password: 'Abcd1234' })).rejects.toThrow('Use more than 8 characters for your password.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('shows a clear register error when the store id is missing', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post, { storeId: '' });
+
+    await expect(authService.register(registerDetails)).rejects.toThrow('Store configuration is missing. Set VITE_OSIMART_STORE_ID before using authentication.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('posts the confirmed resend verification payload', async () => {
+    const post = vi.fn().mockResolvedValue({ data: {} });
+    const { authService } = await loadAuthService(post);
+
+    await authService.resendVerification(' Ada.Customer@Example.com ');
+
+    expect(post).toHaveBeenCalledWith('/regen/', {
+      email: 'ada.customer@example.com',
+      verify_as: 'customer',
+      store_id: 'store-1',
+    });
   });
 });

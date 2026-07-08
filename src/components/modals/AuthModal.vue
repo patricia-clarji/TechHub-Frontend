@@ -5,6 +5,12 @@ import { useUIStore } from '@/stores/ui/ui';
 import { useToastStore } from '@/stores/ui/toast';
 import config from '@/config';
 import { renderGoogleButton } from '@/services/googleIdentity';
+import {
+  getLebanonCountryCode,
+  normalizeLebanonMobileNumber,
+  validateLebanonMobileNumber,
+  validatePassword,
+} from '@/services/authValidation';
 
 const userStore = useUserStore();
 const uiStore = useUIStore();
@@ -14,17 +20,19 @@ const showPassword = ref(false);
 const submitted = ref(false);
 const googleButton = ref(null);
 const googleError = ref('');
+const verificationNotice = ref('');
 const form = reactive({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
+const countryCode = getLebanonCountryCode();
 
 const errors = computed(() => ({
-  firstName: mode.value === 'register' && form.firstName.trim().length < 2 ? 'Enter your first name.' : '',
-  lastName: mode.value === 'register' && form.lastName.trim().length < 2 ? 'Enter your last name.' : '',
+  firstName: mode.value === 'register' && form.firstName.trim().length < 2 ? 'Enter at least 2 characters for your first name.' : '',
+  lastName: mode.value === 'register' && form.lastName.trim().length < 2 ? 'Enter at least 2 characters for your last name.' : '',
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Enter a valid email.',
-  phone: mode.value === 'register' && !/^\+?[0-9\s()-]{7,20}$/.test(form.phone.trim()) ? 'Enter a valid phone number.' : '',
+  phone: mode.value === 'register' ? validateLebanonMobileNumber(form.phone) : '',
   password: mode.value === 'login' && !form.password
     ? 'Enter your password.'
-    : mode.value === 'register' && form.password.length < 8
-      ? 'Use at least 8 characters.'
+    : mode.value === 'register'
+      ? validatePassword(form.password)
       : '',
   confirmPassword: mode.value === 'register' && form.confirmPassword !== form.password ? 'Passwords do not match.' : '',
 }));
@@ -33,6 +41,7 @@ const reset = () => {
   submitted.value = false;
   form.password = '';
   userStore.error = '';
+  verificationNotice.value = '';
 };
 
 const handleGoogleCredential = async (response) => {
@@ -79,10 +88,24 @@ const submit = async () => {
       toastStore.showToast('Welcome back.', 'fa-circle-check');
       uiStore.authModalOpen = false;
     } else if (mode.value === 'register') {
-      const result = await userStore.register(form);
-      toastStore.showToast(result.requiresLogin ? 'Account created. Please sign in.' : 'Account created.', 'fa-circle-check');
-      if (result.requiresLogin) mode.value = 'login';
-      else uiStore.authModalOpen = false;
+      const result = await userStore.register({
+        ...form,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        phone: normalizeLebanonMobileNumber(form.phone, countryCode),
+        password: form.password.trim(),
+      });
+      if (result.requiresLogin) {
+        mode.value = 'login';
+        await nextTick();
+        verificationNotice.value = result.message || 'Account created. Please verify your account before signing in.';
+        userStore.error = verificationNotice.value;
+        toastStore.showToast(verificationNotice.value, 'fa-circle-check');
+      } else {
+        toastStore.showToast('Account created.', 'fa-circle-check');
+        uiStore.authModalOpen = false;
+      }
     } else {
       await userStore.forgotPassword(form.email);
       toastStore.showToast('If that account exists, reset instructions have been sent.', 'fa-envelope');
@@ -90,6 +113,17 @@ const submit = async () => {
     }
   } catch {
     // The store exposes a customer-safe message.
+  }
+};
+
+const resendVerification = async () => {
+  try {
+    await userStore.resendVerification(form.email);
+    verificationNotice.value = 'Verification code sent. Check your email or phone.';
+    userStore.error = verificationNotice.value;
+    toastStore.showToast(verificationNotice.value, 'fa-envelope');
+  } catch {
+    verificationNotice.value = '';
   }
 };
 </script>
@@ -131,8 +165,8 @@ const submit = async () => {
           <p v-if="submitted && errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</p>
         </div>
         <div v-if="mode === 'register'">
-          <label for="auth-phone" class="block text-xs font-bold mb-2">Phone</label>
-          <input id="auth-phone" v-model="form.phone" type="tel" autocomplete="tel" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+          <label for="auth-phone" class="block text-xs font-bold mb-2">Mobile number</label>
+          <input id="auth-phone" v-model="form.phone" type="tel" autocomplete="tel" placeholder="70 123 456" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
           <p v-if="submitted && errors.phone" class="text-red-500 text-xs mt-1">{{ errors.phone }}</p>
         </div>
         <div v-if="mode !== 'forgot'">
@@ -154,6 +188,15 @@ const submit = async () => {
           <p v-if="submitted && errors.confirmPassword" class="text-red-500 text-xs mt-1">{{ errors.confirmPassword }}</p>
         </div>
         <p v-if="userStore.error" role="alert" class="text-red-500 text-sm">{{ userStore.error }}</p>
+        <button
+          v-if="mode === 'login' && verificationNotice && form.email.trim()"
+          type="button"
+          class="text-xs font-bold text-[var(--accent)] hover:underline"
+          :disabled="userStore.loading"
+          @click="resendVerification"
+        >
+          Resend verification
+        </button>
         <button type="submit" :disabled="userStore.loading" class="w-full bg-[var(--accent)] text-white rounded-full py-4 font-bold disabled:opacity-50">
           {{ userStore.loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Send Reset Link' }}
         </button>

@@ -29,7 +29,8 @@ export const useUserStore = defineStore('user', () => {
 
   const register = (details) => run(async () => {
     const result = await authService.register(details);
-    currentUser.value = result.user;
+    currentUser.value = result.requiresLogin ? null : result.user;
+    if (result.loginError) error.value = result.loginError;
     return result;
   });
   const loginWithGoogle = (credential) => run(async () => {
@@ -38,10 +39,11 @@ export const useUserStore = defineStore('user', () => {
   });
 
   const forgotPassword = (email) => run(() => authService.forgotPassword(email));
+  const resendVerification = (email) => run(() => authService.resendVerification(email));
   const logout = () => {
     authService.logout();
     currentUser.value = null;
   };
 
-  return { currentUser, loading, error, isAuthenticated, login, loginWithGoogle, register, forgotPassword, logout };
+  return { currentUser, loading, error, isAuthenticated, login, loginWithGoogle, register, forgotPassword, resendVerification, logout };
 });
