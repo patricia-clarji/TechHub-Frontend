@@ -7,6 +7,7 @@ import {
   validateLebanonMobileNumber,
   validatePassword,
 } from './authValidation';
+import { AUTH_ENDPOINTS } from './endpoints';
 
 const client = axios.create({
   baseURL: config.API.OSIMART_AUTH_URL,
@@ -45,7 +46,7 @@ const extractUser = (data, email = '') => {
     firstName: source.first_name || '',
     lastName: source.last_name || '',
     name: [source.first_name, source.last_name].filter(Boolean).join(' ') || source.name || email.split('@')[0],
-    phone: source.mobile_number || '',
+    phone: source.mobile_number || source.mobile || '',
     avatar: source.profile_pic_path || '',
   };
 };
@@ -168,7 +169,7 @@ export const authService = {
     };
 
     try {
-      const { data } = await client.post('/login/', payload);
+      const { data } = await client.post(AUTH_ENDPOINTS.login, payload);
       const { token, user } = normalizeAuthResponse(data, normalizedEmail);
       if (!token) throw new AuthError('Osimart did not return a session token.', { code: 'TOKEN_MISSING' });
       authSession.set(token, user);
@@ -176,7 +177,7 @@ export const authService = {
     } catch (error) {
       if (isRejectedLoginAs(error)) {
         try {
-          const { data } = await client.post('/login/', { ...payload, login_as: 'custmer' });
+          const { data } = await client.post(AUTH_ENDPOINTS.login, { ...payload, login_as: 'custmer' });
           const { token, user } = normalizeAuthResponse(data, normalizedEmail);
           if (!token) throw new AuthError('Osimart did not return a session token.', { code: 'TOKEN_MISSING' });
           authSession.set(token, user);
@@ -204,7 +205,7 @@ export const authService = {
     ensureStoreId();
 
     try {
-      const { data } = await client.post('/register/', {
+      const { data } = await client.post(AUTH_ENDPOINTS.register, {
         register_as: 'customer',
         store_id: config.API.STORE_ID,
         first_name: normalizedFirstName,
@@ -250,7 +251,7 @@ export const authService = {
     }
     ensureStoreId();
     try {
-      const { data } = await client.post('/verify/', {
+      const { data } = await client.post(AUTH_ENDPOINTS.verify, {
         verify_as: 'customer',
         code: normalizedCode,
         store_id: config.API.STORE_ID,
@@ -277,7 +278,7 @@ export const authService = {
     if (!credential) throw new Error('Google did not return a valid credential.');
     ensureStoreId();
     try {
-      const { data } = await client.post('/login/google/', {
+      const { data } = await client.post(AUTH_ENDPOINTS.googleLogin, {
         login_as: 'customer',
         store_id: config.API.STORE_ID,
         credential,
@@ -298,7 +299,7 @@ export const authService = {
   async forgotPassword(email) {
     ensureStoreId();
     try {
-      await client.post('/forgot-password/', {
+      await client.post(AUTH_ENDPOINTS.forgotPassword, {
         email: email.trim().toLowerCase(),
         reset_as: 'customer',
         store_id: config.API.STORE_ID,
@@ -316,7 +317,7 @@ export const authService = {
     if (!normalizedEmail) throw new AuthError('Enter your email before requesting a verification code.', { code: 'VALIDATION_ERROR' });
     ensureStoreId();
     try {
-      await client.post('/regen/', {
+      await client.post(AUTH_ENDPOINTS.resendVerification, {
         email: normalizedEmail,
         verify_as: 'customer',
         store_id: config.API.STORE_ID,

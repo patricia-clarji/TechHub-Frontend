@@ -1,8 +1,7 @@
 <template>
   <AdminPageHeader :title="config.title" :description="config.description">
     <button v-if="config.exportable" class="admin-btn secondary" :disabled="!rows.length" @click="exportCsv"><i class="fa-solid fa-download"></i> Export CSV</button>
-    <RouterLink v-if="resource === 'products'" to="/admin/products/new" class="admin-btn" aria-disabled="true"><i class="fa-solid fa-plus"></i> New product</RouterLink>
-    <button v-else class="admin-btn" disabled title="Backend write API required"><i class="fa-solid fa-plus"></i> Add {{ config.singular }}</button>
+    <button class="admin-btn" disabled title="Backend write API required"><i class="fa-solid fa-plus"></i> Add {{ resource === 'products' ? 'product' : config.singular }}</button>
   </AdminPageHeader>
   <div class="admin-toolbar">
     <label class="admin-field search-field"><span class="sr-only">Search {{ config.title }}</span><i class="fa-solid fa-magnifying-glass"></i><input v-model="query" :placeholder="`Search ${config.title.toLowerCase()}...`" @keydown.enter="load(1)"></label>

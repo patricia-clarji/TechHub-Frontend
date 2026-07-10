@@ -62,7 +62,7 @@ client.interceptors.response.use(
 );
 
 const sendRequest = async (config) => {
-  const { dedupe = true, retries = 2, retryDelay = 500, ...axiosConfig } = config;
+  const { dedupe = true, retries = 2, retryDelay = 500, retryUnsafe = false, ...axiosConfig } = config;
   const requestConfig = {
     ...axiosConfig,
     signal: axiosConfig.signal || new AbortController().signal,
@@ -101,9 +101,12 @@ const sendRequest = async (config) => {
         };
       } catch (error) {
         const apiError = error instanceof Error && error.name === 'ApiError' ? error : createApiError(error);
+        const method = String(requestConfig.method || 'get').toLowerCase();
+        const canRetryMethod = retryUnsafe || ['get', 'head', 'options'].includes(method);
 
         const shouldRetry =
           attempt < retries &&
+          canRetryMethod &&
           isRetryableApiError(apiError) &&
           ![401, 403, 404, 422].includes(apiError.status);
 

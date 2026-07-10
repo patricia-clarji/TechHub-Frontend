@@ -353,4 +353,3 @@ describe('authService verification', () => {
     expect(post).not.toHaveBeenCalled();
   });
 });
-

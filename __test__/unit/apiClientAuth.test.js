@@ -9,22 +9,23 @@ const loadApiClient = async () => {
   let requestInterceptor;
   const requestUse = vi.fn((callback) => { requestInterceptor = callback; });
   const responseUse = vi.fn();
+  const request = vi.fn();
 
   vi.doMock('axios', () => ({
     default: {
       create: vi.fn(() => ({
+        request,
         interceptors: {
           request: { use: requestUse },
           response: { use: responseUse },
         },
-        request: vi.fn(),
       })),
     },
   }));
 
   const module = await import('@/services/apiClient');
   const { authSession } = await import('@/services/authSession');
-  return { ...module, authSession, getRequestConfig: () => requestInterceptor };
+  return { ...module, authSession, request, getRequestConfig: () => requestInterceptor };
 };
 
 afterEach(() => {
@@ -51,5 +52,39 @@ describe('apiClient auth headers', () => {
     expect(request.headers.Authorization).toBeUndefined();
     expect(request.params.store).toBe('store-1');
     expect(request.requireAuth).toBeUndefined();
+  });
+
+  it('surfaces DRF field validation errors in API responses', async () => {
+    const { apiClient, request } = await loadApiClient();
+    request.mockRejectedValueOnce({ response: { status: 400, data: { email: ['Enter a valid email.'] } } });
+
+    const result = await apiClient.get('/customers/', { retries: 0 });
+
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error.message).toBe('email: Enter a valid email.');
+  });
+
+  it('does not retry non-idempotent POST requests by default', async () => {
+    const { apiClient, request } = await loadApiClient();
+    request.mockRejectedValue({ code: 'ERR_NETWORK', message: 'Network Error' });
+
+    const result = await apiClient.post('/checkout/', { total: 10 }, { retryDelay: 0 });
+
+    expect(result.success).toBe(false);
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('still retries safe GET requests for retryable failures', async () => {
+    const { apiClient, request } = await loadApiClient();
+    request
+      .mockRejectedValueOnce({ code: 'ERR_NETWORK', message: 'Network Error' })
+      .mockRejectedValueOnce({ code: 'ERR_NETWORK', message: 'Network Error' })
+      .mockResolvedValueOnce({ status: 200, data: { results: [] } });
+
+    const result = await apiClient.get('/products/', { retryDelay: 0 });
+
+    expect(result.success).toBe(true);
+    expect(request).toHaveBeenCalledTimes(3);
   });
 });

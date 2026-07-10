@@ -178,7 +178,7 @@ Body:
   "first_name": "Patricia",
   "last_name": "Customer",
   "email": "customer@example.com",
-  "mobile_number": "+96100000000",
+  "mobile": "+96100000000",
   "status": "active",
   "notes": "VIP customer",
   "version": 3

@@ -44,13 +44,14 @@ const errors = computed(() => ({
   code: mode.value === 'verify' && !verificationReady.value ? 'Enter the 4-digit verification code.' : '',
 }));
 
-const reset = () => {
+const reset = ({ preserveVerificationNotice = false } = {}) => {
+  const previousVerificationNotice = verificationNotice.value;
   submitted.value = false;
   form.password = '';
   form.code = '';
   codeDigits.value = ['', '', '', ''];
   userStore.error = '';
-  verificationNotice.value = '';
+  verificationNotice.value = preserveVerificationNotice ? previousVerificationNotice : '';
 };
 
 const focusCodeInput = async (index) => {
@@ -125,8 +126,8 @@ const mountGoogleButton = async () => {
   }
 };
 
-watch(mode, () => {
-  reset();
+watch(mode, (nextMode) => {
+  reset({ preserveVerificationNotice: nextMode === 'verify' });
   mountGoogleButton();
 });
 watch(() => uiStore.authModalOpen, (open) => {
@@ -166,20 +167,13 @@ const submit = async () => {
         password: form.password.trim(),
       });
       if (result.requiresLogin) {
+        const notice = result.message || 'Account created. Please enter the verification code to activate your account.';
+        verificationNotice.value = notice;
         mode.value = 'verify';
         await nextTick();
-        verificationNotice.value = result.message || 'Account created. Please enter the verification code to activate your account.';
+        verificationNotice.value = notice;
         userStore.error = '';
-        toastStore.showToast(verificationNotice.value, 'fa-circle-check');
-        try {
-          const resendResult = await userStore.resendVerification(form.email);
-          verificationNotice.value = resendResult.message || 'Verification code sent. Check your email or phone.';
-          toastStore.showToast(verificationNotice.value, 'fa-envelope');
-          startResendCooldown();
-        } catch {
-          userStore.error = '';
-          verificationNotice.value = 'Account created. Use Resend Code if the verification code does not arrive.';
-        }
+        toastStore.showToast(notice, 'fa-circle-check');
       } else {
         toastStore.showToast('Account created.', 'fa-circle-check');
         uiStore.authModalOpen = false;

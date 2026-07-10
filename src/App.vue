@@ -153,6 +153,10 @@ watch(
   { deep: true }
 );
 
+watch(isAdmin, (adminRoute) => {
+  if (!adminRoute) productsStore.fetchProducts();
+});
+
 onMounted(() => {
   if (!isAdmin.value) productsStore.fetchProducts();
   window.addEventListener('mousemove', handleMouseMove);

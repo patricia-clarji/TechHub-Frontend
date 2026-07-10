@@ -16,10 +16,19 @@ export const createApiError = (error) => {
 
   const status = error?.status ?? error?.response?.status ?? null;
   const payload = error?.response?.data ?? {};
+  const fieldMessage = payload && typeof payload === 'object'
+    ? Object.entries(payload).find(([, value]) => Array.isArray(value) && typeof value[0] === 'string')
+    : null;
+  const nestedMessage = payload && typeof payload === 'object'
+    ? Object.entries(payload).find(([, value]) => value && typeof value === 'object' && !Array.isArray(value))
+    : null;
 
   const message =
     (typeof payload?.detail === 'string' && payload.detail.trim()) ||
     (typeof payload?.message === 'string' && payload.message.trim()) ||
+    (Array.isArray(payload?.non_field_errors) && payload.non_field_errors[0]) ||
+    (fieldMessage && `${fieldMessage[0]}: ${fieldMessage[1][0]}`) ||
+    (nestedMessage && `${nestedMessage[0]}: ${Object.values(nestedMessage[1]).flat().find((value) => typeof value === 'string') || 'Invalid value.'}`) ||
     (typeof error?.message === 'string' && error.message.trim()) ||
     'Unexpected API error.';
 

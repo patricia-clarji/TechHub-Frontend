@@ -38,7 +38,7 @@ For login, the frontend trims/lowercases email but preserves the password exactl
       "first_name": { "type": "string", "required": false, "read_only": false, "label": "First name", "max_length": 150 },
       "last_name": { "type": "string", "required": false, "read_only": false, "label": "Last name", "max_length": 150 },
       "profile_pic_path": { "type": "field", "required": false, "read_only": true, "label": "Profile pic path" },
-      "mobile_number": { "type": "string", "required": false, "read_only": false, "label": "Mobile number", "max_length": 20 }
+      "mobile": { "type": "string", "required": false, "read_only": false, "label": "Mobile number", "max_length": 20 }
     }
   }
 }
@@ -161,7 +161,7 @@ The frontend sends:
   "last_name": "<last name>",
   "email": "<email>",
   "password": "<password>",
-  "mobile_number": "+96170123456"
+  "mobile": "+96170123456"
 }
 ```
 

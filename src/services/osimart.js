@@ -1,5 +1,6 @@
 import { apiClient } from '@/services/apiClient';
 import config from '@/config';
+import { STOREFRONT_ENDPOINTS } from './endpoints';
 
 const OSIMART_STORE_ID = config.API.STORE_ID;
 
@@ -84,34 +85,34 @@ const fetchObject = async (path) => {
 
 export const bannerAPI = {
   async list(params = {}) {
-    return fetchList('/banners/', params);
+    return fetchList(STOREFRONT_ENDPOINTS.banners, params);
   },
 };
 
 export const productAPI = {
   async list(params = {}) {
-    return fetchList('/products/', params);
+    return fetchList(STOREFRONT_ENDPOINTS.products, params);
   },
   async detail(id) {
     if (!id) return null;
-    return fetchObject(`/products/${encodeURIComponent(id)}/`);
+    return fetchObject(STOREFRONT_ENDPOINTS.productDetail(id));
   },
   async detailBySlug(slug) {
     if (!slug) return null;
-    const matches = await fetchList('/products/', { search: slug, page_size: 20 });
+    const matches = await fetchList(STOREFRONT_ENDPOINTS.products, { search: slug, page_size: 20 });
     return matches.find((product) => product.slugified_name === slug) || null;
   },
 };
 
 export const categoryAPI = {
   async list(params = {}) {
-    return fetchList('/categories/', params);
+    return fetchList(STOREFRONT_ENDPOINTS.categories, params);
   },
 };
 
 export const brandAPI = {
   async list(params = {}) {
-    return fetchList('/brands/', params);
+    return fetchList(STOREFRONT_ENDPOINTS.brands, params);
   },
 };
 
