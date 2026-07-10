@@ -135,12 +135,24 @@ const toggleDarkMode = () => {
                     class="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:bg-[var(--bg-muted)] transition-all">
                     <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
                     <span class="text-[10px] font-bold uppercase hidden sm:inline">{{ userStore.isAuthenticated ? userStore.currentUser.name : 'Sign In' }}</span>
+                    <i v-if="userStore.isAuthenticated" class="fa-solid fa-chevron-down text-[8px] transition-transform" :class="{'rotate-180': isAccountDropdownOpen}"></i>
                 </button>
                 <div v-if="isAccountDropdownOpen && userStore.isAuthenticated"
                     class="absolute right-0 mt-3 w-56 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden py-2 z-[60]">
-                    <p class="px-4 py-3 text-xs font-bold truncate border-b border-[var(--border)]">{{ userStore.currentUser.email }}</p>
-                    <router-link to="/account" class="block px-4 py-3 text-xs font-bold hover:bg-[var(--bg-muted)]" @click="isAccountDropdownOpen = false">My Account</router-link>
-                    <button type="button" class="w-full text-left px-4 py-3 text-xs font-bold text-red-500 hover:bg-[var(--bg-muted)]" @click="userStore.logout(); isAccountDropdownOpen = false">Sign Out</button>
+                    <div class="px-4 py-3 border-b border-[var(--border)]/40 mb-2">
+                        <p class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Active Session</p>
+                        <p class="text-xs font-bold truncate">{{ userStore.currentUser.email }}</p>
+                    </div>
+                    <router-link to="/account" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--bg-muted)] transition-colors" @click="isAccountDropdownOpen = false">
+                        <i class="fa-solid fa-gauge-high text-[var(--accent)]"></i> Profile
+                    </router-link>
+                    <router-link to="/settings" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--bg-muted)] transition-colors" @click="isAccountDropdownOpen = false">
+                        <i class="fa-solid fa-gear text-[var(--accent)]"></i> Settings
+                    </router-link>
+                    <div class="h-px bg-[var(--border)]/40 my-2"></div>
+                    <button type="button" class="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors" @click="userStore.logout(); isAccountDropdownOpen = false">
+                        <i class="fa-solid fa-power-off"></i> Logout
+                    </button>
                 </div>
             </div>
 
@@ -184,8 +196,12 @@ const toggleDarkMode = () => {
                     </router-link>
                 </div>
                 <div class="mt-auto space-y-6">
-                    <button v-if="!userStore.isAuthenticated" type="button" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold" @click="isMobileMenuOpen = false; uiStore.toggleAuth()">Sign In</button>
-                    <router-link v-else to="/account" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold block" @click="isMobileMenuOpen = false">My Account</router-link>
+                    <button v-if="!userStore.isAuthenticated" type="button" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold" @click="isMobileMenuOpen = false; uiStore.toggleAuth()">Sign In / Register</button>
+                    <template v-else>
+                        <router-link to="/account" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold block" @click="isMobileMenuOpen = false">Profile</router-link>
+                        <router-link to="/settings" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold block" @click="isMobileMenuOpen = false">Settings</router-link>
+                        <button type="button" class="w-full border border-[var(--border)] py-4 rounded-full text-center font-bold text-red-500" @click="userStore.logout(); isMobileMenuOpen = false">Logout</button>
+                    </template>
                     <router-link to="/products" class="w-full bg-[var(--accent)] text-white py-4 rounded-full text-center font-bold block premium-btn">Shop Now</router-link>
                 </div>
             </div>

@@ -7,6 +7,8 @@ const COMMON_PASSWORDS = new Set([
   'qwerty123',
   'admin123',
   'letmein123',
+  '111111111',
+  'abc123456',
 ]);
 
 const digitsOnly = (value = '') => String(value).replace(/\D/g, '');

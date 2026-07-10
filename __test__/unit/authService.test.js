@@ -33,7 +33,7 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    const user = await authService.login(' Admin@Example.com ', ' secret ');
+    const user = await authService.loginCustomer(' Admin@Example.com ', ' secret ');
 
     expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({
       login_as: 'customer',
@@ -43,6 +43,8 @@ describe('authService login', () => {
       device_id: expect.any(String),
       store_id: 'store-1',
     }));
+    expect(post.mock.calls[0][1]).not.toHaveProperty('code');
+    expect(post.mock.calls[0][1]).not.toHaveProperty('verify_as');
     expect(user).toMatchObject({ id: 'customer-1', email: 'admin@example.com', name: 'Ada Admin' });
     expect(authSession.getToken()).toBe('header.payload.signature');
   });
@@ -57,7 +59,7 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     localStorage.setItem('techhub_auth_device_id', JSON.stringify(''));
 
-    await authService.login('admin@example.com', 'secret');
+    await authService.loginCustomer('admin@example.com', 'secret');
 
     expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({
       device_id: expect.stringMatching(/\S/),
@@ -71,7 +73,7 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    await expect(authService.login('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
+    await expect(authService.loginCustomer('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(post).toHaveBeenCalledWith('/login/', expect.objectContaining({ login_as: 'customer' }));
@@ -84,7 +86,7 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    await expect(authService.login('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
+    await expect(authService.loginCustomer('admin@example.com', 'wrong-password')).rejects.toThrow('Invalid user.');
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(authSession.getToken()).toBe('');
@@ -95,15 +97,20 @@ describe('authService login', () => {
       .mockRejectedValueOnce({ response: { status: 400, data: { non_field_errors: ['User account is not verified.'] } } });
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.login('new@example.com', 'StrongPassw0rd!')).rejects.toThrow('User account is not verified.');
+    await expect(authService.loginCustomer('new@example.com', 'StrongPassw0rd!')).rejects.toMatchObject({
+      message: 'User account is not verified.',
+      code: 'ACCOUNT_UNVERIFIED',
+    });
     expect(post).toHaveBeenCalledTimes(1);
+    expect(post).not.toHaveBeenCalledWith('/verify/', expect.anything());
+    expect(post).not.toHaveBeenCalledWith('/regen/', expect.anything());
   });
 
   it('validates missing login fields before calling the backend', async () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.login('', '')).rejects.toThrow('Email and password are required.');
+    await expect(authService.loginCustomer('', '')).rejects.toThrow('Email and password are required.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -111,7 +118,7 @@ describe('authService login', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post, { storeId: '' });
 
-    await expect(authService.login('admin@example.com', 'secret')).rejects.toThrow('Store configuration is missing. Set VITE_OSIMART_STORE_ID before using authentication.');
+    await expect(authService.loginCustomer('admin@example.com', 'secret')).rejects.toThrow('Store configuration is missing. Please contact support.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -125,7 +132,7 @@ describe('authService login', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    await authService.login('admin@example.com', 'secret');
+    await authService.loginCustomer('admin@example.com', 'secret');
     authService.logout();
 
     expect(authSession.getToken()).toBe('');
@@ -152,7 +159,7 @@ describe('authService register', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    const result = await authService.register(registerDetails);
+    const result = await authService.registerCustomer(registerDetails);
 
     expect(post).toHaveBeenCalledWith('/register/', {
       register_as: 'customer',
@@ -176,13 +183,13 @@ describe('authService register', () => {
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
 
-    const result = await authService.register(registerDetails);
+    const result = await authService.registerCustomer(registerDetails);
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({
       requiresLogin: true,
       verificationRequired: true,
-      message: 'Account created. Please verify your account before signing in.',
+      message: 'Account created. Please enter the verification code to activate your account.',
       email: 'ada.customer@example.com',
     });
     expect(result.user).toMatchObject({ id: 'customer-4', email: 'ada.customer@example.com' });
@@ -196,7 +203,7 @@ describe('authService register', () => {
       });
     const { authService } = await loadAuthService(post);
 
-    const result = await authService.register(registerDetails);
+    const result = await authService.registerCustomer(registerDetails);
 
     expect(result.verificationRequired).toBe(true);
     expect(post).not.toHaveBeenCalledWith('/login/', expect.anything());
@@ -211,14 +218,14 @@ describe('authService register', () => {
     });
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register(registerDetails)).rejects.toThrow('email: Store is required.');
+    await expect(authService.registerCustomer(registerDetails)).rejects.toThrow('email: Store is required.');
   });
 
   it('validates missing register fields before calling the backend', async () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register({ ...registerDetails, phone: '' })).rejects.toThrow('First name, last name, email, phone, and password are required.');
+    await expect(authService.registerCustomer({ ...registerDetails, phone: '' })).rejects.toThrow('First name, last name, email, phone, and password are required.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -226,7 +233,7 @@ describe('authService register', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register({ ...registerDetails, phone: '12 34' })).rejects.toThrow('Enter a valid Lebanon mobile number.');
+    await expect(authService.registerCustomer({ ...registerDetails, phone: '12 34' })).rejects.toThrow('Enter a valid Lebanon mobile number.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -234,7 +241,7 @@ describe('authService register', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register({ ...registerDetails, phone: 'XX XXX XXX' })).rejects.toThrow('Enter digits only for your mobile number.');
+    await expect(authService.registerCustomer({ ...registerDetails, phone: 'XX XXX XXX' })).rejects.toThrow('Enter digits only for your mobile number.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -242,7 +249,7 @@ describe('authService register', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register({ ...registerDetails, password: 'password123' })).rejects.toThrow('Choose a stronger password that is not commonly used.');
+    await expect(authService.registerCustomer({ ...registerDetails, password: 'abc123456' })).rejects.toThrow('Choose a stronger password that is not commonly used.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -250,7 +257,7 @@ describe('authService register', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post);
 
-    await expect(authService.register({ ...registerDetails, password: 'Abcd1234' })).rejects.toThrow('Use more than 8 characters for your password.');
+    await expect(authService.registerCustomer({ ...registerDetails, password: 'Abcd1234' })).rejects.toThrow('Use more than 8 characters for your password.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -258,7 +265,7 @@ describe('authService register', () => {
     const post = vi.fn();
     const { authService } = await loadAuthService(post, { storeId: '' });
 
-    await expect(authService.register(registerDetails)).rejects.toThrow('Store configuration is missing. Set VITE_OSIMART_STORE_ID before using authentication.');
+    await expect(authService.registerCustomer(registerDetails)).rejects.toThrow('Store configuration is missing. Please contact support.');
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -266,7 +273,7 @@ describe('authService register', () => {
     const post = vi.fn().mockResolvedValue({ data: {} });
     const { authService } = await loadAuthService(post);
 
-    await authService.resendVerification(' Ada.Customer@Example.com ');
+    await authService.resendCustomerVerificationCode(' Ada.Customer@Example.com ');
 
     expect(post).toHaveBeenCalledWith('/regen/', {
       email: 'ada.customer@example.com',
@@ -275,3 +282,75 @@ describe('authService register', () => {
     });
   });
 });
+
+
+describe('authService verification', () => {
+  it('posts the confirmed verify payload and returns login-required when no token is returned', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: { email: 'ada.customer@example.com', first_name: 'Ada' },
+    });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    const result = await authService.verifyCustomer({ email: ' Ada.Customer@Example.com ', code: ' 123456 ' });
+
+    expect(post).toHaveBeenCalledWith('/verify/', {
+      verify_as: 'customer',
+      code: '123456',
+      store_id: 'store-1',
+      email: 'ada.customer@example.com',
+    });
+    expect(result).toMatchObject({
+      verified: true,
+      requiresLogin: true,
+      message: 'Account verified. Please sign in.',
+      email: 'ada.customer@example.com',
+    });
+    expect(authSession.getToken()).toBe('');
+  });
+
+  it('stores auth when verify returns a token', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        access: 'verified-token',
+        user: { id: 'customer-7', email: 'ada.customer@example.com' },
+      },
+    });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    const result = await authService.verifyCustomer({ email: 'ada.customer@example.com', code: '123456' });
+
+    expect(result.requiresLogin).toBe(false);
+    expect(authSession.getToken()).toBe('verified-token');
+  });
+
+  it('surfaces verify backend validation errors cleanly', async () => {
+    const post = vi.fn().mockRejectedValue({
+      response: { status: 400, data: { code: ['Invalid verification code.'] } },
+    });
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.verifyCustomer({ email: 'ada.customer@example.com', code: '000000' })).rejects.toMatchObject({
+      message: 'code: Invalid verification code.',
+      code: 'INVALID_VERIFICATION_CODE',
+    });
+  });
+
+  it('blocks verify when store id is missing', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post, { storeId: '' });
+
+    await expect(authService.verifyCustomer({ email: 'ada.customer@example.com', code: '123456' })).rejects.toThrow('Store configuration is missing. Please contact support.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('blocks resend verification when store id is missing', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post, { storeId: '' });
+
+    await expect(authService.resendCustomerVerificationCode('ada.customer@example.com')).rejects.toThrow('Store configuration is missing. Please contact support.');
+    expect(post).not.toHaveBeenCalled();
+  });
+});
+

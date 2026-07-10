@@ -19,6 +19,7 @@ const routes = [
     { path: '/cart', name: 'Cart', component: () => import('@/pages/Cart/index.vue'), meta: { title: 'Cart', description: 'Review products, variants, quantities, and totals in your TechHub cart.' } },
     { path: '/wishlist', name: 'Wishlist', component: () => import('@/pages/Wishlist/index.vue'), meta: { title: 'Wishlist', description: 'Review products saved to your TechHub wishlist.' } },
     { path: '/account', name: 'Account', component: () => import('@/pages/Account/index.vue'), meta: { requiresAuth: true, title: 'My Account', description: 'View your secure TechHub customer account.' } },
+    { path: '/settings', name: 'Settings', component: () => import('@/pages/Settings/index.vue'), meta: { requiresAuth: true, title: 'Settings', description: 'Manage your secure TechHub customer profile and preferences.' } },
     { path: '/checkout', name: 'Checkout', component: () => import('@/pages/Checkout/index.vue'), meta: { title: 'Submit Order Request', description: 'Submit a secure cash-on-delivery order request without entering payment-card details.' } },
     { path: '/faq', name: 'FAQ', component: () => import('@/pages/FAQ/index.vue'), meta: { title: 'Frequently Asked Questions', description: 'Answers about TechHub product availability, order requests, payment, and warranty.' } },
     { path: '/about', name: 'About', component: () => import('@/pages/About/index.vue'), meta: { title: 'About', description: 'Learn about TechHub and our premium electronics storefront.' } },

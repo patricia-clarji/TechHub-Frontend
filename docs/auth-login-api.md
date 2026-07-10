@@ -232,9 +232,9 @@ Invalid `register_as` typo:
 
 A successful response was not captured because creating a live disposable account would mutate production data. The frontend does not fake registration success; it only reports account creation after a real successful `POST /auth/register/` response.
 
-If the response includes a supported token field, the user is signed in immediately. If the response is successful but has no token, the frontend treats the account as pending verification and does not auto-login. It switches back to the sign-in form with the email still present and shows: `Account created. Please verify your account before signing in.`
+If the response includes a supported token field, the user is signed in immediately. If the response is successful but has no token, the frontend treats the account as pending verification and does not auto-login. It switches to the verification-code step with the email still present, shows: `Account created. Please enter the verification code to activate your account.`, and calls `/auth/regen/` once to ensure a verification code is sent.
 
-The frontend blocks login/register/password reset before making a request when `VITE_OSIMART_STORE_ID` is missing and shows a configuration error. The exact successful register response shape still needs confirmation in a staging or sandbox environment where test account creation is allowed.
+The frontend blocks login/register/verify/resend/password reset before making a request when `VITE_OSIMART_STORE_ID` is missing and shows a configuration error. The exact successful register response shape still needs confirmation in a staging or sandbox environment where test account creation is allowed.
 
 ## Verification APIs
 
@@ -254,7 +254,8 @@ Checked on 2026-07-08:
 {
   "email": "<email>",
   "verify_as": "customer",
-  "code": "<verification code>"
+  "code": "<verification code>",
+  "store_id": "<VITE_OSIMART_STORE_ID>"
 }
 ```
 
@@ -291,3 +292,5 @@ Observed validation with a non-existent email and valid store:
   }
 }
 ```
+
+

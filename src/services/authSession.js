@@ -32,6 +32,11 @@ export const authSession = {
     sessionToken = token;
     sessionUser = Object.freeze({ ...user });
   },
+  updateUser(user) {
+    if (!sessionUser) return null;
+    sessionUser = Object.freeze({ ...sessionUser, ...user });
+    return sessionUser;
+  },
   clear() {
     sessionToken = '';
     sessionUser = null;
