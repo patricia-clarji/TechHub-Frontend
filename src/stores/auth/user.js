@@ -2,6 +2,9 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { authService } from '@/services/authService';
 import { authSession } from '@/services/authSession';
+import { useCartStore } from '@/stores/shop/cart';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useNotificationStore } from '@/stores/ui/notifications';
 
 export const useUserStore = defineStore('user', () => {
   const currentUser = ref(authSession.getToken() ? authSession.getUser() : null);
@@ -48,23 +51,13 @@ export const useUserStore = defineStore('user', () => {
 
   const forgotPassword = (email) => run(() => authService.forgotPassword(email));
   const resendVerification = (email) => run(() => authService.resendCustomerVerificationCode(email));
-  const updateProfile = (data) => {
-    if (!currentUser.value) return { success: false };
-    const nextUser = { ...currentUser.value, ...data };
-    currentUser.value = nextUser;
-    authSession.updateUser(nextUser);
-    return { success: true, user: nextUser };
-  };
-  const updatePreferences = (preferences) => updateProfile({
-    preferences: {
-      ...(currentUser.value?.preferences || {}),
-      ...preferences,
-    },
-  });
   const logout = () => {
     authService.logout();
     currentUser.value = null;
+    useCartStore().clearCart();
+    useWishlistStore().clearWishlist();
+    useNotificationStore().clearAll();
   };
 
-  return { currentUser, loading, error, errorCode, isAuthenticated, login, loginWithGoogle, register, verifyCustomer, forgotPassword, resendVerification, updateProfile, updatePreferences, logout };
+  return { currentUser, loading, error, errorCode, isAuthenticated, login, loginWithGoogle, register, verifyCustomer, forgotPassword, resendVerification, logout };
 });

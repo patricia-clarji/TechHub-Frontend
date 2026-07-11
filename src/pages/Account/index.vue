@@ -48,23 +48,23 @@ const handleLogout = () => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2">
         <i class="fa-solid fa-box text-[var(--accent)] text-xl"></i>
-        <h3 class="font-bold text-sm">Deployment Logs</h3>
-        <p class="text-xs text-[var(--text-muted)]">Track outbound physical packages and tracking telemetry parameters.</p>
+        <h3 class="font-bold text-sm">Order Requests</h3>
+        <p class="text-xs text-[var(--text-muted)]">Order history and tracking require a confirmed Osimart customer orders API.</p>
       </div>
       <div class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2">
         <i class="fa-solid fa-credit-card text-[var(--accent)] text-xl"></i>
-        <h3 class="font-bold text-sm">Clearing Profiles</h3>
-        <p class="text-xs text-[var(--text-muted)]">Maintain encryption tokens for commercial processing hardware profiles.</p>
+        <h3 class="font-bold text-sm">Payment Methods</h3>
+        <p class="text-xs text-[var(--text-muted)]">Saved payment methods are disabled until a PCI-compliant provider is connected.</p>
       </div>
       <div class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2">
         <i class="fa-solid fa-shield-halved text-[var(--accent)] text-xl"></i>
-        <h3 class="font-bold text-sm">Access Parameters</h3>
-        <p class="text-xs text-[var(--text-muted)]">Refine network credential authentication profiles security factors.</p>
+        <h3 class="font-bold text-sm">Security</h3>
+        <p class="text-xs text-[var(--text-muted)]">Password changes, MFA, and active session controls need backend account APIs.</p>
       </div>
       <router-link to="/settings" class="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl space-y-2 hover:border-[var(--accent)] transition-all group">
         <i class="fa-solid fa-gear text-[var(--accent)] text-xl group-hover:rotate-90 transition-transform duration-500"></i>
-        <h3 class="font-bold text-sm">System Settings</h3>
-        <p class="text-xs text-[var(--text-muted)]">Configure your profile identity, security parameters, and system preferences.</p>
+        <h3 class="font-bold text-sm">Settings</h3>
+        <p class="text-xs text-[var(--text-muted)]">Review account details and unavailable profile-management contracts.</p>
       </router-link>
     </div>
   </main>

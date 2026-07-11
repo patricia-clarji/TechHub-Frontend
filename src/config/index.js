@@ -27,9 +27,10 @@ export const ENVIRONMENT = {
 };
 
 export const ADMIN = {
-  // The frontend never treats this flag as authorization. Until Osimart exposes
-  // a server-verified staff session, the admin workspace remains read-only.
+  // Frontend flags are never authorization. Admin access stays blocked until a
+  // backend staff session and role check are confirmed.
   MODE: 'demo',
+  STAFF_AUTH_CONFIGURED: false,
 };
 
 export default {

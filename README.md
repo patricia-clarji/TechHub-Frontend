@@ -106,14 +106,19 @@ prerendering or migrate public catalog routes to SSR.
 - Customer login and basic account identity are enabled through Osimart. Profile editing, account settings, order
   history, and review submission are not simulated.
 - Checkout creates an order request, not a paid order. Payment requires a PCI-compliant hosted provider.
-- Cart, wishlist, recently viewed items, notification preferences, and theme preference use local storage; none contain
-  passwords, tokens, card data, or customer checkout details.
+- Guest cart, wishlist, recently viewed items, UI notifications, and theme preference use local storage; none contain
+  passwords, tokens, card data, or customer checkout details. Logout clears customer-visible cart, wishlist, and local
+  notification state to avoid cross-user leakage.
 - Prices are currently displayed in USD because the Osimart payload does not provide storefront currency metadata.
 - The final legal privacy/terms content, shipping rules, social links, and contact ownership require client approval.
 
 ## Admin workspace
 
-The lazy-loaded admin workspace is available at `/admin` and redirects to `/admin/overview`. Routes:
+The lazy-loaded admin workspace code remains in the bundle, but `/admin/*` is blocked by default because no
+server-verified staff authentication contract is configured. `/admin/login` shows a disabled staff-access notice.
+Customer credentials must not unlock admin routes.
+
+Prepared admin routes:
 
 - `/admin/overview`
 - `/admin/analytics`
@@ -124,17 +129,17 @@ The lazy-loaded admin workspace is available at `/admin` and redirects to `/admi
 - `/admin/inventory`, `/admin/reviews`
 - `/admin/settings`
 
-It includes a responsive sidebar/drawer, top navigation, breadcrumbs, dark mode, workspace search, live catalog
+The prepared workspace includes a responsive sidebar/drawer, top navigation, breadcrumbs, dark mode, workspace search, live catalog
 metrics, searchable/filterable responsive tables, product editor schema, loading/empty/error states, inventory and
 product CSV exports, and settings/security blueprints. Product, category, brand, banner, and inventory views use live
 public Osimart catalog data. Private order/customer/review data is never fabricated.
 
 ### Admin security and demo-mode limitation
 
-The workspace is intentionally **read-only demo mode**. The current Osimart customer session does not prove a staff
+The workspace is intentionally **blocked demo mode**. The current Osimart customer session does not prove a staff
 role, and no verified admin API contract was available. Frontend route guards or a `VITE_*` flag are not authorization.
-Therefore create, update, delete, moderation, fulfilment, and settings persistence remain disabled both in the UI and
-in `src/services/adminApi.js`; unsupported service calls throw instead of reporting fake success.
+Therefore admin route access, create, update, delete, moderation, fulfilment, and settings persistence remain disabled;
+unsupported service calls throw instead of reporting fake success.
 
 Before production admin access is enabled, the backend must provide:
 
@@ -160,7 +165,7 @@ variable, source code, localStorage, or the delivered client bundle. For a publi
 - Install the Playwright browser once on each test machine with `npm exec playwright install chromium`.
 - Run `npm install`, `npm run test:api`, `npm test`, `npm run lint`, `npm run test:e2e`, and `npm run build`.
 - Review `reports/osimart-api-smoke.json` after `npm run test:api`; any `405` or `500` response is a backend/API gap, not a frontend success.
-- Confirm all admin routes render on desktop and mobile.
+- Confirm `/admin/*` redirects to the disabled staff-login state until a backend staff session exists.
 - Confirm private modules show “Backend API required” and never show fabricated records.
 - Confirm write/destructive controls remain disabled until staging staff CRUD endpoints pass E2E tests.
 - Confirm public catalog reads use the intended store id and no localhost or private token is bundled.
@@ -180,7 +185,5 @@ npm run build
 npm run dev
 ```
 
-Then open `http://127.0.0.1:5173/admin/overview` and check every route above at desktop and mobile widths. Confirm live
-catalog data loads, private pages explain their backend dependency, write controls cannot submit, CSV export contains
-only the visible public catalog rows, keyboard focus is visible, Escape/backdrop closes the mobile drawer, dark mode
-remains readable, and returning to `/` restores the storefront shell.
+Then open `http://127.0.0.1:5173/admin/overview` and confirm it redirects to `/admin/login` with disabled staff-login
+controls. Only enable route rendering tests after a server-verified staff auth flow is implemented.

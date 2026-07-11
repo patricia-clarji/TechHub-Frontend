@@ -8,13 +8,13 @@ export const useNotificationStore = defineStore('notifications', () => {
 
     const addNotification = (message, type = 'system') => {
         const newNotification = {
-            id: `notif${Date.now()}`,
+            id: globalThis.crypto?.randomUUID?.() || `notif-${Date.now()}-${Math.random().toString(36).slice(2)}`,
             message,
             type,
             date: new Date().toISOString().slice(0, 10),
             read: false,
         };
-        notifications.value.unshift(newNotification); // Add to the beginning
+        notifications.value.unshift(newNotification);
     };
 
     const markAsRead = (id) => {
@@ -36,7 +36,6 @@ export const useNotificationStore = defineStore('notifications', () => {
         return notifications.value.filter(n => !n.read).length;
     });
 
-    // Persist notifications to localStorage
     watch(notifications, (newVal) => {
         writeJson(localStorage, 'techhub_notifications_v2', newVal);
     }, { deep: true });

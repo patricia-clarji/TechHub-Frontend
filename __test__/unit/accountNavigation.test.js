@@ -7,6 +7,9 @@ import router from '@/router';
 import { authSession } from '@/services/authSession';
 import { useUserStore } from '@/stores/auth/user';
 import { useUIStore } from '@/stores/ui/ui';
+import { useCartStore } from '@/stores/shop/cart';
+import { useWishlistStore } from '@/stores/shop/wishlist';
+import { useNotificationStore } from '@/stores/ui/notifications';
 
 const routes = [
   { path: '/', component: { template: '<div>Home</div>' } },
@@ -97,6 +100,28 @@ describe('account navigation', () => {
     expect(root.textContent).not.toContain('demo@example.com');
 
     app.unmount();
+  });
+
+  it('logout clears user-scoped local cart, wishlist, and notifications', () => {
+    authSession.set('token-1', { name: 'Demo User', email: 'demo@example.com' });
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const cartStore = useCartStore();
+    const wishlistStore = useWishlistStore();
+    const notificationStore = useNotificationStore();
+    const userStore = useUserStore();
+
+    cartStore.items.push({ lineKey: 'p1::', productId: 'p1', quantity: 1, priceSnapshot: 10, stockSnapshot: 1, name: 'Product' });
+    wishlistStore.productIds.push('p1');
+    notificationStore.addNotification('Order update', 'order');
+    userStore.currentUser = { name: 'Demo User', email: 'demo@example.com' };
+
+    userStore.logout();
+
+    expect(cartStore.items).toEqual([]);
+    expect(wishlistStore.productIds).toEqual([]);
+    expect(notificationStore.notifications).toEqual([]);
+    expect(userStore.isAuthenticated).toBe(false);
   });
 });
 

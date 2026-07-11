@@ -153,11 +153,6 @@ const ensureStoreId = () => {
 const registerVerificationMessage = 'Account created. Please enter the verification code to activate your account.';
 const loginVerificationMessage = 'Your account is not verified. Enter the verification code sent to your email/phone.';
 
-const isRejectedLoginAs = (error) => {
-  const loginAsErrors = error?.response?.data?.login_as;
-  return Array.isArray(loginAsErrors) && loginAsErrors.some((message) => /not a valid choice|invalid choice/i.test(message));
-};
-
 export const authService = {
   getDeviceInfo,
   normalizeAuthResponse,
@@ -185,17 +180,6 @@ export const authService = {
       authSession.set(token, user, refreshToken);
       return user;
     } catch (error) {
-      if (isRejectedLoginAs(error)) {
-        try {
-          const { data } = await client.post(AUTH_ENDPOINTS.login, { ...payload, login_as: 'custmer' });
-          const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
-          if (!token) throw new AuthError('Osimart did not return a session token.', { code: 'TOKEN_MISSING' });
-          authSession.set(token, user, refreshToken);
-          return user;
-        } catch (retryError) {
-          throw mapAuthError(retryError, 'Unable to sign in.');
-        }
-      }
       throw mapAuthError(error, 'Unable to sign in.');
     }
   },

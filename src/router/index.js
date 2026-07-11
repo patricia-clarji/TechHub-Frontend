@@ -67,8 +67,9 @@ const router = createRouter({
 
 router.beforeEach((to) => {
     const userStore = useUserStore();
-    if (to.name === 'AdminLogin' && userStore.isAuthenticated) {
-        return { path: typeof to.query.redirect === 'string' ? to.query.redirect : '/admin/overview' };
+    if (to.name === 'AdminLogin') return true;
+    if (to.meta.admin && !config.ADMIN.STAFF_AUTH_CONFIGURED) {
+        return { name: 'AdminLogin', query: { redirect: to.fullPath } };
     }
     if (to.meta.admin && !userStore.isAuthenticated) {
         return { name: 'AdminLogin', query: { redirect: to.fullPath } };

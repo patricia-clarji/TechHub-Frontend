@@ -88,18 +88,7 @@ Omitting `store_id` returned:
 }
 ```
 
-Invalid credentials with `login_as: "custmer"` and a valid store id:
-
-```json
-{
-  "status": 400,
-  "body": {
-    "non_field_errors": ["Invalid user."]
-  }
-}
-```
-
-Both values are accepted far enough to return the same credential error, but `customer` is the confirmed spelling for register and login. The frontend sends one clean `customer` login request by default and does not retry alternate `login_as` values on credential or verification errors.
+`customer` is the confirmed spelling for register and login. The frontend sends one clean `customer` login request and does not retry alternate `login_as` values on credential, verification, or validation errors.
 
 Missing `store_id`:
 
