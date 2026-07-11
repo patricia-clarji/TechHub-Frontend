@@ -1,4 +1,5 @@
 let sessionToken = '';
+let sessionRefreshToken = '';
 let sessionUser = null;
 
 const safeParse = (value) => {
@@ -20,17 +21,25 @@ export const authSession = {
   getToken() {
     const expiresAt = tokenExpiry(sessionToken);
     if (expiresAt && expiresAt <= Date.now()) {
-      this.clear();
+      sessionToken = '';
       return '';
     }
     return sessionToken;
   },
+  getRefreshToken() {
+    return sessionRefreshToken;
+  },
   getUser() {
     return sessionUser;
   },
-  set(token, user) {
+  set(token, user, refreshToken = '') {
     sessionToken = token;
+    sessionRefreshToken = refreshToken || sessionRefreshToken;
     sessionUser = Object.freeze({ ...user });
+  },
+  updateAccessToken(token, refreshToken = '') {
+    sessionToken = token;
+    if (refreshToken) sessionRefreshToken = refreshToken;
   },
   updateUser(user) {
     if (!sessionUser) return null;
@@ -39,6 +48,7 @@ export const authSession = {
   },
   clear() {
     sessionToken = '';
+    sessionRefreshToken = '';
     sessionUser = null;
   },
 };

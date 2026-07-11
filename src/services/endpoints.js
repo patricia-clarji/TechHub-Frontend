@@ -5,6 +5,9 @@ export const AUTH_ENDPOINTS = Object.freeze({
   resendVerification: '/regen/',
   googleLogin: '/login/google/',
   forgotPassword: '/forgot-password/',
+  resetPassword: '/reset-password/',
+  changePassword: '/change-password/',
+  refresh: '/refresh/',
 });
 
 export const STOREFRONT_ENDPOINTS = Object.freeze({

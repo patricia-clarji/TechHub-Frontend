@@ -38,6 +38,7 @@ const messageFrom = (error, fallback) => {
 };
 
 const extractToken = (data) => data?.access || data?.access_token || data?.token || data?.key || data?.tokens?.access || data?.data?.access || data?.data?.token || '';
+const extractRefreshToken = (data) => data?.refresh || data?.refresh_token || data?.tokens?.refresh || data?.data?.refresh || data?.data?.refresh_token || '';
 const extractUser = (data, email = '') => {
   const source = data?.user || data?.customer || data?.data?.user || data?.data || data || {};
   return {
@@ -53,6 +54,7 @@ const extractUser = (data, email = '') => {
 
 const normalizeAuthResponse = (data, email = '') => ({
   token: extractToken(data),
+  refreshToken: extractRefreshToken(data),
   user: extractUser(data, email),
   raw: data,
 });
@@ -110,7 +112,11 @@ const getDeviceInfo = () => {
 
 const errorCodeFromMessage = (message, status) => {
   const normalized = String(message || '').toLowerCase();
+  if (normalized.includes('already') && (normalized.includes('email') || normalized.includes('account') || normalized.includes('user'))) return 'DUPLICATE_EMAIL';
+  if (normalized.includes('unique') && normalized.includes('email')) return 'DUPLICATE_EMAIL';
   if (normalized.includes('not verified')) return 'ACCOUNT_UNVERIFIED';
+  if (normalized.includes('inactive') || normalized.includes('disabled')) return 'ACCOUNT_INACTIVE';
+  if (normalized.includes('does not belong') || normalized.includes('wrong store') || normalized.includes('another store')) return 'WRONG_STORE';
   if (normalized.includes('invalid user') || normalized.includes('invalid email') || normalized.includes('invalid password')) return 'INVALID_CREDENTIALS';
   if (normalized.includes('invalid store')) return 'INVALID_STORE';
   if (normalized.includes('expired')) return 'EXPIRED_VERIFICATION_CODE';
@@ -126,9 +132,13 @@ const errorCodeFromMessage = (message, status) => {
 const mapAuthError = (error, fallback) => {
   if (error instanceof AuthError) return error;
   const status = error?.response?.status;
-  const message = messageFrom(error, fallback);
+  const rawMessage = messageFrom(error, fallback);
+  const code = errorCodeFromMessage(rawMessage, status);
+  const message = code === 'DUPLICATE_EMAIL'
+    ? 'An account with this email already exists. Please sign in or reset your password.'
+    : rawMessage;
   return new AuthError(message, {
-    code: errorCodeFromMessage(message, status),
+    code,
     status,
     raw: error,
   });
@@ -170,17 +180,17 @@ export const authService = {
 
     try {
       const { data } = await client.post(AUTH_ENDPOINTS.login, payload);
-      const { token, user } = normalizeAuthResponse(data, normalizedEmail);
+      const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
       if (!token) throw new AuthError('Osimart did not return a session token.', { code: 'TOKEN_MISSING' });
-      authSession.set(token, user);
+      authSession.set(token, user, refreshToken);
       return user;
     } catch (error) {
       if (isRejectedLoginAs(error)) {
         try {
           const { data } = await client.post(AUTH_ENDPOINTS.login, { ...payload, login_as: 'custmer' });
-          const { token, user } = normalizeAuthResponse(data, normalizedEmail);
+          const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
           if (!token) throw new AuthError('Osimart did not return a session token.', { code: 'TOKEN_MISSING' });
-          authSession.set(token, user);
+          authSession.set(token, user, refreshToken);
           return user;
         } catch (retryError) {
           throw mapAuthError(retryError, 'Unable to sign in.');
@@ -214,9 +224,9 @@ export const authService = {
         password,
         mobile_number: normalizedPhone,
       });
-      const { token, user } = normalizeAuthResponse(data, normalizedEmail);
+      const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
       if (token) {
-        authSession.set(token, user);
+        authSession.set(token, user, refreshToken);
         return { user, requiresLogin: false };
       }
 
@@ -257,9 +267,9 @@ export const authService = {
         store_id: config.API.STORE_ID,
         email: normalizedEmail,
       });
-      const { token, user } = normalizeAuthResponse(data, normalizedEmail);
+      const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
       if (token) {
-        authSession.set(token, user);
+        authSession.set(token, user, refreshToken);
         return { user, requiresLogin: false, verified: true };
       }
       return {
@@ -287,9 +297,10 @@ export const authService = {
         headers: { Authorization: `Bearer ${credential}` },
       });
       const token = extractToken(data);
+      const refreshToken = extractRefreshToken(data);
       if (!token) throw new Error('Osimart did not return a customer session.');
       const user = extractUser(data);
-      authSession.set(token, user);
+      authSession.set(token, user, refreshToken);
       return user;
     } catch (error) {
       throw mapAuthError(error, error.message || 'Google sign-in could not be completed.');

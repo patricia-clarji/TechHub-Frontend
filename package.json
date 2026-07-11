@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "chat:proxy": "node server/deepseek-proxy.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
@@ -12,7 +13,8 @@
     "test:e2e": "playwright test",
     "verify:api": "node scripts/verify-osimart-drf-api.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:vite": "vite"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
