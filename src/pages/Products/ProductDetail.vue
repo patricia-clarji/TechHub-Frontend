@@ -207,17 +207,17 @@ const recentlyViewedProducts = computed(() => {
         .slice(0, 4);
 });
 
-const handleAddToCart = () => {
+const handleAddToCart = async () => {
     if (product.value) {
-        const result = cartStore.addToCart(product.value, selectedQuantity.value, { variant: selectedVariant.value, color: selectedColor.value });
+        const result = await cartStore.addToCart(product.value, selectedQuantity.value, { variant: selectedVariant.value, color: selectedColor.value });
         toastStore.showToast(result.success ? 'Added to cart.' : result.message, result.success ? 'fa-cart-plus' : 'fa-triangle-exclamation');
     }
 };
 
-const handleBuyNow = () => {
+const handleBuyNow = async () => {
     if (!product.value) return;
     cartStore.clearCart();
-    const result = cartStore.addToCart(product.value, selectedQuantity.value, { variant: selectedVariant.value, color: selectedColor.value });
+    const result = await cartStore.addToCart(product.value, selectedQuantity.value, { variant: selectedVariant.value, color: selectedColor.value });
     if (result.success) router.push('/cart');
     else toastStore.showToast(result.message, 'fa-triangle-exclamation');
 };
@@ -343,12 +343,12 @@ watch(product, () => {
                             </button>
                         </div>
 
-                        <button @click="handleAddToCart" :disabled="availableStock === 0"
+                        <button @click="handleAddToCart" :disabled="availableStock === 0 || cartStore.loading"
                             class="flex-1 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white font-bold uppercase tracking-widest text-[10px] py-5 rounded-2xl premium-btn shadow-lg disabled:opacity-50">
-                            Add to Cart
+                            {{ cartStore.loading ? 'Adding...' : 'Add to Cart' }}
                         </button>
                     </div>
-                    <button @click="handleBuyNow" v-if="availableStock > 0"
+                    <button @click="handleBuyNow" v-if="availableStock > 0" :disabled="cartStore.loading"
                         class="w-full mt-3 py-4 border-2 border-[var(--accent)] text-[var(--accent)] rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--accent)] hover:text-white transition-all">
                         Buy Now
                     </button>

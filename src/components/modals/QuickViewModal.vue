@@ -16,6 +16,11 @@ const availableVariant = computed(() => product.value?.variants?.find((variant) 
 const close = () => {
     uiStore.closeQuickView();
 };
+
+const handleAddToCart = async () => {
+    const result = await cartStore.addToCart(product.value, 1, { variant: availableVariant.value });
+    if (result.success) close();
+};
 </script>
 
 <template>
@@ -43,9 +48,9 @@ const close = () => {
                 <p class="text-sm text-[var(--text-muted)] leading-relaxed">{{ product.desc }}</p>
 
                 <div class="flex gap-4">
-                    <button type="button" :disabled="!product.inStock" @click="cartStore.addToCart(product, 1, { variant: availableVariant }); close()"
+                    <button type="button" :disabled="!product.inStock || cartStore.loading" @click="handleAddToCart"
                         class="flex-1 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white py-4 rounded-full font-bold transition-all premium-btn disabled:opacity-50">
-                        {{ product.inStock ? 'Add to Cart' : 'Out of Stock' }}
+                        {{ product.inStock ? (cartStore.loading ? 'Adding...' : 'Add to Cart') : 'Out of Stock' }}
                     </button>
                 </div>
             </div>

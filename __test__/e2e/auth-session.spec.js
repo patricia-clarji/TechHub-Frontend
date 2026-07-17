@@ -48,7 +48,9 @@ test('customer session survives reload and logout remains permanent', async ({ p
   });
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: /sign in/i }).click();
+  const navSignInButton = page.getByRole('navigation').getByRole('button', { name: /^sign in$/i });
+
+  await navSignInButton.click();
   const dialog = page.getByRole('dialog', { name: /sign in/i });
   await page.getByLabel('Email').fill('ada@example.com');
   await page.locator('#auth-password').fill('StrongPassw0rd!');
@@ -67,10 +69,10 @@ test('customer session survives reload and logout remains permanent', async ({ p
 
   await page.getByRole('button', { name: /ada customer/i }).click();
   await page.getByRole('button', { name: /logout/i }).click();
-  await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+  await expect(navSignInButton).toBeVisible();
 
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+  await expect(navSignInButton).toBeVisible();
   await expect(page.getByText('ada@example.com')).toHaveCount(0);
   expect(refreshCount).toBe(refreshCountBeforeLogout);
 });

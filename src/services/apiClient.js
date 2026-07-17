@@ -27,6 +27,7 @@ const client = axios.create({
   headers: {
     Accept: 'application/json',
   },
+  withCredentials: true,
   timeout: 20000,
 });
 

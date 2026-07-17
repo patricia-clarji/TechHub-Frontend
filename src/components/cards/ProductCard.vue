@@ -86,10 +86,10 @@ const isLowStock = computed(() => props.product.stock > 0 && props.product.stock
                     <span class="text-lg font-black text-[var(--accent)]">$ {{ Number(product.price).toFixed(2) }}</span>
                 </div>
                 <button @click="cartStore.addToCart(product)" type="button"
-                    :disabled="!product.inStock"
+                    :disabled="!product.inStock || cartStore.loading"
                     :aria-label="product.inStock ? `Add ${product.name} to cart` : `${product.name} is out of stock`"
                     class="bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white p-3.5 rounded-2xl transition-all premium-btn shadow-lg disabled:opacity-40 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-cart-plus"></i>
+                    <i :class="cartStore.loading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-cart-plus'"></i>
                 </button>
             </div>
         </div>

@@ -1,14 +1,15 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import { useProductsStore } from './products';
-import { readJson, writeJson } from '@/utils/storage';
-
-const STORAGE_KEY = 'techhub_cart_v2';
-
-const readCart = () => {
-  const saved = readJson(localStorage, STORAGE_KEY, []);
-  return Array.isArray(saved) ? saved : [];
-};
+import {
+  CART_ACTIONS,
+  buildCartLine,
+  cartAPI,
+  clearLegacyCartStorage,
+  clearLocalCart,
+  readLocalCart,
+  writeLocalCart,
+} from '@/services/cartService';
 
 const optionLabel = (option) => {
   if (!option) return '';
@@ -17,9 +18,11 @@ const optionLabel = (option) => {
 };
 
 export const useCartStore = defineStore('cart', () => {
-  const items = ref(readCart());
+  const items = ref(readLocalCart());
   const productsStore = useProductsStore();
   const lastError = ref('');
+  const loading = ref(false);
+  const lastBackendCart = ref(null);
 
   const resolveProduct = (productOrId) => (
     typeof productOrId === 'object'
@@ -43,7 +46,65 @@ export const useCartStore = defineStore('cart', () => {
     };
   }));
 
-  const addToCart = (productOrId, quantity = 1, options = {}) => {
+  const findProductByVariant = (variantId) => productsStore.products.find((product) => (
+    Array.isArray(product.variants) &&
+    product.variants.some((variant) => String(variant.id) === String(variantId))
+  ));
+
+  const selectVariant = (product, requestedVariant) => {
+    if (requestedVariant?.id) return requestedVariant;
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    return variants.find((variant) => Number(variant.stock ?? product.stock ?? 0) > 0 && Number(variant.price ?? product.price ?? 0) > 0)
+      || variants.find((variant) => variant.id && Number(variant.stock ?? product.stock ?? 0) > 0)
+      || null;
+  };
+
+  const mapBackendLine = (backendLine, fallback = {}) => {
+    const product = fallback.product || findProductByVariant(backendLine.variantId);
+    const variant = fallback.variant || product?.variants?.find((item) => String(item.id) === String(backendLine.variantId)) || null;
+    const color = fallback.color || '';
+    const line = product
+      ? buildCartLine({ product, quantity: backendLine.quantity, variant, color })
+      : {
+          lineKey: `${backendLine.variantId}:${backendLine.variantId}:`,
+          productId: String(backendLine.variantId),
+          slug: '',
+          variantId: backendLine.variantId,
+          variantName: backendLine.values.join(' / '),
+          color: '',
+          quantity: backendLine.quantity,
+          priceSnapshot: backendLine.price,
+          stockSnapshot: backendLine.remainingStock,
+          name: backendLine.name,
+          image: backendLine.image,
+          category: '',
+        };
+
+    return {
+      ...line,
+      backendItemId: backendLine.backendItemId,
+      variantId: backendLine.variantId,
+      variantName: line.variantName || backendLine.values.join(' / '),
+      quantity: backendLine.quantity,
+      priceSnapshot: backendLine.price,
+      stockSnapshot: backendLine.remainingStock,
+      name: product?.name || backendLine.name,
+      image: product?.image || product?.img || backendLine.image,
+    };
+  };
+
+  const applyBackendCart = (backendCart, fallback = {}) => {
+    lastBackendCart.value = backendCart;
+    items.value = backendCart.items
+      .filter((backendLine) => backendLine.quantity > 0)
+      .map((backendLine) => mapBackendLine(backendLine, fallback));
+  };
+
+  const errorMessage = (error, fallback = 'Unable to update your cart. Please try again.') => (
+    error?.message || error?.detail || fallback
+  );
+
+  const addToCart = async (productOrId, quantity = 1, options = {}) => {
     lastError.value = '';
     const product = resolveProduct(productOrId);
     if (!product) {
@@ -51,7 +112,12 @@ export const useCartStore = defineStore('cart', () => {
       return { success: false, message: lastError.value };
     }
 
-    const variant = options.variant || null;
+    const variant = selectVariant(product, options.variant);
+    if (!variant?.id) {
+      lastError.value = 'This item cannot be added because no purchasable variant is available.';
+      return { success: false, message: lastError.value };
+    }
+
     const stock = Number(variant?.stock ?? product.stock ?? 0);
     if (!product.inStock || stock <= 0) {
       lastError.value = 'This item is currently out of stock.';
@@ -69,47 +135,99 @@ export const useCartStore = defineStore('cart', () => {
       return { success: false, message: lastError.value };
     }
 
-    const price = Number(variant?.price ?? product.price ?? 0);
-    if (existing) {
-      existing.quantity = nextQuantity;
-      existing.stockSnapshot = stock;
-    } else {
-      items.value.push({
-        lineKey,
-        productId: String(product.id),
-        slug: product.slug || '',
-        variantId,
-        variantName: optionLabel(variant),
-        color,
-        quantity: Math.min(requested, stock),
-        priceSnapshot: price,
-        stockSnapshot: stock,
-        name: product.name,
-        image: product.image || product.img || '',
-        category: product.category || '',
+    loading.value = true;
+    try {
+      const backendCart = await cartAPI.updateItem({
+        itemId: variantId,
+        action: CART_ACTIONS.add,
+        quantity: requested,
       });
+      applyBackendCart(backendCart, { product, variant, color });
+      return { success: true, cart: backendCart };
+    } catch (error) {
+      lastError.value = errorMessage(error);
+      return { success: false, message: lastError.value };
+    } finally {
+      loading.value = false;
     }
-    return { success: true };
   };
 
-  const setQuantity = (lineKey, quantity) => {
+  const setQuantity = async (lineKey, quantity) => {
+    lastError.value = '';
     const line = items.value.find((item) => item.lineKey === lineKey);
-    if (!line) return;
+    if (!line) return { success: false, message: 'Cart item not found.' };
     const detail = detailedItems.value.find((item) => item.lineKey === lineKey);
     const stock = Math.max(0, detail?.stock || 0);
-    line.quantity = Math.max(1, Math.min(Number(quantity) || 1, stock));
+    const nextQuantity = Math.max(0, Math.min(Number(quantity) || 0, stock));
+    if (nextQuantity === 0) return removeFromCart(lineKey);
+    const delta = nextQuantity - line.quantity;
+    if (delta === 0) return { success: true };
+
+    loading.value = true;
+    try {
+      const backendCart = await cartAPI.updateItem({
+        itemId: line.variantId || line.backendItemId,
+        action: delta > 0 ? CART_ACTIONS.add : CART_ACTIONS.remove,
+        quantity: Math.abs(delta),
+      });
+      applyBackendCart(backendCart);
+      return { success: true, cart: backendCart };
+    } catch (error) {
+      lastError.value = errorMessage(error);
+      return { success: false, message: lastError.value };
+    } finally {
+      loading.value = false;
+    }
   };
 
-  const increment = (lineKey, amount) => {
+  const increment = async (lineKey, amount) => {
     const line = items.value.find((item) => item.lineKey === lineKey);
-    if (line) setQuantity(lineKey, line.quantity + amount);
+    if (!line) return { success: false, message: 'Cart item not found.' };
+    return setQuantity(lineKey, line.quantity + amount);
   };
 
-  const removeFromCart = (lineKey) => {
-    items.value = items.value.filter((item) => item.lineKey !== lineKey && item.productId !== String(lineKey));
+  const removeFromCart = async (lineKey) => {
+    lastError.value = '';
+    const line = items.value.find((item) => item.lineKey === lineKey || item.productId === String(lineKey));
+    if (!line) return { success: false, message: 'Cart item not found.' };
+
+    loading.value = true;
+    try {
+      const backendCart = await cartAPI.updateItem({
+        itemId: line.variantId || line.backendItemId,
+        action: CART_ACTIONS.removeAll,
+      });
+      applyBackendCart(backendCart);
+      return { success: true, cart: backendCart };
+    } catch (error) {
+      lastError.value = errorMessage(error);
+      return { success: false, message: lastError.value };
+    } finally {
+      loading.value = false;
+    }
   };
 
-  const clearCart = () => { items.value = []; };
+  const clearCart = () => {
+    items.value = [];
+    clearLocalCart();
+    lastBackendCart.value = null;
+  };
+
+  const fetchBackendCart = async () => {
+    lastError.value = '';
+    loading.value = true;
+    try {
+      const backendCart = await cartAPI.view();
+      applyBackendCart(backendCart);
+      return { success: true, cart: backendCart };
+    } catch (error) {
+      lastError.value = errorMessage(error, 'Unable to load your cart.');
+      return { success: false, message: lastError.value };
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const subtotal = computed(() => detailedItems.value.reduce((total, item) => total + item.price * item.quantity, 0));
   const discountTotal = computed(() => 0);
   const totalAmount = computed(() => subtotal.value);
@@ -117,20 +235,23 @@ export const useCartStore = defineStore('cart', () => {
   const hasUnavailableItems = computed(() => detailedItems.value.some((item) => item.unavailable || item.stock < item.quantity));
 
   watch(items, (value) => {
-    writeJson(localStorage, STORAGE_KEY, value);
+    writeLocalCart(value);
   }, { deep: true });
 
-  try { localStorage.removeItem('cart_items'); } catch { /* Storage may be unavailable. */ }
+  clearLegacyCartStorage();
 
   return {
     items,
     detailedItems,
     lastError,
+    loading,
+    lastBackendCart,
     addToCart,
     setQuantity,
     increment,
     removeFromCart,
     clearCart,
+    fetchBackendCart,
     subtotal,
     discountTotal,
     totalAmount,

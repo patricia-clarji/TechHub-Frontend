@@ -29,9 +29,9 @@ const hasBeenVisible = ref(false);
 
 let observer = null;
 
-const handleAddToCart = () => {
-    cartStore.addToCart(props.product);
-    emit('add-to-cart', props.product);
+const handleAddToCart = async () => {
+    const result = await cartStore.addToCart(props.product);
+    if (result.success) emit('add-to-cart', props.product);
 };
 
 onMounted(() => {
@@ -143,9 +143,9 @@ const getAnimationClass = (baseClass) => {
 
                 <!-- CTA Area -->
                 <div :class="getAnimationClass('flex flex-wrap gap-4 pt-6 delay-700')">
-                    <button @click="handleAddToCart"
+                    <button @click="handleAddToCart" :disabled="cartStore.loading"
                         class="group inline-flex items-center gap-3 bg-[var(--accent)] hover:bg-[var(--accent-dk)] text-white px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all premium-btn shadow-lg">
-                        <span>Add to Cart</span>
+                        <span>{{ cartStore.loading ? 'Adding...' : 'Add to Cart' }}</span>
                         <i class="fa-solid fa-cart-plus transition-transform group-hover:translate-x-1"></i>
                     </button>
 
