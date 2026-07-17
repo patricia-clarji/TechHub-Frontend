@@ -81,6 +81,7 @@ export const useOsimartCategoriesStore = defineStore('osimartCategories', () => 
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart categories.';
             error.value = errorMsg;
+            hasFetched.value = true;
             logger.error('Error fetching categories:', errorMsg);
             logger.error('Full error:', err);
             categories.value = [];

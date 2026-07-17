@@ -3,6 +3,7 @@ import config from '@/config';
 import { STOREFRONT_ENDPOINTS } from './endpoints';
 
 const OSIMART_STORE_ID = config.API.STORE_ID;
+const PRODUCT_LIST_TIMEOUT_MS = 60000;
 
 const isAbsoluteUrl = (value) => /^https?:\/\//i.test(value);
 
@@ -69,15 +70,19 @@ const buildParams = (params = {}) => ({
   ...(params || {}),
 });
 
-const fetchList = async (path, params = {}) => {
-  const response = await apiClient.get(path, { params: buildParams(params) });
+const fetchList = async (path, params = {}, requestOptions = {}) => {
+  const response = await apiClient.get(path, {
+    params: buildParams(params),
+    skipAuth: true,
+    ...requestOptions,
+  });
   if (!response.success) throw response.error;
   if (response.data === null) throw new Error(`Osimart returned no data for ${path}`);
   return extractList(response.data);
 };
 
 const fetchObject = async (path) => {
-  const response = await apiClient.get(path);
+  const response = await apiClient.get(path, { skipAuth: true });
   if (!response.success) throw response.error;
   if (response.data === null) return null;
   return extractObject(response.data);
@@ -91,7 +96,9 @@ export const bannerAPI = {
 
 export const productAPI = {
   async list(params = {}) {
-    return fetchList(STOREFRONT_ENDPOINTS.products, params);
+    return fetchList(STOREFRONT_ENDPOINTS.products, params, {
+      timeout: PRODUCT_LIST_TIMEOUT_MS,
+    });
   },
   async detail(id) {
     if (!id) return null;

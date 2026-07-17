@@ -59,6 +59,8 @@ const normalizeAuthResponse = (data, email = '') => ({
   raw: data,
 });
 
+const hasUserPayload = (data) => Boolean(data?.user || data?.customer || data?.data?.user || data?.data?.customer);
+
 const deviceStorageKey = 'techhub_auth_device_id';
 
 const createDeviceId = () => {
@@ -121,6 +123,9 @@ const errorCodeFromMessage = (message, status) => {
   if (normalized.includes('invalid store')) return 'INVALID_STORE';
   if (normalized.includes('expired')) return 'EXPIRED_VERIFICATION_CODE';
   if (normalized.includes('invalid') && normalized.includes('code')) return 'INVALID_VERIFICATION_CODE';
+  if (normalized.includes('incorrect') && normalized.includes('password')) return 'WRONG_PASSWORD';
+  if (normalized.includes('old password') || normalized.includes('current password')) return 'WRONG_PASSWORD';
+  if (normalized.includes('password') && (normalized.includes('too short') || normalized.includes('common') || normalized.includes('weak'))) return 'PASSWORD_REJECTED';
   if (status === 401) return 'UNAUTHORIZED';
   if (status === 403) return 'FORBIDDEN';
   if (status === 429) return 'RATE_LIMITED';
@@ -150,13 +155,73 @@ const ensureStoreId = () => {
   }
 };
 
+const normalizeEmail = (email) => email?.trim().toLowerCase() || '';
+
+const ensureValidEmail = (email) => {
+  const normalizedEmail = normalizeEmail(email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    throw new AuthError('Enter a valid email.', { code: 'VALIDATION_ERROR' });
+  }
+  return normalizedEmail;
+};
+
 const registerVerificationMessage = 'Account created. Please enter the verification code to activate your account.';
 const loginVerificationMessage = 'Your account is not verified. Enter the verification code sent to your email/phone.';
+let refreshPromise = null;
+
+const withRefreshAuth = (refreshToken) => ({
+  withCredentials: true,
+  headers: refreshToken ? { Authorization: `Bearer ${refreshToken}` } : {},
+});
+
+const refreshSessionRequest = async () => {
+  const refreshToken = authSession.getRefreshToken();
+  const persistedUser = authSession.getPersistedUser();
+  const generation = authSession.getGeneration();
+  if (!refreshToken) {
+    throw new AuthError('No recoverable session is available.', { code: 'SESSION_NOT_RECOVERABLE' });
+  }
+
+  try {
+    const { data } = await client.post(AUTH_ENDPOINTS.refresh, {
+      refresh: refreshToken,
+      store_id: config.API.STORE_ID,
+    }, withRefreshAuth(refreshToken));
+    const normalized = normalizeAuthResponse(data, persistedUser?.email || '');
+    if (!normalized.token) {
+      throw new AuthError('Osimart did not return a refreshed access token.', { code: 'TOKEN_MISSING' });
+    }
+    const user = hasUserPayload(data) ? normalized.user : persistedUser;
+    if (!user) {
+      throw new AuthError('Osimart did not return enough user information to restore the session.', { code: 'USER_MISSING' });
+    }
+    if (generation !== authSession.getGeneration()) {
+      throw new AuthError('The previous session was cleared before refresh completed.', { code: 'SESSION_CLEARED' });
+    }
+    authSession.set(normalized.token, user, normalized.refreshToken || refreshToken);
+    return user;
+  } catch (error) {
+    authSession.clear();
+    throw mapAuthError(error, 'Unable to restore your session.');
+  }
+};
+
+const refreshSessionOnce = () => {
+  if (!refreshPromise) {
+    refreshPromise = refreshSessionRequest().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+};
 
 export const authService = {
   getDeviceInfo,
   normalizeAuthResponse,
   mapAuthError,
+  hasRecoverableSession: () => authSession.hasRecoverableSession(),
+  clearSession: () => authSession.clear(),
+  refreshSession: refreshSessionOnce,
 
   async loginCustomer(email, password) {
     const normalizedEmail = email?.trim().toLowerCase();
@@ -206,7 +271,7 @@ export const authService = {
         last_name: normalizedLastName,
         email: normalizedEmail,
         password,
-        mobile_number: normalizedPhone,
+        mobile: normalizedPhone,
       });
       const { token, refreshToken, user } = normalizeAuthResponse(data, normalizedEmail);
       if (token) {
@@ -293,17 +358,63 @@ export const authService = {
 
   async forgotPassword(email) {
     ensureStoreId();
+    const normalizedEmail = ensureValidEmail(email);
     try {
       await client.post(AUTH_ENDPOINTS.forgotPassword, {
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         reset_as: 'customer',
         store_id: config.API.STORE_ID,
       });
+      return { email: normalizedEmail, message: 'If an account exists for this email, a reset code has been sent.' };
     } catch (error) {
-      // Do not expose whether an email is registered. Treat validation responses
-      // as accepted and always show the same message to prevent enumeration.
-      if ([400, 404].includes(error?.response?.status)) return;
       throw mapAuthError(error, 'Unable to request a password reset right now. Please try again later.');
+    }
+  },
+
+  async resetPassword({ email, code, password }) {
+    ensureStoreId();
+    const normalizedEmail = ensureValidEmail(email);
+    const normalizedCode = code?.trim();
+    if (!normalizedCode) throw new AuthError('Reset code is required.', { code: 'VALIDATION_ERROR' });
+    const passwordError = validatePassword(password);
+    if (passwordError) throw new AuthError(passwordError, { code: 'VALIDATION_ERROR' });
+    try {
+      await client.post(AUTH_ENDPOINTS.resetPassword, {
+        email: normalizedEmail,
+        reset_as: 'customer',
+        store_id: config.API.STORE_ID,
+        code: normalizedCode,
+        password,
+      });
+      return { email: normalizedEmail, message: 'Password reset successfully. Please sign in.' };
+    } catch (error) {
+      throw mapAuthError(error, 'Unable to reset your password right now.');
+    }
+  },
+
+  async changePassword({ oldPassword, newPassword }) {
+    ensureStoreId();
+    if (!oldPassword) throw new AuthError('Current password is required.', { code: 'VALIDATION_ERROR' });
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) throw new AuthError(passwordError, { code: 'VALIDATION_ERROR' });
+    if (oldPassword === newPassword) {
+      throw new AuthError('New password must be different from your current password.', { code: 'VALIDATION_ERROR' });
+    }
+    const token = authSession.getToken();
+    if (!token) {
+      throw new AuthError('Please sign in again before changing your password.', { code: 'UNAUTHORIZED', status: 401 });
+    }
+    try {
+      await client.post(AUTH_ENDPOINTS.changePassword, {
+        old_password: oldPassword,
+        new_password: newPassword,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+      return { message: 'Password changed successfully.' };
+    } catch (error) {
+      throw mapAuthError(error, 'Unable to change your password right now.');
     }
   },
 
@@ -324,7 +435,17 @@ export const authService = {
   },
 
   logout() {
+    const refreshToken = authSession.getRefreshToken();
+    const accessToken = authSession.getToken();
     authSession.clear();
+    if (!refreshToken && !accessToken) return Promise.resolve();
+    return client.post(AUTH_ENDPOINTS.logout, {
+      ...(refreshToken ? { refresh: refreshToken } : {}),
+      store_id: config.API.STORE_ID,
+    }, {
+      withCredentials: true,
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : withRefreshAuth(refreshToken).headers,
+    }).catch(() => {});
   },
 };
 

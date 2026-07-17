@@ -21,6 +21,8 @@ const submitted = ref(false);
 const googleButton = ref(null);
 const googleError = ref('');
 const verificationNotice = ref('');
+const resetNotice = ref('');
+const passwordResetCode = ref('');
 const codeInputs = ref([]);
 const codeDigits = ref(['', '', '', '']);
 const resendCooldown = ref(0);
@@ -37,21 +39,26 @@ const errors = computed(() => ({
   phone: mode.value === 'register' ? validateLebanonMobileNumber(form.phone) : '',
   password: mode.value === 'login' && !form.password
     ? 'Enter your password.'
-    : mode.value === 'register'
+    : ['register', 'reset'].includes(mode.value)
       ? validatePassword(form.password)
       : '',
-  confirmPassword: mode.value === 'register' && form.confirmPassword !== form.password ? 'Passwords do not match.' : '',
+  confirmPassword: ['register', 'reset'].includes(mode.value) && form.confirmPassword !== form.password ? 'Passwords do not match.' : '',
   code: mode.value === 'verify' && !verificationReady.value ? 'Enter the 4-digit verification code.' : '',
+  resetCode: mode.value === 'reset' && !passwordResetCode.value.trim() ? 'Enter the reset code.' : '',
 }));
 
 const reset = ({ preserveVerificationNotice = false } = {}) => {
   const previousVerificationNotice = verificationNotice.value;
+  const previousResetNotice = resetNotice.value;
   submitted.value = false;
   form.password = '';
+  form.confirmPassword = '';
   form.code = '';
+  passwordResetCode.value = '';
   codeDigits.value = ['', '', '', ''];
   userStore.error = '';
   verificationNotice.value = preserveVerificationNotice ? previousVerificationNotice : '';
+  resetNotice.value = mode.value === 'reset' ? previousResetNotice : '';
 };
 
 const focusCodeInput = async (index) => {
@@ -189,9 +196,25 @@ const submit = async () => {
         toastStore.showToast('Account verified.', 'fa-circle-check');
         uiStore.authModalOpen = false;
       }
-    } else {
-      await userStore.forgotPassword(form.email);
-      toastStore.showToast('If that account exists, reset instructions have been sent.', 'fa-envelope');
+    } else if (mode.value === 'forgot') {
+      const result = await userStore.forgotPassword(form.email);
+      resetNotice.value = result.message || 'If an account exists for this email, a reset code has been sent.';
+      userStore.error = '';
+      toastStore.showToast(resetNotice.value, 'fa-envelope');
+      mode.value = 'reset';
+    } else if (mode.value === 'reset') {
+      const result = await userStore.resetPassword({
+        email: form.email,
+        code: passwordResetCode.value,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+      });
+      resetNotice.value = '';
+      userStore.error = '';
+      passwordResetCode.value = '';
+      form.password = '';
+      form.confirmPassword = '';
+      toastStore.showToast(result.message || 'Password reset successfully. Please sign in.', 'fa-circle-check');
       mode.value = 'login';
     }
   } catch {
@@ -221,10 +244,11 @@ const resendVerification = async () => {
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
       </button>
       <h2 id="auth-title" class="font-[Playfair_Display] text-3xl font-bold">
-        {{ mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : mode === 'verify' ? 'Verify Account' : 'Reset Password' }}
+        {{ mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : mode === 'verify' ? 'Verify Account' : mode === 'reset' ? 'Reset Password' : 'Forgot Password' }}
       </h2>
       <p class="text-sm text-[var(--text-muted)] mt-2 mb-7">Securely connected to your Osimart customer account.</p>
       <p v-if="mode === 'verify' && verificationNotice" class="text-center text-xs font-semibold text-[var(--accent)] -mt-3 mb-5">{{ verificationNotice }}</p>
+      <p v-if="(mode === 'forgot' || mode === 'reset') && resetNotice" class="text-center text-xs font-semibold text-[var(--accent)] -mt-3 mb-5">{{ resetNotice }}</p>
 
       <div v-if="mode === 'login' || mode === 'register'" class="mb-6">
         <div v-if="config.API.GOOGLE_CLIENT_ID" ref="googleButton" class="min-h-11 flex justify-center"></div>
@@ -255,7 +279,13 @@ const resendVerification = async () => {
           <input id="auth-phone" v-model="form.phone" type="tel" autocomplete="tel" placeholder="70 123 456" class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
           <p v-if="submitted && errors.phone" class="text-red-500 text-xs mt-1">{{ errors.phone }}</p>
         </div>
-        <div v-if="mode === 'login' || mode === 'register'">
+        <div v-if="mode === 'reset'">
+          <label for="password-reset-code" class="block text-xs font-bold mb-2">Reset code</label>
+          <input id="password-reset-code" v-model="passwordResetCode" type="text" inputmode="numeric" autocomplete="one-time-code"
+            class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
+          <p v-if="submitted && errors.resetCode" class="text-red-500 text-xs mt-1">{{ errors.resetCode }}</p>
+        </div>
+        <div v-if="mode === 'login' || mode === 'register' || mode === 'reset'">
           <label for="auth-password" class="block text-xs font-bold mb-2">Password</label>
           <div class="relative">
             <input id="auth-password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
@@ -267,7 +297,7 @@ const resendVerification = async () => {
           </div>
           <p v-if="submitted && errors.password" class="text-red-500 text-xs mt-1">{{ errors.password }}</p>
         </div>
-        <div v-if="mode === 'register'">
+        <div v-if="mode === 'register' || mode === 'reset'">
           <label for="auth-confirm-password" class="block text-xs font-bold mb-2">Confirm password</label>
           <input id="auth-confirm-password" v-model="form.confirmPassword" type="password" autocomplete="new-password"
             class="w-full border border-[var(--border)] bg-[var(--bg)] rounded-xl p-3" />
@@ -295,7 +325,7 @@ const resendVerification = async () => {
         </div>
         <p v-if="userStore.error" role="alert" class="text-red-500 text-sm">{{ userStore.error }}</p>
         <button type="submit" :disabled="userStore.loading || (mode === 'verify' && !verificationReady)" class="w-full bg-[var(--accent)] text-white rounded-full py-4 font-bold disabled:opacity-50">
-          {{ userStore.loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : mode === 'verify' ? 'Verify Account' : 'Send Reset Link' }}
+          {{ userStore.loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : mode === 'verify' ? 'Verify Account' : mode === 'reset' ? 'Reset Password' : 'Send Reset Code' }}
         </button>
         <button
           v-if="mode === 'verify' && form.email.trim()"
@@ -311,6 +341,7 @@ const resendVerification = async () => {
       <div class="mt-6 text-center text-sm space-y-3">
         <button v-if="mode === 'login'" type="button" class="text-[var(--accent)] hover:underline" @click="mode = 'forgot'">Forgot password?</button>
         <button v-if="mode === 'login' || mode === 'forgot'" type="button" class="block mx-auto hover:underline" @click="mode = 'register'">New customer? Create an account</button>
+        <button v-if="mode === 'forgot'" type="button" class="block mx-auto hover:underline" @click="mode = 'reset'">Already have a reset code?</button>
         <button v-if="mode !== 'login'" type="button" class="block mx-auto hover:underline" @click="mode = 'login'">Back to sign in</button>
       </div>
     </section>

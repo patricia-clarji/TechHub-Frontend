@@ -113,6 +113,7 @@ export const useBrandsStore = defineStore('brands', () => {
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart brands.';
             error.value = errorMsg;
+            hasFetched.value = true;
             logger.error('Error fetching brands:', errorMsg);
             logger.error('Full error:', err);
             brands.value = [];

@@ -25,6 +25,14 @@ const mountAuthModal = async () => {
     message: 'Account created. Please enter the verification code to activate your account.',
     email: 'ada.customer@example.com',
   });
+  const forgotPassword = vi.fn().mockResolvedValue({
+    email: 'ada.customer@example.com',
+    message: 'If an account exists for this email, a reset code has been sent.',
+  });
+  const resetPassword = vi.fn().mockResolvedValue({
+    email: 'ada.customer@example.com',
+    message: 'Password reset successfully. Please sign in.',
+  });
   const resendCustomerVerificationCode = vi.fn();
 
   vi.doMock('@/services/authService', () => ({
@@ -33,7 +41,8 @@ const mountAuthModal = async () => {
       loginWithGoogle: vi.fn(),
       registerCustomer,
       verifyCustomer: vi.fn(),
-      forgotPassword: vi.fn(),
+      forgotPassword,
+      resetPassword,
       resendCustomerVerificationCode,
       logout: vi.fn(),
     },
@@ -56,13 +65,50 @@ const mountAuthModal = async () => {
   app.mount(root);
   await nextTick();
 
-  return { app, root, registerCustomer, resendCustomerVerificationCode };
+  return { app, root, registerCustomer, forgotPassword, resetPassword, resendCustomerVerificationCode };
 };
 
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   document.body.innerHTML = '';
+});
+
+describe('AuthModal password reset flow', () => {
+  it('moves forgot-password success to reset screen and submits the reset payload', async () => {
+    const { app, root, forgotPassword, resetPassword } = await mountAuthModal();
+
+    [...root.querySelectorAll('button')]
+      .find((button) => button.textContent.includes('Forgot password?'))
+      ?.click();
+    await nextTick();
+    await setInput(root, '#auth-email', 'Ada.Customer@Example.com');
+
+    root.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flush();
+    await flush();
+
+    expect(forgotPassword).toHaveBeenCalledWith('Ada.Customer@Example.com');
+    expect(root.textContent).toContain('Reset Password');
+    expect(root.textContent).toContain('If an account exists for this email, a reset code has been sent.');
+
+    await setInput(root, '#password-reset-code', '1234');
+    await setInput(root, '#auth-password', 'NewPassw0rd!');
+    await setInput(root, '#auth-confirm-password', 'NewPassw0rd!');
+
+    root.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flush();
+    await flush();
+
+    expect(resetPassword).toHaveBeenCalledWith({
+      email: 'Ada.Customer@Example.com',
+      code: '1234',
+      password: 'NewPassw0rd!',
+    });
+    expect(root.textContent).toContain('Sign In');
+
+    app.unmount();
+  });
 });
 
 describe('AuthModal register verification flow', () => {

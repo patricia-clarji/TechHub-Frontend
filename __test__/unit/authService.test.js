@@ -6,6 +6,7 @@ const loadAuthService = async (post = vi.fn(), options = {}) => {
   vi.stubEnv('VITE_OSIMART_AUTH_URL', 'https://api.example.test/auth');
   vi.stubEnv('VITE_OSIMART_STORE_ID', options.storeId ?? 'store-1');
   localStorage.clear();
+  sessionStorage.clear();
 
   vi.doMock('axios', () => ({
     default: {
@@ -20,6 +21,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 describe('authService login', () => {
@@ -138,6 +140,104 @@ describe('authService login', () => {
     expect(authSession.getToken()).toBe('');
     expect(authSession.getUser()).toBeNull();
   });
+
+  it('stores a recoverable refresh session when login returns a refresh token', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        access: 'access-token',
+        refresh: 'refresh-token',
+        user: { id: 'customer-1', email: 'admin@example.com', first_name: 'Ada', last_name: 'Admin' },
+      },
+    });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    await authService.loginCustomer('admin@example.com', 'secret');
+
+    expect(authSession.getPersistedRefreshToken()).toBe('refresh-token');
+    expect(authSession.getPersistedUser()).toMatchObject({ email: 'admin@example.com', name: 'Ada Admin' });
+  });
+
+  it('restores a session from the persisted refresh token', async () => {
+    sessionStorage.setItem('techhub_auth_refresh_v1', JSON.stringify('refresh-token'));
+    sessionStorage.setItem('techhub_auth_user_v1', JSON.stringify({ id: 'customer-1', email: 'admin@example.com', name: 'Ada Admin' }));
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        access: 'new-access-token',
+        refresh: 'new-refresh-token',
+        user: { id: 'customer-1', email: 'admin@example.com', first_name: 'Ada', last_name: 'Admin' },
+      },
+    });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+    sessionStorage.setItem('techhub_auth_refresh_v1', JSON.stringify('refresh-token'));
+    sessionStorage.setItem('techhub_auth_user_v1', JSON.stringify({ id: 'customer-1', email: 'admin@example.com', name: 'Ada Admin' }));
+
+    const user = await authService.refreshSession();
+
+    expect(post).toHaveBeenCalledWith('/refresh/', {
+      refresh: 'refresh-token',
+      store_id: 'store-1',
+    }, expect.objectContaining({
+      withCredentials: true,
+      headers: { Authorization: 'Bearer refresh-token' },
+    }));
+    expect(user).toMatchObject({ email: 'admin@example.com', name: 'Ada Admin' });
+    expect(authSession.getToken()).toBe('new-access-token');
+    expect(authSession.getPersistedRefreshToken()).toBe('new-refresh-token');
+  });
+
+  it('uses the persisted user snapshot when refresh returns only tokens', async () => {
+    const post = vi.fn().mockResolvedValue({ data: { access: 'new-access-token' } });
+    const { authService } = await loadAuthService(post);
+    sessionStorage.setItem('techhub_auth_refresh_v1', JSON.stringify('refresh-token'));
+    sessionStorage.setItem('techhub_auth_user_v1', JSON.stringify({ id: 'customer-1', email: 'admin@example.com', name: 'Ada Admin' }));
+
+    const user = await authService.refreshSession();
+
+    expect(user).toMatchObject({ email: 'admin@example.com', name: 'Ada Admin' });
+  });
+
+  it('clears persisted session when refresh fails', async () => {
+    const post = vi.fn().mockRejectedValue({ response: { status: 401, data: { detail: 'Token error: Token is invalid or expired' } } });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+    sessionStorage.setItem('techhub_auth_refresh_v1', JSON.stringify('expired-refresh'));
+    sessionStorage.setItem('techhub_auth_user_v1', JSON.stringify({ email: 'admin@example.com' }));
+
+    await expect(authService.refreshSession()).rejects.toThrow('Token error: Token is invalid or expired');
+
+    expect(authSession.getToken()).toBe('');
+    expect(authSession.getPersistedRefreshToken()).toBe('');
+    expect(authSession.getPersistedUser()).toBeNull();
+  });
+
+  it('logout clears persisted refresh state and calls the logout endpoint', async () => {
+    const post = vi.fn()
+      .mockResolvedValueOnce({
+        data: {
+          access: 'access-token',
+          refresh: 'refresh-token',
+          user: { id: 'customer-1', email: 'admin@example.com' },
+        },
+      })
+      .mockResolvedValueOnce({ data: {} });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+
+    await authService.loginCustomer('admin@example.com', 'secret');
+    await authService.logout();
+
+    expect(post).toHaveBeenLastCalledWith('/logout/', {
+      refresh: 'refresh-token',
+      store_id: 'store-1',
+    }, expect.objectContaining({
+      withCredentials: true,
+      headers: { Authorization: 'Bearer access-token' },
+    }));
+    expect(authSession.getPersistedRefreshToken()).toBe('');
+    expect(authSession.getUser()).toBeNull();
+  });
 });
 
 describe('authService register', () => {
@@ -168,7 +268,7 @@ describe('authService register', () => {
       last_name: 'Customer',
       email: 'ada.customer@example.com',
       password: 'StrongPassw0rd!',
-      mobile_number: '+96170123456',
+      mobile: '+96170123456',
     });
     expect(result.requiresLogin).toBe(false);
     expect(result.user).toMatchObject({ id: 'customer-3', email: 'ada.customer@example.com', name: 'Ada Customer' });
@@ -350,6 +450,129 @@ describe('authService verification', () => {
     const { authService } = await loadAuthService(post, { storeId: '' });
 
     await expect(authService.resendCustomerVerificationCode('ada.customer@example.com')).rejects.toThrow('Store configuration is missing. Please contact support.');
+    expect(post).not.toHaveBeenCalled();
+  });
+});
+
+describe('authService password recovery and change', () => {
+  it('posts the confirmed forgot-password payload with normalized email', async () => {
+    const post = vi.fn().mockResolvedValue({ data: {} });
+    const { authService } = await loadAuthService(post);
+
+    const result = await authService.forgotPassword(' Ada.Customer@Example.com ');
+
+    expect(post).toHaveBeenCalledWith('/forgot-password/', {
+      email: 'ada.customer@example.com',
+      reset_as: 'customer',
+      store_id: 'store-1',
+    });
+    expect(result.message).toBe('If an account exists for this email, a reset code has been sent.');
+  });
+
+  it('does not fake forgot-password success for backend validation errors', async () => {
+    const post = vi.fn().mockRejectedValue({
+      response: { status: 400, data: { email: ['Enter a valid email address.'] } },
+    });
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.forgotPassword('ada@example.com')).rejects.toThrow('email: Enter a valid email address.');
+  });
+
+  it('blocks forgot-password when store id is missing', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post, { storeId: '' });
+
+    await expect(authService.forgotPassword('ada@example.com')).rejects.toThrow('Store configuration is missing. Please contact support.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('posts reset-password using the confirmed password field', async () => {
+    const post = vi.fn().mockResolvedValue({ data: {} });
+    const { authService } = await loadAuthService(post);
+
+    const result = await authService.resetPassword({
+      email: ' Ada.Customer@Example.com ',
+      code: ' 1234 ',
+      password: 'StrongPassw0rd!',
+    });
+
+    expect(post).toHaveBeenCalledWith('/reset-password/', {
+      email: 'ada.customer@example.com',
+      reset_as: 'customer',
+      store_id: 'store-1',
+      code: '1234',
+      password: 'StrongPassw0rd!',
+    });
+    expect(result.message).toBe('Password reset successfully. Please sign in.');
+  });
+
+  it('surfaces invalid reset code errors', async () => {
+    const post = vi.fn().mockRejectedValue({
+      response: { status: 400, data: { code: ['Invalid verification code.'] } },
+    });
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.resetPassword({
+      email: 'ada@example.com',
+      code: '0000',
+      password: 'StrongPassw0rd!',
+    })).rejects.toMatchObject({ code: 'INVALID_VERIFICATION_CODE' });
+  });
+
+  it('blocks weak reset passwords before calling the backend', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.resetPassword({
+      email: 'ada@example.com',
+      code: '1234',
+      password: 'password123',
+    })).rejects.toThrow('Choose a stronger password that is not commonly used.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('posts change-password with authenticated underscore field names', async () => {
+    const post = vi.fn().mockResolvedValue({ data: {} });
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+    authSession.set('access-token', { email: 'ada@example.com' });
+
+    const result = await authService.changePassword({
+      oldPassword: 'OldPassw0rd!',
+      newPassword: 'NewPassw0rd!',
+    });
+
+    expect(post).toHaveBeenCalledWith('/change-password/', {
+      old_password: 'OldPassw0rd!',
+      new_password: 'NewPassw0rd!',
+    }, expect.objectContaining({
+      withCredentials: true,
+      headers: { Authorization: 'Bearer access-token' },
+    }));
+    expect(result.message).toBe('Password changed successfully.');
+  });
+
+  it('blocks change-password when the new password matches the old password', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+    const { authSession } = await import('@/services/authSession');
+    authSession.set('access-token', { email: 'ada@example.com' });
+
+    await expect(authService.changePassword({
+      oldPassword: 'SamePassw0rd!',
+      newPassword: 'SamePassw0rd!',
+    })).rejects.toThrow('New password must be different from your current password.');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('requires authentication before changing password', async () => {
+    const post = vi.fn();
+    const { authService } = await loadAuthService(post);
+
+    await expect(authService.changePassword({
+      oldPassword: 'OldPassw0rd!',
+      newPassword: 'NewPassw0rd!',
+    })).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     expect(post).not.toHaveBeenCalled();
   });
 });

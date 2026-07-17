@@ -8,6 +8,7 @@ export const AUTH_ENDPOINTS = Object.freeze({
   resetPassword: '/reset-password/',
   changePassword: '/change-password/',
   refresh: '/refresh/',
+  logout: '/logout/',
 });
 
 export const STOREFRONT_ENDPOINTS = Object.freeze({

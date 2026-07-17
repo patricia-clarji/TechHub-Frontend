@@ -205,6 +205,7 @@ export const useProductsStore = defineStore('products', () => {
         } catch (err) {
             const errorMsg = err?.response?.data?.detail || err?.message || 'Unable to load Osimart products.';
             error.value = errorMsg;
+            hasFetched.value = true;
             logger.error('Error fetching products:', errorMsg);
             logger.error('Full error:', err);
             products.value = [];

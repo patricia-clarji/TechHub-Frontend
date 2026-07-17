@@ -9,9 +9,12 @@ import { useNotificationStore } from '@/stores/ui/notifications';
 export const useUserStore = defineStore('user', () => {
   const currentUser = ref(authSession.getToken() ? authSession.getUser() : null);
   const loading = ref(false);
+  const isInitializing = ref(false);
+  const hasInitialized = ref(false);
   const error = ref('');
   const errorCode = ref('');
   const isAuthenticated = computed(() => Boolean(currentUser.value && authSession.getToken()));
+  let restorePromise = null;
 
   const run = async (action) => {
     loading.value = true;
@@ -50,7 +53,42 @@ export const useUserStore = defineStore('user', () => {
   });
 
   const forgotPassword = (email) => run(() => authService.forgotPassword(email));
+  const resetPassword = ({ email, code, password, confirmPassword }) => run(() => {
+    if (password !== confirmPassword) throw new Error('Passwords do not match.');
+    return authService.resetPassword({ email, code, password });
+  });
+  const changePassword = ({ oldPassword, newPassword, confirmPassword }) => run(() => {
+    if (newPassword !== confirmPassword) throw new Error('Passwords do not match.');
+    return authService.changePassword({ oldPassword, newPassword });
+  });
   const resendVerification = (email) => run(() => authService.resendCustomerVerificationCode(email));
+  const restoreSession = async () => {
+    if (hasInitialized.value && !isInitializing.value) return currentUser.value;
+    if (restorePromise) return restorePromise;
+    isInitializing.value = true;
+    restorePromise = (async () => {
+      try {
+        if (authSession.getToken()) {
+          currentUser.value = authSession.getUser();
+          return currentUser.value;
+        }
+        if (!authService.hasRecoverableSession()) {
+          currentUser.value = null;
+          return null;
+        }
+        currentUser.value = await authService.refreshSession();
+        return currentUser.value;
+      } catch {
+        currentUser.value = null;
+        return null;
+      } finally {
+        hasInitialized.value = true;
+        isInitializing.value = false;
+        restorePromise = null;
+      }
+    })();
+    return restorePromise;
+  };
   const logout = () => {
     authService.logout();
     currentUser.value = null;
@@ -59,5 +97,23 @@ export const useUserStore = defineStore('user', () => {
     useNotificationStore().clearAll();
   };
 
-  return { currentUser, loading, error, errorCode, isAuthenticated, login, loginWithGoogle, register, verifyCustomer, forgotPassword, resendVerification, logout };
+  return {
+    currentUser,
+    loading,
+    isInitializing,
+    hasInitialized,
+    error,
+    errorCode,
+    isAuthenticated,
+    login,
+    loginWithGoogle,
+    register,
+    verifyCustomer,
+    forgotPassword,
+    resetPassword,
+    changePassword,
+    resendVerification,
+    restoreSession,
+    logout,
+  };
 });

@@ -1,34 +1,117 @@
 import { apiClient } from './apiClient';
 import config from '@/config';
+import { createApiError } from '@/services/errorHandler';
 
-export const submitOrderRequest = async ({ customer, address, notes, items, total }) => {
+const extractList = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (payload && typeof payload === 'object') return [payload];
+  return [];
+};
+
+const getCheckoutPaymentMethodId = async () => {
+  const response = await apiClient.get('/available-payment-methods/', {
+    skipAuth: true,
+    retries: 0,
+  });
+  if (!response.success) throw response.error;
+
+  const paymentMethod = extractList(response.data).find((method) => method?.is_cod && method?.is_active)
+    || extractList(response.data).find((method) => method?.is_active)
+    || extractList(response.data)[0];
+
+  if (!paymentMethod?.id) {
+    throw createApiError({ message: 'Cash on Delivery is not available for this store.' });
+  }
+
+  return paymentMethod.id;
+};
+
+const getCheckoutAddressDefaults = async () => {
+  const response = await apiClient.get('/shippingcountries/', {
+    skipAuth: true,
+    retries: 0,
+  });
+  if (!response.success) throw response.error;
+
+  const country = extractList(response.data)[0];
+  const zone = Array.isArray(country?.shipping_zones) ? country.shipping_zones[0] : null;
+
+  if (!country?.id) {
+    throw createApiError({ message: 'No delivery country is configured for this store.' });
+  }
+  if (!zone?.id) {
+    throw createApiError({ message: 'No delivery zone is configured for this store.' });
+  }
+
+  return {
+    country: country.id,
+    zone: zone.id,
+  };
+};
+
+const isPricedVariant = (variant) => Number.isFinite(Number(variant?.price)) && Number(variant.price) > 0;
+
+const getLineCheckoutItemId = (item) => {
+  const variants = Array.isArray(item.product?.variants) ? item.product.variants : [];
+  const selectedVariant = variants.find((variant) => String(variant.id) === String(item.variantId));
+  if (selectedVariant && isPricedVariant(selectedVariant)) return selectedVariant.id;
+
+  if (item.variantId && !variants.length) return item.variantId;
+
+  const priceMatchedVariant = variants.find((variant) => (
+    isPricedVariant(variant) && Number(variant.price) === Number(item.price)
+  ));
+  if (priceMatchedVariant?.id) return priceMatchedVariant.id;
+
+  const firstPricedVariant = variants.find(isPricedVariant);
+  return firstPricedVariant?.id || '';
+};
+
+const buildCheckoutCart = (items) => {
+  const cart = {};
+
+  items.forEach((item) => {
+    const itemId = getLineCheckoutItemId(item);
+    if (!itemId) return;
+    cart[itemId] = {
+      quantity: Number(item.quantity) || 1,
+    };
+  });
+
+  if (!Object.keys(cart).length) {
+    throw createApiError({ message: 'Unable to prepare checkout items. Please refresh your cart and try again.' });
+  }
+
+  return cart;
+};
+
+export const submitOrderRequest = async ({ customer, address, city = '', postalCode = '', notes, items, total }) => {
   const [firstName, ...lastNameParts] = customer.name.trim().split(/\s+/);
-  const lines = items.map((item) => [
-    `${item.quantity} × ${item.name}`,
-    item.variantName && `Variant: ${item.variantName}`,
-    item.color && `Color: ${item.color}`,
-    `Unit price: $${item.price.toFixed(2)}`,
-    `Product ID: ${item.productId}`,
-  ].filter(Boolean).join(' | '));
+  const [paymentMethodId, addressDefaults] = await Promise.all([
+    getCheckoutPaymentMethodId(),
+    getCheckoutAddressDefaults(),
+  ]);
 
-  const message = [
-    'Cash on Delivery / Order Request',
-    `Phone: ${customer.phone}`,
-    `Address: ${address}`,
-    notes ? `Notes: ${notes}` : '',
-    '',
-    ...lines,
-    '',
-    `Total: $${total.toFixed(2)}`,
-    'No online payment was collected.',
-  ].filter(Boolean).join('\n');
-
-  const response = await apiClient.post('/contactmessage/', {
-    first_name: firstName,
-    last_name: lastNameParts.join(' ') || '-',
-    email: customer.email.trim(),
-    subject: 'Website order request',
-    message,
+  const response = await apiClient.post('/checkout/', {
+    payment_method_id: paymentMethodId,
+    cart: buildCheckoutCart(items),
+    guest: {
+      first_name: firstName,
+      last_name: lastNameParts.join(' ') || '-',
+      email: customer.email.trim(),
+      phone: customer.phone.trim(),
+    },
+    address: {
+      address,
+      city: city.trim() || undefined,
+      postal_code: postalCode.trim() || undefined,
+      country: addressDefaults.country,
+      zone: addressDefaults.zone,
+    },
+    notes: notes || '',
+    total,
     store_id: config.API.STORE_ID,
   }, { retries: 0, dedupe: false });
 

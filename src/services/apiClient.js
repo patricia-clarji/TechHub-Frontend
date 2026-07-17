@@ -6,6 +6,7 @@ import {
   delay,
 } from './errorHandler';
 import { authSession } from './authSession';
+import { authService } from './authService';
 
 const pendingRequests = new Map();
 
@@ -24,14 +25,14 @@ const buildRequestKey = (config) => {
 const client = axios.create({
   baseURL: config.API.OSIMART_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  timeout: 10000,
+  timeout: 20000,
 });
 
 client.interceptors.request.use((request) => {
   request.headers = request.headers || {};
+  const method = String(request.method || 'get').toLowerCase();
 
   if (config.API.STORE_ID) {
     request.params = {
@@ -40,15 +41,21 @@ client.interceptors.request.use((request) => {
     };
   }
 
+  const skipAuth = request.skipAuth === true;
   delete request.requireAuth;
-  const token = authSession.getToken();
+  delete request.skipAuth;
+  const token = skipAuth ? '' : authSession.getToken();
   if (token) {
     request.headers.Authorization = `Bearer ${token}`;
   } else {
     delete request.headers.Authorization;
   }
   request.headers['Accept'] = 'application/json';
-  request.headers['Content-Type'] = request.headers['Content-Type'] || 'application/json';
+  if (method === 'get' || method === 'head') {
+    delete request.headers['Content-Type'];
+  } else {
+    request.headers['Content-Type'] = request.headers['Content-Type'] || 'application/json';
+  }
 
   return request;
 });
@@ -63,6 +70,7 @@ client.interceptors.response.use(
 
 const sendRequest = async (config) => {
   const { dedupe = true, retries = 2, retryDelay = 500, retryUnsafe = false, ...axiosConfig } = config;
+  const canRefreshAuth = axiosConfig.skipAuth !== true && axiosConfig.authRefresh !== false;
   const requestConfig = {
     ...axiosConfig,
     signal: axiosConfig.signal || new AbortController().signal,
@@ -103,6 +111,21 @@ const sendRequest = async (config) => {
         const apiError = error instanceof Error && error.name === 'ApiError' ? error : createApiError(error);
         const method = String(requestConfig.method || 'get').toLowerCase();
         const canRetryMethod = retryUnsafe || ['get', 'head', 'options'].includes(method);
+        const shouldRefreshAuth =
+          apiError.status === 401 &&
+          canRefreshAuth &&
+          !requestConfig.__retriedAfterRefresh &&
+          authSession.hasRecoverableSession();
+
+        if (shouldRefreshAuth) {
+          try {
+            await authService.refreshSession();
+            requestConfig.__retriedAfterRefresh = true;
+            continue;
+          } catch {
+            authSession.clear();
+          }
+        }
 
         const shouldRetry =
           attempt < retries &&

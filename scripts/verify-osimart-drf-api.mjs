@@ -22,35 +22,40 @@ if (!baseUrl || !storeId) {
   process.exit(1);
 }
 
+const readEndpoint = (name, path, supportsDetail = true) => ({ name, path, supportsDetail, method: 'GET' });
+const postEndpoint = (name, path) => ({ name, path, supportsDetail: false, method: 'POST' });
+
 const endpoints = [
-  ['stores', '/stores/', true],
-  ['customer-info', '/customer-info/', true],
-  ['customer-addresses', '/customer-addresses/', true],
-  ['categories', '/categories/', true],
-  ['collections', '/collections/', true],
-  ['brands', '/brands/', true],
-  ['variant-types', '/variant-types/', true],
-  ['products', '/products/', true],
-  ['product-variants', '/product-variants/', true],
-  ['product-notification-requests', '/product-notification-requests/', true],
-  ['wishlist', '/wishlist/', false],
-  ['cart-view', '/cart/view/', false],
-  ['payment-methods', '/payment-methods/', true],
-  ['available-payment-methods', '/available-payment-methods/', true],
-  ['shippingcountries', '/shippingcountries/', true],
-  ['promocodes', '/promocodes/', true],
-  ['freedeliveries', '/freedeliveries/', true],
-  ['checkout', '/checkout/', true],
-  ['order-summaries', '/order-summaries/', true],
-  ['contactmessage', '/contactmessage/', false],
-  ['policies', '/policies/', true],
-  ['banners', '/banners/', true],
-  ['announcementbars', '/announcementbars/', true],
-  ['submitproductrequest', '/submitproductrequest/', false],
+  readEndpoint('stores', '/stores/'),
+  readEndpoint('customer-info', '/customer-info/'),
+  readEndpoint('customer-addresses', '/customer-addresses/'),
+  readEndpoint('categories', '/categories/'),
+  readEndpoint('collections', '/collections/'),
+  readEndpoint('brands', '/brands/'),
+  readEndpoint('variant-types', '/variant-types/'),
+  readEndpoint('products', '/products/'),
+  readEndpoint('product-variants', '/product-variants/'),
+  readEndpoint('product-notification-requests', '/product-notification-requests/'),
+  readEndpoint('wishlist', '/wishlist/', false),
+  readEndpoint('cart-view', '/cart/view/', false),
+  postEndpoint('cart-update-item', '/cart/update-item/'),
+  readEndpoint('payment-methods', '/payment-methods/'),
+  readEndpoint('available-payment-methods', '/available-payment-methods/'),
+  readEndpoint('shippingcountries', '/shippingcountries/'),
+  readEndpoint('promocodes', '/promocodes/'),
+  readEndpoint('freedeliveries', '/freedeliveries/'),
+  postEndpoint('checkout', '/checkout/'),
+  readEndpoint('order-summaries', '/order-summaries/'),
+  postEndpoint('contactmessage', '/contactmessage/'),
+  readEndpoint('policies', '/policies/'),
+  readEndpoint('banners', '/banners/'),
+  readEndpoint('announcementbars', '/announcementbars/'),
+  postEndpoint('submitproductrequest', '/submitproductrequest/'),
 ];
 
 const allowedAuthStatuses = new Set([401, 403]);
 const report = [];
+const requestTimeoutMs = Number(process.env.OSIMART_SMOKE_TIMEOUT_MS || 30000);
 
 const buildUrl = (path, params = {}) => {
   const url = new URL(`${baseUrl}${path}`);
@@ -67,10 +72,27 @@ const extractItems = (payload) => {
   return [];
 };
 
-for (const [name, path, supportsDetail] of endpoints) {
-  const entry = { name, list: { ok: false, status: null, count: 0 }, detail: { skipped: !supportsDetail, ok: false, status: null } };
+const fetchWithTimeout = async (url, options = {}) => fetch(url, {
+  ...options,
+  headers: { Accept: 'application/json' },
+  signal: AbortSignal.timeout(requestTimeoutMs),
+});
+
+for (const { name, path, supportsDetail, method } of endpoints) {
+  const entry = { name, method, list: { ok: false, status: null, count: 0 }, detail: { skipped: !supportsDetail, ok: false, status: null } };
   try {
-    const response = await fetch(buildUrl(path, { page_size: '3' }), { headers: { Accept: 'application/json' } });
+    if (method === 'POST') {
+      const response = await fetchWithTimeout(buildUrl(path), { method: 'OPTIONS' });
+      entry.list.status = response.status;
+      entry.list.allow = response.headers.get('allow') || '';
+      entry.list.ok = response.ok && entry.list.allow.split(',').map((value) => value.trim().toUpperCase()).includes('POST');
+      entry.list.contractOnly = true;
+      report.push(entry);
+      console.log(`${name}: ${entry.list.ok ? 'ok' : 'failed'} (${entry.list.status}; allow=${entry.list.allow || 'unknown'})`);
+      continue;
+    }
+
+    const response = await fetchWithTimeout(buildUrl(path, { page_size: '3' }));
     entry.list.status = response.status;
     if (response.ok) {
       const payload = await response.json();
@@ -82,7 +104,7 @@ for (const [name, path, supportsDetail] of endpoints) {
       entry.list.shape = Array.isArray(payload) ? 'array' : Array.isArray(payload?.results) ? 'paginated' : 'object';
 
       if (supportsDetail && firstId) {
-        const detailResponse = await fetch(buildUrl(`${path}${encodeURIComponent(firstId)}/`), { headers: { Accept: 'application/json' } });
+        const detailResponse = await fetchWithTimeout(buildUrl(`${path}${encodeURIComponent(firstId)}/`));
         entry.detail.status = detailResponse.status;
         entry.detail.ok = detailResponse.ok || allowedAuthStatuses.has(detailResponse.status);
       }

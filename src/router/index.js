@@ -65,8 +65,9 @@ const router = createRouter({
     }
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
     const userStore = useUserStore();
+    if (!userStore.hasInitialized) await userStore.restoreSession();
     if (to.name === 'AdminLogin') return true;
     if (to.meta.admin && !config.ADMIN.STAFF_AUTH_CONFIGURED) {
         return { name: 'AdminLogin', query: { redirect: to.fullPath } };

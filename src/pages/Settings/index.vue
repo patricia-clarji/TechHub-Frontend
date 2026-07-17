@@ -1,9 +1,17 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useUserStore } from '@/stores/auth/user';
+import { validatePassword } from '@/services/authValidation';
 
 const userStore = useUserStore();
 const activeTab = ref('profile');
+const passwordSubmitted = ref(false);
+const passwordSuccess = ref('');
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+});
 
 const customer = computed(() => userStore.currentUser || {});
 const displayName = computed(() => customer.value.name || 'TechHub Customer');
@@ -17,6 +25,36 @@ const tabs = [
   { key: 'billing', label: 'Billing' },
   { key: 'notifications', label: 'Notifications' },
 ];
+
+const passwordErrors = computed(() => ({
+  oldPassword: !passwordForm.oldPassword ? 'Enter your current password.' : '',
+  newPassword: validatePassword(passwordForm.newPassword) ||
+    (passwordForm.oldPassword && passwordForm.oldPassword === passwordForm.newPassword ? 'New password must be different from your current password.' : ''),
+  confirmPassword: passwordForm.confirmPassword !== passwordForm.newPassword ? 'Passwords do not match.' : '',
+}));
+
+const clearPasswordForm = () => {
+  passwordForm.oldPassword = '';
+  passwordForm.newPassword = '';
+  passwordForm.confirmPassword = '';
+};
+
+const submitPasswordChange = async () => {
+  passwordSubmitted.value = true;
+  passwordSuccess.value = '';
+  userStore.error = '';
+  if (Object.values(passwordErrors.value).some(Boolean)) return;
+  try {
+    const result = await userStore.changePassword({ ...passwordForm });
+    passwordSuccess.value = result.message || 'Password changed successfully.';
+    clearPasswordForm();
+    passwordSubmitted.value = false;
+  } catch {
+    passwordForm.oldPassword = '';
+    passwordForm.newPassword = '';
+    passwordForm.confirmPassword = '';
+  }
+};
 </script>
 
 <template>
@@ -85,12 +123,59 @@ const tabs = [
 
         <div v-if="activeTab === 'security'" class="space-y-6">
           <h2 class="font-[Playfair_Display] text-4xl font-bold mb-2">Security</h2>
-          <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm">
-            Password changes, MFA, active sessions, and account deletion require server-side APIs. TechHub does not collect password changes in the browser until those APIs are confirmed.
-          </div>
-          <button type="button" disabled class="bg-[var(--accent)] text-white px-6 py-3 rounded-xl font-medium opacity-50">
-            Backend security API required
-          </button>
+          <p class="text-sm text-[var(--text-muted)]">Update your customer password using the secure Osimart account API.</p>
+
+          <form class="space-y-5 max-w-xl" @submit.prevent="submitPasswordChange" novalidate>
+            <label class="block" for="settings-old-password">
+              <span class="block mb-2 font-medium">Current password</span>
+              <input
+                id="settings-old-password"
+                v-model="passwordForm.oldPassword"
+                type="password"
+                autocomplete="current-password"
+                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-[var(--bg)]"
+                :aria-invalid="passwordSubmitted && Boolean(passwordErrors.oldPassword)"
+                aria-describedby="settings-old-password-error"
+              >
+              <span v-if="passwordSubmitted && passwordErrors.oldPassword" id="settings-old-password-error" class="block text-red-500 text-xs mt-1">{{ passwordErrors.oldPassword }}</span>
+            </label>
+
+            <label class="block" for="settings-new-password">
+              <span class="block mb-2 font-medium">New password</span>
+              <input
+                id="settings-new-password"
+                v-model="passwordForm.newPassword"
+                type="password"
+                autocomplete="new-password"
+                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-[var(--bg)]"
+                :aria-invalid="passwordSubmitted && Boolean(passwordErrors.newPassword)"
+                aria-describedby="settings-new-password-error settings-new-password-help"
+              >
+              <span id="settings-new-password-help" class="block text-[var(--text-muted)] text-xs mt-1">Use more than 8 characters and avoid common passwords.</span>
+              <span v-if="passwordSubmitted && passwordErrors.newPassword" id="settings-new-password-error" class="block text-red-500 text-xs mt-1">{{ passwordErrors.newPassword }}</span>
+            </label>
+
+            <label class="block" for="settings-confirm-password">
+              <span class="block mb-2 font-medium">Confirm new password</span>
+              <input
+                id="settings-confirm-password"
+                v-model="passwordForm.confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                class="w-full border border-[var(--border)] rounded-xl px-4 py-3 bg-[var(--bg)]"
+                :aria-invalid="passwordSubmitted && Boolean(passwordErrors.confirmPassword)"
+                aria-describedby="settings-confirm-password-error"
+              >
+              <span v-if="passwordSubmitted && passwordErrors.confirmPassword" id="settings-confirm-password-error" class="block text-red-500 text-xs mt-1">{{ passwordErrors.confirmPassword }}</span>
+            </label>
+
+            <p v-if="userStore.error" role="alert" class="text-red-500 text-sm">{{ userStore.error }}</p>
+            <p v-if="passwordSuccess" role="status" class="text-emerald-600 text-sm font-semibold">{{ passwordSuccess }}</p>
+
+            <button type="submit" :disabled="userStore.loading" class="bg-[var(--accent)] text-white px-6 py-3 rounded-xl font-medium disabled:opacity-50">
+              {{ userStore.loading ? 'Updating…' : 'Change password' }}
+            </button>
+          </form>
         </div>
 
         <div v-if="activeTab === 'billing'" class="space-y-6">

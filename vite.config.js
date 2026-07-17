@@ -3,6 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
 
+const chatbotProxyPort = process.env.DEEPSEEK_PROXY_PORT || '8787'
+
 export default defineConfig({
   plugins: [
     vue(),
@@ -21,7 +23,7 @@ export default defineConfig({
     strictPort: true,
     open: false,
     proxy: {
-      '/api/chatbot': 'http://127.0.0.1:8787'
+      '/api/chatbot': `http://127.0.0.1:${chatbotProxyPort}`
     }
   }
 })
