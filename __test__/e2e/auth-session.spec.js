@@ -64,7 +64,7 @@ test('customer session survives reload and logout remains permanent', async ({ p
 
   await page.goto('/account', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/account$/);
-  await expect(page.getByText('ada@example.com')).toBeVisible();
+  await expect(page.getByText('ada@example.com').first()).toBeVisible();
   const refreshCountBeforeLogout = refreshCount;
 
   await page.getByRole('button', { name: /ada customer/i }).click();

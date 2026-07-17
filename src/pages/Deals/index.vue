@@ -2,11 +2,10 @@
 import { computed, onMounted } from 'vue';
 import { useProductsStore } from '@/stores/shop/products';
 import ProductCard from '@/components/cards/ProductCard.vue';
+import { normalizeDealProduct } from '@/services/normalizers';
 
 const productsStore = useProductsStore();
-const discountedProducts = computed(() => productsStore.sampleProducts.filter(
-  (product) => Number(product.oldPrice) > Number(product.price),
-));
+const discountedProducts = computed(() => productsStore.sampleProducts.map(normalizeDealProduct).filter(Boolean));
 onMounted(() => productsStore.fetchProducts());
 </script>
 

@@ -56,10 +56,17 @@ const applyCustomerPrefill = () => {
   const user = userStore.currentUser;
   const key = checkoutUserKey.value;
   if (!user || !key || prefilledFor.value === key) return;
+  const address = user.defaultAddress || null;
 
-  if (!form.name.trim()) form.name = user.name || [user.firstName, user.lastName].filter(Boolean).join(' ');
+  if (!form.name.trim()) form.name = user.displayName || user.name || [user.firstName, user.lastName].filter(Boolean).join(' ');
   if (!form.email.trim()) form.email = user.email || '';
   if (!form.phone.trim()) form.phone = user.phone || '';
+  if (address) {
+    if (!form.address.trim()) form.address = address.address || '';
+    if (!form.city.trim()) form.city = address.city || address.region || '';
+    if (!form.postalCode.trim()) form.postalCode = address.postalCode || '';
+    if (!form.notes.trim()) form.notes = address.notes || '';
+  }
 
   prefilledFor.value = key;
 };

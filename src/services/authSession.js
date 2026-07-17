@@ -42,9 +42,14 @@ const persistRecoverableSession = (refreshToken, user) => {
     email: user.email || '',
     firstName: user.firstName || '',
     lastName: user.lastName || '',
+    displayName: user.displayName || '',
     name: user.name || '',
     phone: user.phone || '',
     avatar: user.avatar || '',
+    avatarUrl: user.avatarUrl || '',
+    storeId: user.storeId || '',
+    addresses: Array.isArray(user.addresses) ? user.addresses : [],
+    defaultAddress: user.defaultAddress || null,
   });
 };
 

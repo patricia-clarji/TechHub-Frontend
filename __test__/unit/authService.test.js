@@ -531,7 +531,7 @@ describe('authService password recovery and change', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('posts change-password with authenticated underscore field names', async () => {
+  it('posts change-password with authenticated hyphenated field names', async () => {
     const post = vi.fn().mockResolvedValue({ data: {} });
     const { authService } = await loadAuthService(post);
     const { authSession } = await import('@/services/authSession');
@@ -543,8 +543,8 @@ describe('authService password recovery and change', () => {
     });
 
     expect(post).toHaveBeenCalledWith('/change-password/', {
-      old_password: 'OldPassw0rd!',
-      new_password: 'NewPassw0rd!',
+      'old-password': 'OldPassw0rd!',
+      'new-password': 'NewPassw0rd!',
     }, expect.objectContaining({
       withCredentials: true,
       headers: { Authorization: 'Bearer access-token' },

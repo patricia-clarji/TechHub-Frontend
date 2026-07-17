@@ -123,6 +123,37 @@ describe('account navigation', () => {
     expect(notificationStore.notifications).toEqual([]);
     expect(userStore.isAuthenticated).toBe(false);
   });
+
+  it('keeps wishlist and notifications isolated between signed-in customers', () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const wishlistStore = useWishlistStore();
+    const notificationStore = useNotificationStore();
+
+    authSession.set('token-a', { id: 'customer-a', email: 'a@example.com' });
+    wishlistStore.syncOwner();
+    notificationStore.syncOwner();
+    wishlistStore.toggleWishlist('product-a');
+    notificationStore.addNotification('Customer A notice', 'account');
+
+    authSession.set('token-b', { id: 'customer-b', email: 'b@example.com' });
+    wishlistStore.syncOwner();
+    notificationStore.syncOwner();
+
+    expect(wishlistStore.productIds).toEqual([]);
+    expect(notificationStore.notifications).toEqual([]);
+
+    wishlistStore.toggleWishlist('product-b');
+    notificationStore.addNotification('Customer B notice', 'account');
+
+    authSession.set('token-a', { id: 'customer-a', email: 'a@example.com' });
+    wishlistStore.syncOwner();
+    notificationStore.syncOwner();
+
+    expect(wishlistStore.productIds).toEqual(['product-a']);
+    expect(notificationStore.notifications).toHaveLength(1);
+    expect(notificationStore.notifications[0].message).toBe('Customer A notice');
+  });
 });
 
 describe('profile and settings route guards', () => {

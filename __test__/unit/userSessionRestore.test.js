@@ -5,6 +5,7 @@ import { authSession } from '@/services/authSession';
 const refreshSession = vi.fn();
 const hasRecoverableSession = vi.fn();
 const logout = vi.fn();
+const fetchCurrentProfile = vi.fn();
 
 vi.mock('@/services/authService', () => ({
   authService: {
@@ -20,6 +21,12 @@ vi.mock('@/services/authService', () => ({
   },
 }));
 
+vi.mock('@/services/customerProfileService', () => ({
+  customerProfileService: {
+    fetchCurrentProfile,
+  },
+}));
+
 describe('user session restoration', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -27,6 +34,8 @@ describe('user session restoration', () => {
     refreshSession.mockReset();
     hasRecoverableSession.mockReset();
     logout.mockReset();
+    fetchCurrentProfile.mockReset();
+    fetchCurrentProfile.mockImplementation(async (user) => user);
   });
 
   afterEach(() => {

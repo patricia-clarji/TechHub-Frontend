@@ -8,6 +8,7 @@ import {
   validatePassword,
 } from './authValidation';
 import { AUTH_ENDPOINTS } from './endpoints';
+import { normalizeCustomerProfile } from './customerProfileNormalizers';
 
 const client = axios.create({
   baseURL: config.API.OSIMART_AUTH_URL,
@@ -39,18 +40,7 @@ const messageFrom = (error, fallback) => {
 
 const extractToken = (data) => data?.access || data?.access_token || data?.token || data?.key || data?.tokens?.access || data?.data?.access || data?.data?.token || '';
 const extractRefreshToken = (data) => data?.refresh || data?.refresh_token || data?.tokens?.refresh || data?.data?.refresh || data?.data?.refresh_token || '';
-const extractUser = (data, email = '') => {
-  const source = data?.user || data?.customer || data?.data?.user || data?.data || data || {};
-  return {
-    id: source.id || source.pk || '',
-    email: source.email || email,
-    firstName: source.first_name || '',
-    lastName: source.last_name || '',
-    name: [source.first_name, source.last_name].filter(Boolean).join(' ') || source.name || email.split('@')[0],
-    phone: source.mobile_number || source.mobile || '',
-    avatar: source.profile_pic_path || '',
-  };
-};
+const extractUser = (data, email = '') => normalizeCustomerProfile(data, email);
 
 const normalizeAuthResponse = (data, email = '') => ({
   token: extractToken(data),
@@ -406,8 +396,8 @@ export const authService = {
     }
     try {
       await client.post(AUTH_ENDPOINTS.changePassword, {
-        old_password: oldPassword,
-        new_password: newPassword,
+        'old-password': oldPassword,
+        'new-password': newPassword,
       }, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,

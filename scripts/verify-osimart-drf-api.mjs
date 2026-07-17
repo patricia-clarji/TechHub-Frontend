@@ -55,7 +55,7 @@ const endpoints = [
 
 const allowedAuthStatuses = new Set([401, 403]);
 const report = [];
-const requestTimeoutMs = Number(process.env.OSIMART_SMOKE_TIMEOUT_MS || 30000);
+const requestTimeoutMs = Number(process.env.OSIMART_SMOKE_TIMEOUT_MS || 8000);
 
 const buildUrl = (path, params = {}) => {
   const url = new URL(`${baseUrl}${path}`);

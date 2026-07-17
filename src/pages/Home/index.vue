@@ -27,6 +27,26 @@ const activeBanner = computed(() =>
     bannersStore.banners[0] ||
     null
 );
+const fallbackHeroTitle = 'Discover the\nLatest Tech\nat Unbeatable\nPrices';
+const heroTitleText = computed(() => activeBanner.value?.title || fallbackHeroTitle);
+const heroTitleLines = computed(() => {
+    const explicitLines = String(heroTitleText.value || fallbackHeroTitle)
+        .split(/\r?\n|<br\s*\/?>/i)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    if (explicitLines.length > 1) return explicitLines.slice(0, 4);
+
+    const words = explicitLines[0]?.split(/\s+/).filter(Boolean) || [];
+    if (words.length <= 3) return [explicitLines[0] || 'Discover Tech'];
+    const chunkSize = Math.ceil(words.length / 4);
+    const lines = [];
+    for (let index = 0; index < words.length; index += chunkSize) {
+        lines.push(words.slice(index, index + chunkSize).join(' '));
+    }
+    return lines.slice(0, 4);
+});
+const heroImage = computed(() => activeBanner.value?.image || '/og-image.svg');
+const heroImageAlt = computed(() => activeBanner.value?.title || activeBanner.value?.subtitle || 'TechHub premium electronics');
 
 const trustItems = [
     { icon: 'fa-box', title: 'Live Catalog', desc: 'Products loaded from Osimart' },
@@ -158,15 +178,14 @@ onUnmounted(() => {
                     </span>
                     <h1
                         class="font-[Playfair_Display] text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.06] hero-title">
-                        <template v-if="activeBanner?.title">{{ activeBanner.title }}</template>
-                        <template v-else>
-                            Discover the<br>
-                            <em class="not-italic relative">
-                                <span class="relative z-10 text-[var(--accent)]">Latest Tech</span>
+                        <template v-for="(line, index) in heroTitleLines" :key="`${line}-${index}`">
+                            <em v-if="index === 1" class="not-italic relative">
+                                <span class="relative z-10 text-[var(--accent)]">{{ line }}</span>
                                 <span
                                     class="absolute bottom-2 left-0 right-0 h-3 bg-[var(--accent)] opacity-10 -z-0 rounded"></span>
-                            </em><br />
-                            at Unbeatable<br />Prices
+                            </em>
+                            <span v-else>{{ line }}</span>
+                            <br v-if="index < heroTitleLines.length - 1">
                         </template>
                     </h1>
                     <!-- Description comes from API subtitle -->
@@ -186,9 +205,12 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="hidden lg:block relative hero-img-wrap">
-                    <img :src="activeBanner?.image || '/og-image.svg'"
+                    <img :src="heroImage"
                         class="h-[580px] w-full object-cover rounded-[2.5rem] shadow-2xl relative z-10 hero-parallax"
-                        :style="{ transform: `translateY(${scrollY * 0.08}px)` }" alt="Tech Hub">
+                        width="720"
+                        height="580"
+                        :style="{ transform: `translateY(${scrollY * 0.08}px)` }"
+                        :alt="heroImageAlt">
                 </div>
             </div>
         </section>

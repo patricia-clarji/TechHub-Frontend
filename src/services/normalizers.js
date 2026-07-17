@@ -95,3 +95,16 @@ export const normalizeProduct = (raw = {}) => {
     desc: safeString(raw.short_description ?? raw.shortDescription ?? raw.summary ?? raw.desc ?? raw.description, ''),
   };
 };
+
+export const normalizeDealProduct = (product = {}) => {
+  const price = toNumber(product.price, 0);
+  const oldPrice = toNumber(product.oldPrice ?? product.compare_at_price ?? product.price_range, 0);
+  const hasDiscount = oldPrice > price && price > 0;
+  if (!hasDiscount) return null;
+  return {
+    ...product,
+    price,
+    oldPrice,
+    savingsPercent: Math.max(1, Math.round(((oldPrice - price) / oldPrice) * 100)),
+  };
+};

@@ -1,5 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { authSession } from '@/services/authSession';
 
 const get = vi.fn();
 const post = vi.fn();
@@ -48,6 +49,8 @@ const product = {
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
+  authSession.clear();
   get.mockReset();
   post.mockReset();
   setActivePinia(createPinia());
@@ -176,5 +179,59 @@ describe('Osimart cart API integration', () => {
     expect(result.success).toBe(false);
     expect(result.message).toContain('No ProductVariant');
     expect(cartStore.items).toEqual([]);
+  });
+
+  it('merges guest cart items into the signed-in customer cart', async () => {
+    const { useCartStore } = await import('@/stores/shop/cart');
+    const { readLocalCart, GUEST_CART_OWNER } = await import('@/services/cartService');
+    const cartStore = useCartStore();
+
+    cartStore.items = [{
+      lineKey: 'product-1:variant-1:',
+      productId: 'product-1',
+      variantId: 'variant-1',
+      quantity: 1,
+      priceSnapshot: 1000,
+      stockSnapshot: 3,
+      name: 'AeroBlade 14',
+    }];
+
+    authSession.set('token-a', { id: 'customer-a', email: 'a@example.com' });
+    cartStore.syncOwner({ mergeGuest: true });
+
+    expect(cartStore.owner).toBe('customer:customer-a');
+    expect(cartStore.items).toHaveLength(1);
+    expect(cartStore.items[0]).toMatchObject({ variantId: 'variant-1', quantity: 1 });
+    expect(readLocalCart('customer:customer-a')).toHaveLength(1);
+    expect(readLocalCart(GUEST_CART_OWNER)).toEqual([]);
+  });
+
+  it('keeps a signed-in customer cart after logout and restores it on next login', async () => {
+    const { useCartStore } = await import('@/stores/shop/cart');
+    const cartStore = useCartStore();
+
+    authSession.set('token-a', { id: 'customer-a', email: 'a@example.com' });
+    cartStore.syncOwner({ mergeGuest: true });
+    cartStore.items = [{
+      lineKey: 'product-1:variant-1:',
+      productId: 'product-1',
+      variantId: 'variant-1',
+      quantity: 2,
+      priceSnapshot: 1000,
+      stockSnapshot: 3,
+      name: 'AeroBlade 14',
+    }];
+
+    authSession.clear();
+    cartStore.syncOwner();
+    expect(cartStore.owner).toBe('guest');
+    expect(cartStore.items).toEqual([]);
+
+    authSession.set('token-a', { id: 'customer-a', email: 'a@example.com' });
+    cartStore.syncOwner({ mergeGuest: true });
+
+    expect(cartStore.owner).toBe('customer:customer-a');
+    expect(cartStore.items).toHaveLength(1);
+    expect(cartStore.items[0]).toMatchObject({ variantId: 'variant-1', quantity: 2 });
   });
 });

@@ -3,10 +3,12 @@ import { ref, computed, watch } from 'vue';
 import { useProductsStore } from './products';
 import {
   CART_ACTIONS,
+  GUEST_CART_OWNER,
   buildCartLine,
   cartAPI,
   clearLegacyCartStorage,
   clearLocalCart,
+  getCartOwner,
   readLocalCart,
   writeLocalCart,
 } from '@/services/cartService';
@@ -18,7 +20,8 @@ const optionLabel = (option) => {
 };
 
 export const useCartStore = defineStore('cart', () => {
-  const items = ref(readLocalCart());
+  const owner = ref(getCartOwner());
+  const items = ref(readLocalCart(owner.value));
   const productsStore = useProductsStore();
   const lastError = ref('');
   const loading = ref(false);
@@ -103,6 +106,51 @@ export const useCartStore = defineStore('cart', () => {
   const errorMessage = (error, fallback = 'Unable to update your cart. Please try again.') => (
     error?.message || error?.detail || fallback
   );
+
+  const mergeLines = (baseLines = [], incomingLines = []) => {
+    const merged = new Map();
+    [...baseLines, ...incomingLines].forEach((line) => {
+      if (!line?.lineKey) return;
+      const current = merged.get(line.lineKey);
+      if (!current) {
+        merged.set(line.lineKey, { ...line });
+        return;
+      }
+      const stock = Math.max(Number(current.stockSnapshot) || 0, Number(line.stockSnapshot) || 0);
+      const quantity = (Number(current.quantity) || 0) + (Number(line.quantity) || 0);
+      merged.set(line.lineKey, {
+        ...current,
+        ...line,
+        quantity: stock > 0 ? Math.min(quantity, stock) : quantity,
+        stockSnapshot: stock || current.stockSnapshot || line.stockSnapshot,
+      });
+    });
+    return [...merged.values()];
+  };
+
+  const syncOwner = ({ mergeGuest = false } = {}) => {
+    const nextOwner = getCartOwner();
+    if (nextOwner === owner.value && !mergeGuest) return items.value;
+
+    const currentOwner = owner.value;
+    const currentItems = [...items.value];
+    writeLocalCart(currentItems, currentOwner);
+
+    if (mergeGuest && nextOwner !== GUEST_CART_OWNER) {
+      const guestItems = currentOwner === GUEST_CART_OWNER ? currentItems : readLocalCart(GUEST_CART_OWNER);
+      const customerItems = readLocalCart(nextOwner);
+      const merged = mergeLines(customerItems, guestItems);
+      owner.value = nextOwner;
+      items.value = merged;
+      writeLocalCart(merged, nextOwner);
+      clearLocalCart(GUEST_CART_OWNER);
+      return items.value;
+    }
+
+    owner.value = nextOwner;
+    items.value = readLocalCart(nextOwner);
+    return items.value;
+  };
 
   const addToCart = async (productOrId, quantity = 1, options = {}) => {
     lastError.value = '';
@@ -207,9 +255,9 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  const clearCart = () => {
-    items.value = [];
-    clearLocalCart();
+  const clearCart = (targetOwner = owner.value) => {
+    if (targetOwner === owner.value) items.value = [];
+    clearLocalCart(targetOwner);
     lastBackendCart.value = null;
   };
 
@@ -235,7 +283,7 @@ export const useCartStore = defineStore('cart', () => {
   const hasUnavailableItems = computed(() => detailedItems.value.some((item) => item.unavailable || item.stock < item.quantity));
 
   watch(items, (value) => {
-    writeLocalCart(value);
+    writeLocalCart(value, owner.value);
   }, { deep: true });
 
   clearLegacyCartStorage();
@@ -246,6 +294,8 @@ export const useCartStore = defineStore('cart', () => {
     lastError,
     loading,
     lastBackendCart,
+    owner,
+    syncOwner,
     addToCart,
     setQuantity,
     increment,

@@ -6,7 +6,7 @@ import logger from '@/utils/logger';
 const pick = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
 const normalizeId = (value) => String(value || '').trim().toLowerCase();
 
-const normalizeBanner = (raw = {}) => {
+export const normalizeBanner = (raw = {}) => {
     logger.debug('Normalizing banner:', raw);
     
     const image = mediaAPI.getImageUrl(
